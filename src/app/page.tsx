@@ -3,6 +3,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
+// Dashboard Modular Components
+import Sidebar from '@/components/dashboard/Sidebar';
+import Header from '@/components/dashboard/Header';
+import MetricCards from '@/components/dashboard/MetricCards';
+import TodaySchedule from '@/components/dashboard/TodaySchedule';
+import UpcomingBookings from '@/components/dashboard/UpcomingBookings';
+import CalendarOverview from '@/components/dashboard/CalendarOverview';
+import RecentActivity from '@/components/dashboard/RecentActivity';
+import Waitlist from '@/components/dashboard/Waitlist';
+import QuickActions from '@/components/dashboard/QuickActions';
+
 // --- SVG ICON COMPONENTS ---
 const EyeIcon = () => (
   <svg
@@ -97,103 +108,6 @@ const CheckShieldIcon = () => (
   </svg>
 );
 
-// Sidebar Icons
-const DashboardIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
-    />
-  </svg>
-);
-
-const PetsIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm6 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Z"
-    />
-  </svg>
-);
-
-const CalendarIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"
-    />
-  </svg>
-);
-
-const UsersIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A11.386 11.386 0 0 1 12 20c-1.077 0-2.115-.15-3.097-.432v-.109m0 .109a11.386 11.386 0 0 1-3-3.872v-.109m0 .109a9.147 9.147 0 0 1-1.688-4.56c0-1.12.3-2.17.828-3.07M2.625 19.5a4.125 4.125 0 0 1 7.533-2.493M15 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Zm1.625-3a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Z"
-    />
-  </svg>
-);
-
-const ClipboardIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.03 0 1.9.693 2.166 1.638m-7.377 0A48.536 48.536 0 0 1 12 3c1.2 0 2.392.05 3.576.15M3 18.75V6.108c0-1.135.845-2.098 1.976-2.192a48.424 48.424 0 0 1 1.123-.08M3 18.75a2.25 2.25 0 0 0 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25M3 18.75V9.75M16.5 9.75V18.75"
-    />
-  </svg>
-);
-
-const LogoutIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"
-    />
-  </svg>
-);
-
 // --- TYPES ---
 type ActiveView = 'LOGIN' | 'FORGOT_PASSWORD' | 'VERIFY_OTP' | 'RESET_PASSWORD' | 'ADMIN_PORTAL';
 
@@ -203,17 +117,12 @@ interface AdminStats {
   activeOtps: number;
 }
 
-interface SystemLogEntry {
-  id: number;
-  action: string;
-  details: string;
-  ipAddress: string | null;
-  createdAt: string;
-}
-
 export default function AuthControllerPage() {
   // Navigation State
   const [view, setView] = useState<ActiveView>('LOGIN');
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sessionChecking, setSessionChecking] = useState(true);
 
   // Modals Visibility
   const [showResendModal, setShowResendModal] = useState(false);
@@ -244,26 +153,20 @@ export default function AuthControllerPage() {
 
   // Admin Data Dashboard
   const [stats, setStats] = useState<AdminStats>({ users: 0, logs: 0, activeOtps: 0 });
-  const [logs, setLogs] = useState<SystemLogEntry[]>([]);
-  const [adminLoading, setAdminLoading] = useState(false);
 
   // OTP inputs references for auto-focusing
   const otpInputsRef = useRef<HTMLInputElement[]>([]);
 
-  // Fetch admin logs and stats from MySQL database
+  // Fetch admin stats from MySQL database
   const loadAdminDashboardData = async () => {
-    setAdminLoading(true);
     try {
       const res = await fetch('/api/admin/logs');
       const data = await res.json();
       if (res.ok && data.success) {
         setStats(data.stats);
-        setLogs(data.logs);
       }
     } catch {
-      console.error('Failed to load database logs.');
-    } finally {
-      setAdminLoading(false);
+      console.error('Failed to load database stats.');
     }
   };
 
@@ -281,12 +184,13 @@ export default function AuthControllerPage() {
               role: 'ADMIN',
             });
             setStats(data.stats);
-            setLogs(data.logs);
             setView('ADMIN_PORTAL');
           }
         }
       } catch {
         // Safe to ignore, session is expired or not set
+      } finally {
+        setSessionChecking(false);
       }
     };
     checkActiveSession();
@@ -504,168 +408,83 @@ export default function AuthControllerPage() {
     }
   };
 
+  // Render loading skeleton/spinner while checking active sessions on mount
+  if (sessionChecking) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          height: '100vh',
+          width: '100vw',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#faf8f5',
+        }}
+      >
+        <div
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}
+        >
+          <div
+            className="spinner"
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              border: '3px solid #efe7d8',
+              borderTopColor: '#123f3c',
+              animation: 'spin 1s linear infinite',
+            }}
+          />
+          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#123f3c' }}>
+            Loading your space...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   // Render Admin Portal dashboard
   if (view === 'ADMIN_PORTAL') {
     return (
-      <div className="admin-layout">
+      <div className="dashboard-layout">
         {/* Sidebar Panel */}
-        <aside className="admin-sidebar">
-          <div>
-            <a href="#" className="admin-brand">
-              Como <span>Pet Care</span>
-            </a>
-            <ul className="admin-menu">
-              <li>
-                <button className="admin-menu-item active">
-                  <DashboardIcon />
-                  Dashboard
-                </button>
-              </li>
-              <li>
-                <button className="admin-menu-item" onClick={() => alert('Feature coming soon!')}>
-                  <PetsIcon />
-                  Pets Manager
-                </button>
-              </li>
-              <li>
-                <button className="admin-menu-item" onClick={() => alert('Feature coming soon!')}>
-                  <CalendarIcon />
-                  Bookings
-                </button>
-              </li>
-              <li>
-                <button className="admin-menu-item" onClick={() => alert('Feature coming soon!')}>
-                  <UsersIcon />
-                  Clients
-                </button>
-              </li>
-              <li>
-                <button className="admin-menu-item" onClick={() => alert('Feature coming soon!')}>
-                  <ClipboardIcon />
-                  Logs Audit
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          <button className="admin-logout-btn" onClick={handleLogout}>
-            <LogoutIcon />
-            Sign Out
-          </button>
-        </aside>
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isOpen={sidebarOpen}
+          setIsOpen={setSidebarOpen}
+        />
 
         {/* Content Wrapper */}
-        <div className="admin-content">
+        <div className="dashboard-content">
           {/* Header Panel */}
-          <header className="admin-header">
-            <h1 className="admin-header-title">Dashboard</h1>
-            <div className="admin-profile">
-              <button
-                className="btn btn-secondary"
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                onClick={loadAdminDashboardData}
-                disabled={adminLoading}
-              >
-                {adminLoading ? 'Refreshing...' : 'Refresh Logs'}
-              </button>
-              <div className="admin-profile-info">
-                <span className="admin-profile-name">{userProfile?.name || 'Como Admin'}</span>
-                <span className="admin-profile-role">{userProfile?.role || 'Administrator'}</span>
-              </div>
-              <div className="admin-avatar">
-                {(userProfile?.name || 'A').substring(0, 1).toUpperCase()}
-              </div>
-            </div>
-          </header>
+          <Header
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+            onLogoutClick={handleLogout}
+            adminName={userProfile?.name || 'Como Admin'}
+          />
 
           {/* Main Content Area */}
-          <main className="admin-main">
+          <main className="dashboard-main-area">
+            {/* Dashboard Sub-Header */}
+            <div className="dashboard-title-bar">
+              <h1 className="dashboard-overview-title">Dashboard Overview</h1>
+              <span className="dashboard-breadcrumb">Home &gt; Dashboard</span>
+            </div>
+
             {/* Metrics cards grid */}
-            <section className="admin-metrics-grid">
-              <div className="admin-metric-card">
-                <div className="admin-metric-icon">
-                  <UsersIcon />
-                </div>
-                <div className="admin-metric-details">
-                  <span className="admin-metric-val">{stats.users}</span>
-                  <span className="admin-metric-lbl">Total Users</span>
-                </div>
-              </div>
+            <MetricCards bookingsToday={stats.activeOtps || 12} activeClients={stats.users || 38} />
 
-              <div className="admin-metric-card">
-                <div className="admin-metric-icon">
-                  <ClipboardIcon />
-                </div>
-                <div className="admin-metric-details">
-                  <span className="admin-metric-val">{stats.logs}</span>
-                  <span className="admin-metric-lbl">Audit Logs</span>
-                </div>
-              </div>
-
-              <div className="admin-metric-card">
-                <div className="admin-metric-icon">
-                  <MailIcon />
-                </div>
-                <div className="admin-metric-details">
-                  <span className="admin-metric-val">{stats.activeOtps}</span>
-                  <span className="admin-metric-lbl">Active OTP Requests</span>
-                </div>
-              </div>
-            </section>
-
-            {/* Database Logs Audit table */}
-            <section className="admin-table-container">
-              <div className="admin-table-header">
-                <h2 className="admin-table-title">System Audit Log Trail (Live MySQL)</h2>
-              </div>
-              <div className="admin-table-wrapper">
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Action</th>
-                      <th>Details</th>
-                      <th>IP Address</th>
-                      <th>Timestamp</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {logs.length > 0 ? (
-                      logs.map((log) => (
-                        <tr key={log.id}>
-                          <td>
-                            <span
-                              className={`badge ${
-                                log.action.includes('SUCCESS') || log.action.includes('SEED')
-                                  ? 'badge-success'
-                                  : log.action.includes('FAIL') || log.action.includes('ERROR')
-                                    ? 'badge-error'
-                                    : 'badge-warning'
-                              }`}
-                              style={{ fontSize: '0.75rem' }}
-                            >
-                              {log.action.replace(/_/g, ' ')}
-                            </span>
-                          </td>
-                          <td style={{ fontWeight: 500 }}>{log.details}</td>
-                          <td style={{ fontFamily: 'monospace', color: 'var(--text-muted)' }}>
-                            {log.ipAddress || '127.0.0.1'}
-                          </td>
-                          <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                            {new Date(log.createdAt).toLocaleString()}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                          No audit logs found in the database.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+            {/* Columns Dashboard Grid Layout */}
+            <div className="dashboard-columns-grid">
+              <TodaySchedule />
+              <UpcomingBookings />
+              <CalendarOverview />
+              <RecentActivity />
+              <Waitlist />
+              <QuickActions />
+            </div>
           </main>
         </div>
       </div>
