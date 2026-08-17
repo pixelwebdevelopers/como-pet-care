@@ -9,9 +9,9 @@ const envSchema = z.object({
 
   SMTP_SECURE: z.preprocess((val) => val === 'true' || val === true || val === '1', z.boolean()),
 
-  SMTP_USER: z.string().min(1, 'SMTP_USER cannot be empty'),
+  SMTP_USER: z.string().default(''),
 
-  SMTP_PASS: z.string().min(1, 'SMTP_PASS cannot be empty'),
+  SMTP_PASS: z.string().default(''),
 
   SMTP_FROM: z.string().min(1, 'SMTP_FROM cannot be empty'),
 
