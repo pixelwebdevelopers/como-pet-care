@@ -17,6 +17,7 @@ import Bookings from '@/components/dashboard/Bookings';
 import CalendarPage from '@/components/dashboard/CalendarPage';
 import Clients from '@/components/dashboard/Clients';
 import Pets from '@/components/dashboard/Pets';
+import Services from '@/components/dashboard/Services';
 
 // --- SVG ICON COMPONENTS ---
 const EyeIcon = () => (
@@ -505,11 +506,14 @@ export default function AuthControllerPage() {
 
             {activeTab === 'pets' && <Pets />}
 
+            {activeTab === 'services' && <Services />}
+
             {activeTab !== 'dashboard' &&
               activeTab !== 'bookings' &&
               activeTab !== 'calendar' &&
               activeTab !== 'clients' &&
-              activeTab !== 'pets' && (
+              activeTab !== 'pets' &&
+              activeTab !== 'services' && (
                 <div
                   style={{
                     display: 'flex',
