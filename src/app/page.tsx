@@ -13,6 +13,7 @@ import CalendarOverview from '@/components/dashboard/CalendarOverview';
 import RecentActivity from '@/components/dashboard/RecentActivity';
 import Waitlist from '@/components/dashboard/Waitlist';
 import QuickActions from '@/components/dashboard/QuickActions';
+import Bookings from '@/components/dashboard/Bookings';
 
 // --- SVG ICON COMPONENTS ---
 const EyeIcon = () => (
@@ -467,24 +468,56 @@ export default function AuthControllerPage() {
 
           {/* Main Content Area */}
           <main className="dashboard-main-area">
-            {/* Dashboard Sub-Header */}
-            <div className="dashboard-title-bar">
-              <h1 className="dashboard-overview-title">Dashboard Overview</h1>
-              <span className="dashboard-breadcrumb">Home &gt; Dashboard</span>
-            </div>
+            {activeTab === 'dashboard' && (
+              <>
+                {/* Dashboard Sub-Header */}
+                <div className="dashboard-title-bar">
+                  <h1 className="dashboard-overview-title">Dashboard Overview</h1>
+                  <span className="dashboard-breadcrumb">Home &gt; Dashboard</span>
+                </div>
 
-            {/* Metrics cards grid */}
-            <MetricCards bookingsToday={stats.activeOtps || 12} activeClients={stats.users || 38} />
+                {/* Metrics cards grid */}
+                <MetricCards
+                  bookingsToday={stats.activeOtps || 12}
+                  activeClients={stats.users || 38}
+                />
 
-            {/* Columns Dashboard Grid Layout */}
-            <div className="dashboard-columns-grid">
-              <TodaySchedule />
-              <UpcomingBookings />
-              <CalendarOverview />
-              <RecentActivity />
-              <Waitlist />
-              <QuickActions />
-            </div>
+                {/* Columns Dashboard Grid Layout */}
+                <div className="dashboard-columns-grid">
+                  <TodaySchedule />
+                  <UpcomingBookings />
+                  <CalendarOverview />
+                  <RecentActivity />
+                  <Waitlist />
+                  <QuickActions />
+                </div>
+              </>
+            )}
+
+            {activeTab === 'bookings' && <Bookings />}
+
+            {activeTab !== 'dashboard' && activeTab !== 'bookings' && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '80px 24px',
+                  textAlign: 'center',
+                  backgroundColor: 'var(--card-bg)',
+                  border: '1px solid var(--card-border)',
+                  borderRadius: 'var(--radius-lg)',
+                }}
+              >
+                <h2 style={{ color: 'var(--foreground)', marginBottom: '8px' }}>
+                  {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Tab
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
+                  This screen is currently under construction.
+                </p>
+              </div>
+            )}
           </main>
         </div>
       </div>
