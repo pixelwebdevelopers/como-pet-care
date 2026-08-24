@@ -1,0 +1,405 @@
+/* Waitlist Page CSS Module */
+
+.waitlistContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.waitlistCard {
+  background-color: var(--card-bg, #ffffff);
+  border: 1px solid var(--card-border, #efe7d8);
+  border-radius: var(--radius-lg, 16px);
+  padding: 32px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.cardSubtitle {
+  font-size: 14px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  margin: 0;
+}
+
+/* Tabs Row */
+.tabsContainer {
+  border-bottom: 1px solid var(--soft-cream, #efe7d8);
+  margin-bottom: 4px;
+}
+
+.tabsList {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 24px;
+  overflow-x: auto;
+}
+
+.tabButton {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  padding: 12px 0;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  color: var(--foreground, #1c2524);
+}
+
+.tabButtonActive {
+  color: var(--primary, #123f3c) !important;
+}
+
+.tabButtonActive::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--primary, #123f3c);
+  border-radius: 2px;
+}
+
+/* Actions Row */
+.actionsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.searchContainer {
+  position: relative;
+  flex: 1;
+  max-width: 440px;
+  min-width: 280px;
+}
+
+.searchBar {
+  width: 100%;
+  padding: 10px 16px 10px 40px;
+  font-size: 14px;
+  background-color: var(--card-bg, #ffffff);
+  border: 1px solid var(--input-border, rgba(28, 37, 36, 0.2));
+  border-radius: var(--radius-sm, 8px);
+  color: var(--foreground, #1c2524);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.searchBar:focus {
+  outline: none;
+  border-color: var(--primary, #123f3c);
+  box-shadow: 0 0 0 3px rgba(18, 63, 60, 0.05);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(28, 37, 36, 0.4);
+  pointer-events: none;
+}
+
+.filterSortRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btnSecondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--card-bg, #ffffff);
+  border: 1px solid var(--input-border, rgba(28, 37, 36, 0.2));
+  border-radius: var(--radius-sm, 8px);
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground, #1c2524);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.btnSecondary:hover {
+  background-color: var(--warm-ivory, #f7f4ed);
+  border-color: var(--primary, #123f3c);
+}
+
+/* Table layout */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--card-border, #efe7d8);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+  background-color: var(--card-bg, #ffffff);
+}
+
+.th {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 16px 20px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--soft-cream, #efe7d8);
+  color: var(--foreground, #1c2524);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.tdCheckbox,
+.thCheckbox {
+  width: 50px;
+  text-align: center;
+  padding-right: 0 !important;
+}
+
+.customCheckbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--input-border, rgba(28, 37, 36, 0.2));
+  accent-color: var(--primary, #123f3c);
+  cursor: pointer;
+}
+
+.clientLink {
+  color: var(--primary, #123f3c);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.clientLink:hover {
+  color: var(--antique-gold, #b18a45);
+}
+
+.boldText {
+  font-weight: 600;
+}
+
+/* Status Badges */
+.statusTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.statusConfirmed {
+  background-color: rgba(18, 63, 60, 0.08);
+  color: var(--primary, #123f3c);
+}
+
+.statusWaiting {
+  background-color: rgba(245, 158, 11, 0.08);
+  color: #f59e0b;
+}
+
+.statusAvailabilitySent {
+  background-color: rgba(139, 92, 246, 0.08);
+  color: #8b5cf6;
+}
+
+.statusExpired {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: var(--error, #ef4444);
+}
+
+.statusRemoved {
+  background-color: rgba(107, 114, 128, 0.08);
+  color: #6b7280;
+}
+
+/* Action Dots */
+.btnActionEllipsis {
+  background: none;
+  border: none;
+  color: rgba(28, 37, 36, 0.4);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin: 0 auto;
+}
+
+.btnActionEllipsis:hover {
+  background-color: var(--warm-ivory, #f7f4ed);
+  color: var(--foreground, #1c2524);
+}
+
+/* ==========================================================================
+   LAPTOP RESPONSIVENESS (1024px to 1400px)
+   ========================================================================== */
+
+@media (max-width: 1400px) {
+  .waitlistCard {
+    padding: 24px;
+    gap: 20px;
+  }
+
+  .th,
+  .td {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .tabButton {
+    font-size: 13px;
+    padding: 10px 0;
+  }
+
+  .btnSecondary {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .searchBar {
+    padding: 8px 16px 8px 36px;
+    font-size: 13px;
+  }
+
+  .statusTag {
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .th,
+  .td {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .tabButton {
+    font-size: 12px;
+  }
+
+  .cardTitle {
+    font-size: 18px;
+  }
+}
+
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVENESS (< 992px)
+   ========================================================================== */
+
+@media (max-width: 992px) {
+  .actionsRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchContainer {
+    max-width: 100%;
+  }
+
+  .filterSortRow {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 768px) {
+  .table,
+  .table tbody,
+  .table tr,
+  .table td,
+  .table th {
+    display: block;
+  }
+
+  .th {
+    display: none;
+  }
+
+  .table tr {
+    border-bottom: 2px solid var(--soft-cream, #efe7d8);
+    padding: 12px 0;
+  }
+
+  .td {
+    border-bottom: none;
+    padding: 8px 16px;
+    text-align: right;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    white-space: normal;
+  }
+
+  .td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--text-muted, rgba(28, 37, 36, 0.6));
+    text-align: left;
+    margin-right: 16px;
+  }
+
+  .tdCheckbox {
+    justify-content: space-between;
+    text-align: left;
+    width: 100%;
+    padding-left: 16px;
+  }
+
+  .tdCheckbox::before {
+    content: 'Select Record';
+  }
+
+  .btnActionEllipsis {
+    margin-right: 0;
+  }
+}

@@ -1,0 +1,279 @@
+/* Settings Page CSS Module */
+
+.settingsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.settingsCard {
+  background-color: var(--card-bg, #ffffff);
+  border: 1px solid var(--card-border, #efe7d8);
+  border-radius: var(--radius-lg, 16px);
+  padding: 32px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.cardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.cardSubtitle {
+  font-size: 14px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  margin: 0;
+}
+
+/* Tabs Navigation Row */
+.tabsContainer {
+  border-bottom: 1px solid var(--soft-cream, #efe7d8);
+  margin-bottom: 8px;
+}
+
+.tabsList {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 24px;
+  overflow-x: auto;
+}
+
+.tabButton {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  padding: 12px 0;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  color: var(--foreground, #1c2524);
+}
+
+.tabButtonActive {
+  color: var(--primary, #123f3c) !important;
+}
+
+.tabButtonActive::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--primary, #123f3c);
+  border-radius: 2px;
+}
+
+/* Form Layout Container */
+.formSection {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sectionTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary, #123f3c);
+  margin: 0 0 4px 0;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+  width: 100%;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroupFull {
+  grid-column: span 2;
+}
+
+.formLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+}
+
+.formInput {
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid var(--input-border, rgba(28, 37, 36, 0.2));
+  border-radius: var(--radius-sm, 8px);
+  background-color: var(--card-bg, #ffffff);
+  color: var(--foreground, #1c2524);
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--primary, #123f3c);
+}
+
+.formTextarea {
+  padding: 12px 14px;
+  font-size: 14px;
+  border: 1px solid var(--input-border, rgba(28, 37, 36, 0.2));
+  border-radius: var(--radius-sm, 8px);
+  background-color: var(--card-bg, #ffffff);
+  color: var(--foreground, #1c2524);
+  min-height: 100px;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.formTextarea:focus {
+  outline: none;
+  border-color: var(--primary, #123f3c);
+}
+
+.formActions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.btnCancel {
+  background-color: #e5e7eb;
+  color: var(--foreground, #1c2524);
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  padding: 12px 48px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.btnCancel:hover {
+  background-color: #d1d5db;
+}
+
+.btnSave {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  padding: 12px 48px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  font-family: inherit;
+}
+
+.btnSave:hover {
+  background-color: var(--primary-hover, #0c2b29);
+  box-shadow: 0 2px 4px rgba(18, 63, 60, 0.15);
+}
+
+/* ==========================================================================
+   LAPTOP RESPONSIVENESS (1024px to 1400px)
+   ========================================================================== */
+
+@media (max-width: 1400px) {
+  .settingsCard {
+    padding: 24px;
+    gap: 20px;
+  }
+
+  .tabButton {
+    font-size: 13px;
+    padding: 10px 0;
+  }
+
+  .sectionTitle {
+    font-size: 20px;
+  }
+
+  .formInput,
+  .formTextarea {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .btnSave,
+  .btnCancel {
+    padding: 10px 36px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .tabButton {
+    font-size: 12px;
+  }
+
+  .cardTitle {
+    font-size: 18px;
+  }
+
+  .formGrid {
+    gap: 16px;
+  }
+}
+
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVENESS (< 992px)
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formGroupFull {
+    grid-column: span 1;
+  }
+
+  .formActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btnSave,
+  .btnCancel {
+    padding: 12px 16px;
+    width: 100%;
+    text-align: center;
+  }
+}

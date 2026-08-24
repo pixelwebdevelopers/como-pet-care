@@ -18,6 +18,9 @@ import CalendarPage from '@/components/dashboard/CalendarPage';
 import Clients from '@/components/dashboard/Clients';
 import Pets from '@/components/dashboard/Pets';
 import Services from '@/components/dashboard/Services';
+import Payments from '@/components/dashboard/Payments';
+import WaitlistPage from '@/components/dashboard/WaitlistPage';
+import Settings from '@/components/dashboard/Settings';
 
 // --- SVG ICON COMPONENTS ---
 const EyeIcon = () => (
@@ -508,12 +511,21 @@ export default function AuthControllerPage() {
 
             {activeTab === 'services' && <Services />}
 
+            {activeTab === 'payments' && <Payments />}
+
+            {activeTab === 'waitlist' && <WaitlistPage />}
+
+            {activeTab === 'settings' && <Settings />}
+
             {activeTab !== 'dashboard' &&
               activeTab !== 'bookings' &&
               activeTab !== 'calendar' &&
               activeTab !== 'clients' &&
               activeTab !== 'pets' &&
-              activeTab !== 'services' && (
+              activeTab !== 'services' &&
+              activeTab !== 'payments' &&
+              activeTab !== 'waitlist' &&
+              activeTab !== 'settings' && (
                 <div
                   style={{
                     display: 'flex',
