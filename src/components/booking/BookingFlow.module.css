@@ -1,0 +1,710 @@
+/* Customer Booking Flow CSS Module */
+
+.bookingPage {
+  min-height: 100vh;
+  background-color: #f7f5ef;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  color: var(--foreground, #1c2524);
+}
+
+/* Header with Centered Logo and Right Back Button */
+.header {
+  height: 80px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #efe7d8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.headerSpacer {
+  width: 120px; /* Balances the back button width to keep logo centered */
+  display: flex;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnBackHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: transparent;
+  border: 1px solid var(--primary, #123f3c);
+  color: var(--primary, #123f3c);
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  width: 120px;
+  justify-content: center;
+}
+
+.btnBackHeader:hover {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(18, 63, 60, 0.15);
+}
+
+/* Main Container Frame */
+.mainContainer {
+  flex: 1;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px 80px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Reusable Progress Steps Indicator (Matching mockup styling) */
+.progressIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.stepNode {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stepCircle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #e5e0d5;
+  color: #7a7366;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.25s ease;
+}
+
+.stepText {
+  font-size: 14px;
+  font-weight: 500;
+  color: #7a7366;
+  transition: all 0.25s ease;
+}
+
+.stepActive .stepCircle {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+}
+
+.stepActive .stepText {
+  color: var(--primary, #123f3c);
+  font-weight: 700;
+}
+
+.stepCompleted .stepCircle {
+  background-color: var(--antique-gold, #b18a45);
+  color: #ffffff;
+}
+
+.stepCompleted .stepText {
+  color: var(--antique-gold, #b18a45);
+  font-weight: 600;
+}
+
+/* Step Content Card */
+.cardFrame {
+  background-color: #ffffff;
+  border: 1px solid #efe7d8;
+  border-radius: 24px;
+  padding: 48px;
+  box-shadow: 0 4px 20px rgba(28, 37, 36, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.headingGroup {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.pageTitle {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin: 0;
+  letter-spacing: -0.02em;
+  font-family: inherit;
+}
+
+.pageSubtitle {
+  font-size: 15px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Step 1: Service Cards Grid */
+.servicesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.serviceCard {
+  background-color: #ffffff;
+  border: 1px solid #efe7d8;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  text-align: left;
+}
+
+.serviceCard:hover {
+  border-color: var(--primary, #123f3c);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(18, 63, 60, 0.05);
+}
+
+.serviceCardSelected {
+  border-color: var(--primary, #123f3c);
+  background-color: rgba(18, 63, 60, 0.02);
+  box-shadow: 0 8px 16px rgba(18, 63, 60, 0.06);
+}
+
+.cardIconFrame {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid var(--primary, #123f3c);
+  background-color: rgba(18, 63, 60, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary, #123f3c);
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.serviceCard:hover .cardIconFrame {
+  transform: scale(1.05);
+}
+
+.cardMainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin: 0;
+}
+
+.cardBadge {
+  background-color: #efe7d8;
+  color: #7a7366;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.cardDescription {
+  font-size: 13.5px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  line-height: 1.5;
+  margin: 0;
+  min-height: 40px;
+}
+
+.cardFooterRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.cardPrice {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary, #123f3c);
+}
+
+.cardArrow {
+  color: var(--primary, #123f3c);
+  opacity: 0.6;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+}
+
+.serviceCard:hover .cardArrow {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+/* Step 2: Schedule Picker Screen */
+.scheduleWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.frequencyGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.freqOption {
+  border: 1px solid #efe7d8;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.freqOption:hover {
+  border-color: var(--primary, #123f3c);
+}
+
+.freqActive {
+  background-color: rgba(18, 63, 60, 0.03);
+  border-color: var(--primary, #123f3c);
+  color: var(--primary, #123f3c);
+}
+
+.calendarGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slotsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.timeSlotBtn {
+  border: 1px solid #efe7d8;
+  background: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground, #1c2524);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: center;
+}
+
+.timeSlotBtn:hover {
+  border-color: var(--primary, #123f3c);
+  background-color: #f7f5ef;
+}
+
+.timeSlotActive {
+  background-color: var(--primary, #123f3c) !important;
+  color: #ffffff !important;
+  border-color: var(--primary, #123f3c) !important;
+}
+
+/* Step 3: Details form layout */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroupFull {
+  grid-column: span 2;
+}
+
+.formLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+}
+
+.formInput,
+.formSelect {
+  padding: 12px 14px;
+  font-size: 14px;
+  border: 1px solid rgba(28, 37, 36, 0.2);
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: var(--foreground, #1c2524);
+  transition: border-color 0.2s ease;
+}
+
+.formInput:focus,
+.formSelect:focus {
+  outline: none;
+  border-color: var(--primary, #123f3c);
+}
+
+.formTextarea {
+  padding: 12px 14px;
+  font-size: 14px;
+  border: 1px solid rgba(28, 37, 36, 0.2);
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: var(--foreground, #1c2524);
+  min-height: 90px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.formTextarea:focus {
+  outline: none;
+  border-color: var(--primary, #123f3c);
+}
+
+/* Step 4: Checkout Layout */
+.checkoutContainer {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 32px;
+  width: 100%;
+}
+
+.checkoutFormBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.checkoutTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary, #123f3c);
+  margin: 0 0 4px 0;
+}
+
+.summarySidebar {
+  background-color: #f7f5ef;
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-self: flex-start;
+}
+
+.summaryTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin: 0;
+  border-bottom: 1px solid #efe7d8;
+  padding-bottom: 12px;
+}
+
+.summaryItemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+}
+
+.summaryLabel {
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  font-weight: 500;
+}
+
+.summaryValue {
+  font-weight: 600;
+  color: var(--foreground, #1c2524);
+  text-align: right;
+}
+
+.summaryTotalRow {
+  border-top: 1px dashed #efe7d8;
+  padding-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary, #123f3c);
+}
+
+/* Step 5: Success Box */
+.successBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 24px;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.successBadgeFrame {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.successDetailsCard {
+  width: 100%;
+  border-radius: 16px;
+  background-color: #f7f5ef;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.successRefCode {
+  font-family: monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary, #123f3c);
+}
+
+/* Wizard Next/Submit Actions Button block */
+.wizardActions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  width: 100%;
+}
+
+.btnPrimary {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  border: none;
+  border-radius: 30px;
+  padding: 14px 48px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 10px rgba(18, 63, 60, 0.15);
+  font-family: inherit;
+}
+
+.btnPrimary:hover {
+  background-color: var(--primary-hover, #0c2b29);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(18, 63, 60, 0.2);
+}
+
+/* ==========================================================================
+   LAPTOP RESPONSIVENESS (1024px to 1400px)
+   ========================================================================== */
+
+@media (max-width: 1400px) {
+  .cardFrame {
+    padding: 36px;
+    gap: 24px;
+  }
+
+  .pageTitle {
+    font-size: 26px;
+  }
+
+  .servicesGrid {
+    gap: 16px;
+  }
+
+  .serviceCard {
+    padding: 20px;
+  }
+
+  .cardTitle {
+    font-size: 16px;
+  }
+
+  .cardDescription {
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .progressIndicator {
+    gap: 12px;
+  }
+
+  .stepText {
+    font-size: 12px;
+  }
+
+  .checkoutContainer {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 24px;
+  }
+}
+
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVENESS (< 992px)
+   ========================================================================== */
+
+@media (max-width: 992px) {
+  .servicesGrid {
+    grid-template-columns: 1fr;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .checkoutContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .summarySidebar {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0 20px;
+    height: 72px;
+  }
+
+  .headerSpacer {
+    width: 90px;
+  }
+
+  .btnBackHeader {
+    width: 90px;
+    padding: 6px 12px;
+    font-size: 12.5px;
+  }
+
+  .mainContainer {
+    padding: 24px 16px 60px 16px;
+    gap: 24px;
+  }
+
+  .progressIndicator {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+  }
+
+  .stepNode {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .stepText {
+    font-size: 10px;
+    text-align: center;
+    display: none; /* Hide labels on mobile to avoid overflow */
+  }
+
+  .stepActive .stepText {
+    display: block; /* Only show active step text on mobile */
+    font-size: 9px;
+  }
+
+  .cardFrame {
+    padding: 24px 16px;
+    border-radius: 16px;
+  }
+
+  .pageTitle {
+    font-size: 22px;
+  }
+
+  .pageSubtitle {
+    font-size: 13px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .timeSlotBtn {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .btnPrimary {
+    padding: 12px 32px;
+    font-size: 14px;
+    width: 100%;
+    text-align: center;
+  }
+}

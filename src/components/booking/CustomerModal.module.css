@@ -1,0 +1,143 @@
+/* Existing Customer Query Modal CSS Module */
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(28, 37, 36, 0.45);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dialog {
+  background-color: #ffffff;
+  border-radius: 24px;
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 20px 40px rgba(18, 63, 60, 0.15);
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.avatarCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1.5px solid #efe7d8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary, #123f3c);
+  background-color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.heading {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin: 0;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.btnNew {
+  flex: 1;
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+
+.btnNew:hover {
+  background-color: var(--primary-hover, #0c2b29);
+  box-shadow: 0 4px 12px rgba(18, 63, 60, 0.15);
+}
+
+.btnExisting {
+  flex: 1;
+  background-color: #ffffff;
+  color: var(--primary, #123f3c);
+  border: 1.5px solid var(--primary, #123f3c);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+
+.btnExisting:hover {
+  background-color: var(--warm-ivory, #f7f4ed);
+  border-color: var(--primary-hover, #0c2b29);
+  color: var(--primary-hover, #0c2b29);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .dialog {
+    padding: 32px 24px;
+    gap: 16px;
+  }
+
+  .heading {
+    font-size: 18px;
+  }
+
+  .buttonRow {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btnNew,
+  .btnExisting {
+    width: 100%;
+    padding: 12px;
+  }
+}

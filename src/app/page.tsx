@@ -701,15 +701,35 @@ export default function AuthControllerPage() {
                 </button>
               </form>
 
-              <div className="login-signup-text">
-                {"Don't have an account yet?"}
-                <a
-                  href="#"
-                  className="login-signup-link"
-                  onClick={() => alert('Feature coming soon!')}
-                >
-                  Signup
-                </a>
+              <div
+                className="login-signup-text"
+                style={{
+                  marginTop: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div>
+                  {"Don't have an account yet? "}
+                  <a
+                    href="#"
+                    className="login-signup-link"
+                    onClick={() => alert('Feature coming soon!')}
+                  >
+                    Register
+                  </a>
+                </div>
+                <div>
+                  {'Looking to book a service? '}
+                  <a
+                    href="/booking"
+                    className="login-signup-link"
+                    style={{ fontWeight: '700', color: 'var(--primary, #123f3c)' }}
+                  >
+                    Go to Customer Booking Flow →
+                  </a>
+                </div>
               </div>
             </>
           )}

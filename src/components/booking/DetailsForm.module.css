@@ -1,0 +1,235 @@
+/* Customer & Pet Details Form CSS Module */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.headingGroup {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Two Column form layout */
+.formCard {
+  background-color: #ffffff;
+  border: 1px solid #efe7d8;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 4px 12px rgba(28, 37, 36, 0.02);
+}
+
+.columnsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.divider {
+  border-right: 1px solid #efe7d8;
+  height: 100%;
+}
+
+.colHeader {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary, #123f3c);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 2px solid #f7f4ed;
+  padding-bottom: 12px;
+}
+
+.fieldsList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+}
+
+.input {
+  background-color: #ffffff;
+  border: 1.5px solid #efe7d8;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  color: var(--foreground, #1c2524);
+  width: 100%;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary, #123f3c);
+  box-shadow: 0 0 0 3px rgba(18, 63, 60, 0.08);
+}
+
+/* Side-by-side double fields layout */
+.fieldsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Textarea Notes */
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Columbia checkbox styling */
+.checkboxGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: var(--primary, #123f3c);
+  cursor: pointer;
+}
+
+.checkboxLabel {
+  font-size: 12px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+/* Continue button */
+.btnContinue {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  border: none;
+  border-radius: 30px;
+  padding: 14px 36px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  font-family: inherit;
+  margin-top: 10px;
+}
+
+.btnContinue:hover {
+  background-color: var(--primary-hover, #0c2b29);
+  box-shadow: 0 4px 12px rgba(18, 63, 60, 0.15);
+}
+
+/* ==========================================================================
+   LAPTOP RESPONSIVENESS (1024px to 1400px)
+   ========================================================================== */
+
+@media (max-width: 1400px) {
+  .title {
+    font-size: 26px;
+  }
+
+  .subtitle {
+    font-size: 13.5px;
+  }
+
+  .formCard {
+    padding: 32px;
+  }
+
+  .columnsGrid {
+    gap: 32px;
+  }
+
+  .input {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVENESS (< 992px)
+   ========================================================================== */
+
+@media (max-width: 992px) {
+  .columnsGrid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .formCard {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .fieldsRow {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

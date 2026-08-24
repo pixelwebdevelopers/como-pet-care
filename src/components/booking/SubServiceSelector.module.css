@@ -1,0 +1,242 @@
+/* Reusable Sub-Service Selector CSS Module */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.headingGroup {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Walk Length Pill Selector Toggles */
+.toggleWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.toggleContainer {
+  background-color: #efe7d8;
+  border-radius: 30px;
+  padding: 6px;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.toggleButton {
+  background: none;
+  border: none;
+  border-radius: 24px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  min-width: 120px;
+  text-align: center;
+  font-family: inherit;
+}
+
+.toggleActive {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(18, 63, 60, 0.15);
+}
+
+/* Plan Card Grid */
+.optionsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  width: 100%;
+}
+
+.optionsGrid3Col {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.optionCard {
+  background-color: #ffffff;
+  border: 1.5px solid #efe7d8;
+  border-radius: 16px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  text-align: left;
+}
+
+.optionCard:hover {
+  border-color: var(--primary, #123f3c);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(18, 63, 60, 0.05);
+}
+
+.optionCardSelected {
+  border-color: var(--primary, #123f3c);
+  background-color: rgba(18, 63, 60, 0.02);
+  box-shadow: 0 8px 16px rgba(18, 63, 60, 0.06);
+}
+
+.cardHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.cardBadge {
+  background-color: #efe7d8;
+  color: #7a7366;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.cardDescription {
+  font-size: 13.5px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  line-height: 1.55;
+  margin: 0;
+  min-height: 48px;
+}
+
+.priceWrapper {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.priceText {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary, #123f3c);
+}
+
+.savingText {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--antique-gold, #b18a45);
+}
+
+/* ==========================================================================
+   LAPTOP RESPONSIVENESS (1024px to 1400px)
+   ========================================================================== */
+
+@media (max-width: 1400px) {
+  .title {
+    font-size: 26px;
+  }
+
+  .subtitle {
+    font-size: 13.5px;
+  }
+
+  .optionsGrid {
+    gap: 16px;
+  }
+
+  .optionCard {
+    padding: 20px;
+  }
+
+  .cardTitle {
+    font-size: 16px;
+  }
+
+  .cardDescription {
+    font-size: 12.5px;
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .optionsGrid3Col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVENESS (< 768px)
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .container {
+    gap: 24px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .optionsGrid,
+  .optionsGrid3Col {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 500px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .toggleButton {
+    min-width: 100px;
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}

@@ -1,0 +1,340 @@
+/* BookingConfirmation.module.css — Step 5: Booking Confirmation */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 20px;
+}
+
+/* Paw print background decorations */
+.pawBg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.pawPrint {
+  position: absolute;
+  opacity: 0.06;
+  color: var(--primary, #123f3c);
+}
+
+.paw1 {
+  top: 10%;
+  left: 2%;
+  transform: rotate(-25deg);
+}
+
+.paw2 {
+  top: 30%;
+  left: 6%;
+  transform: rotate(15deg) scale(0.8);
+}
+
+.paw3 {
+  top: 55%;
+  left: 1%;
+  transform: rotate(-10deg) scale(1.1);
+}
+
+.paw4 {
+  top: 75%;
+  left: 5%;
+  transform: rotate(30deg) scale(0.7);
+}
+
+.paw5 {
+  top: 15%;
+  right: 3%;
+  transform: rotate(20deg) scale(0.9);
+}
+
+.paw6 {
+  top: 40%;
+  right: 1%;
+  transform: rotate(-30deg);
+}
+
+.paw7 {
+  top: 60%;
+  right: 5%;
+  transform: rotate(10deg) scale(0.85);
+}
+
+.paw8 {
+  top: 80%;
+  right: 2%;
+  transform: rotate(-15deg) scale(1.05);
+}
+
+/* Heading */
+.headingGroup {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.title {
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 32px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--foreground, #1c2524);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  line-height: 1.6;
+}
+
+/* Confirmation ticket card */
+.ticketCard {
+  width: 100%;
+  max-width: 560px;
+  background-color: #ffffff;
+  border: 1px solid #efe7d8;
+  border-radius: 14px;
+  padding: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ticket header */
+.ticketHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #efe7d8;
+  margin-bottom: 0;
+}
+
+.ticketIcon {
+  color: var(--primary, #123f3c);
+  display: flex;
+  align-items: center;
+}
+
+.ticketTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+}
+
+/* Reference badge */
+.refBadge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 18px 0;
+  padding: 14px 18px;
+  background-color: var(--warm-ivory, #f7f4ed);
+  border: 1px dashed #ddd3c0;
+  border-radius: 8px;
+}
+
+.refLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+}
+
+.refCode {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary, #123f3c);
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+/* Confirmation rows */
+.confirmList {
+  display: flex;
+  flex-direction: column;
+}
+
+.confirmRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f3ede3;
+}
+
+.confirmRow:last-child {
+  border-bottom: none;
+}
+
+.confirmRowIcon {
+  flex-shrink: 0;
+  color: var(--primary, #123f3c);
+  display: flex;
+  align-items: center;
+}
+
+.confirmRowLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.confirmRowValue {
+  font-size: 13px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  text-align: right;
+  flex: 1;
+}
+
+.confirmRowValueHighlight {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--primary, #123f3c);
+  text-align: right;
+  flex: 1;
+}
+
+/* Action buttons */
+.actionBtns {
+  display: flex;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.btnIntake {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 20px;
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btnIntake:hover {
+  background-color: #0e332f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(18, 63, 60, 0.2);
+}
+
+.btnViewDetails {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 20px;
+  background-color: #ffffff;
+  color: var(--primary, #123f3c);
+  font-size: 14px;
+  font-weight: 700;
+  border: 2px solid var(--primary, #123f3c);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btnViewDetails:hover {
+  background-color: var(--warm-ivory, #f7f4ed);
+  transform: translateY(-1px);
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 1280px) {
+  .title {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 900px) {
+  .title {
+    font-size: 24px;
+  }
+
+  .ticketCard {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    gap: 18px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+  }
+
+  .ticketCard {
+    padding: 18px;
+    border-radius: 10px;
+  }
+
+  .ticketTitle {
+    font-size: 14px;
+  }
+
+  .refBadge {
+    padding: 10px 14px;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  .refLabel,
+  .refCode {
+    font-size: 12px;
+  }
+
+  .confirmRow {
+    padding: 10px 0;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .confirmRowLabel {
+    font-size: 12px;
+    min-width: 100px;
+  }
+
+  .confirmRowValue {
+    font-size: 11px;
+  }
+
+  .confirmRowValueHighlight {
+    font-size: 13px;
+  }
+
+  .actionBtns {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btnIntake,
+  .btnViewDetails {
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+}
