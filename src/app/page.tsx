@@ -15,6 +15,8 @@ import Waitlist from '@/components/dashboard/Waitlist';
 import QuickActions from '@/components/dashboard/QuickActions';
 import Bookings from '@/components/dashboard/Bookings';
 import CalendarPage from '@/components/dashboard/CalendarPage';
+import Clients from '@/components/dashboard/Clients';
+import Pets from '@/components/dashboard/Pets';
 
 // --- SVG ICON COMPONENTS ---
 const EyeIcon = () => (
@@ -499,28 +501,36 @@ export default function AuthControllerPage() {
 
             {activeTab === 'calendar' && <CalendarPage />}
 
-            {activeTab !== 'dashboard' && activeTab !== 'bookings' && activeTab !== 'calendar' && (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '80px 24px',
-                  textAlign: 'center',
-                  backgroundColor: 'var(--card-bg)',
-                  border: '1px solid var(--card-border)',
-                  borderRadius: 'var(--radius-lg)',
-                }}
-              >
-                <h2 style={{ color: 'var(--foreground)', marginBottom: '8px' }}>
-                  {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Tab
-                </h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
-                  This screen is currently under construction.
-                </p>
-              </div>
-            )}
+            {activeTab === 'clients' && <Clients />}
+
+            {activeTab === 'pets' && <Pets />}
+
+            {activeTab !== 'dashboard' &&
+              activeTab !== 'bookings' &&
+              activeTab !== 'calendar' &&
+              activeTab !== 'clients' &&
+              activeTab !== 'pets' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '80px 24px',
+                    textAlign: 'center',
+                    backgroundColor: 'var(--card-bg)',
+                    border: '1px solid var(--card-border)',
+                    borderRadius: 'var(--radius-lg)',
+                  }}
+                >
+                  <h2 style={{ color: 'var(--foreground)', marginBottom: '8px' }}>
+                    {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Tab
+                  </h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
+                    This screen is currently under construction.
+                  </p>
+                </div>
+              )}
           </main>
         </div>
       </div>
