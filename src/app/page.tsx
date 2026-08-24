@@ -14,6 +14,7 @@ import RecentActivity from '@/components/dashboard/RecentActivity';
 import Waitlist from '@/components/dashboard/Waitlist';
 import QuickActions from '@/components/dashboard/QuickActions';
 import Bookings from '@/components/dashboard/Bookings';
+import CalendarPage from '@/components/dashboard/CalendarPage';
 
 // --- SVG ICON COMPONENTS ---
 const EyeIcon = () => (
@@ -496,7 +497,9 @@ export default function AuthControllerPage() {
 
             {activeTab === 'bookings' && <Bookings />}
 
-            {activeTab !== 'dashboard' && activeTab !== 'bookings' && (
+            {activeTab === 'calendar' && <CalendarPage />}
+
+            {activeTab !== 'dashboard' && activeTab !== 'bookings' && activeTab !== 'calendar' && (
               <div
                 style={{
                   display: 'flex',
