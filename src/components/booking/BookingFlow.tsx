@@ -518,7 +518,7 @@ export default function BookingFlow() {
                     bookingDate: scheduleData.bookingDate || '',
                     bookingEndDate: scheduleData.bookingEndDate,
                   }}
-                  onSubmitPayment={(_paymentIntentId) => setBookingScreen('confirmation')}
+                  onSubmitPayment={() => setBookingScreen('confirmation')}
                 />
               );
             })()}

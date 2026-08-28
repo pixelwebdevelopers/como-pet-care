@@ -286,24 +286,24 @@ export default function PaymentForm({
   // Initialize PaymentIntent on mount
   useEffect(() => {
     let isMounted = true;
-    setLoadingIntent(true);
-    setIntentError(null);
 
-    async function initializePaymentIntent() {
-      try {
-        const res = await fetch('/api/payments/create-intent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: totalPrice,
-            customerDetails,
-            bookingDetails,
-          }),
-        });
+    if (totalPrice <= 0) {
+      return;
+    }
 
+    fetch('/api/payments/create-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: totalPrice,
+        customerDetails,
+        bookingDetails,
+      }),
+    })
+      .then(async (res) => {
         const data = await res.json();
-
         if (!isMounted) return;
+        setLoadingIntent(false);
 
         if (res.ok && data.success && data.clientSecret) {
           setClientSecret(data.clientSecret);
@@ -315,21 +315,12 @@ export default function PaymentForm({
             setIntentError(data.message || 'Unable to initialize Stripe payment.');
           }
         }
-      } catch (err) {
+      })
+      .catch((err) => {
         if (!isMounted) return;
+        setLoadingIntent(false);
         setIntentError(err instanceof Error ? err.message : 'Network error initializing payment.');
-      } finally {
-        if (isMounted) {
-          setLoadingIntent(false);
-        }
-      }
-    }
-
-    if (totalPrice > 0) {
-      initializePaymentIntent();
-    } else {
-      setLoadingIntent(false);
-    }
+      });
 
     return () => {
       isMounted = false;
