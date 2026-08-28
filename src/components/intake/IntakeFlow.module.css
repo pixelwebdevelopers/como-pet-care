@@ -1,0 +1,222 @@
+/* IntakeFlow.module.css — CoMo Pet Care Intake Form */
+
+.intakePage {
+  min-height: 100vh;
+  background-color: #f7f5ef;
+  display: flex;
+  flex-direction: column;
+  color: var(--foreground, #1c2524);
+  font-family: inherit;
+}
+
+/* Header with Centered Logo and Right Back Button */
+.header {
+  height: 80px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #efe7d8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.headerSpacer {
+  width: 120px;
+  display: flex;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnBackHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: transparent;
+  border: 1px solid var(--primary, #123f3c);
+  color: var(--primary, #123f3c);
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  width: 120px;
+  justify-content: center;
+}
+
+.btnBackHeader:hover {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(18, 63, 60, 0.15);
+}
+
+/* Main Container Frame */
+.mainContainer {
+  flex: 1;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px 80px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Outer Card Frame */
+.cardFrame {
+  background-color: #ffffff;
+  border: 1px solid #efe7d8;
+  border-radius: 24px;
+  padding: 48px 56px;
+  box-shadow: 0 4px 20px rgba(28, 37, 36, 0.03);
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.35s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Top Level Form Title */
+.intakeTopTitle {
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: #b18a45;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* Steps Indicator */
+.stepsIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-bottom: 36px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f3ece0;
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: default;
+  transition: all 0.25s ease;
+}
+
+.stepCircle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #eae3d5;
+  color: #7c7465;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.stepLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #7c7465;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+/* Active & Completed step states */
+.stepItemActive .stepCircle {
+  background-color: #123f3c;
+  color: #ffffff;
+}
+
+.stepItemActive .stepLabel {
+  color: #1c2524;
+  font-weight: 700;
+}
+
+.stepItemCompleted .stepCircle {
+  background-color: #123f3c;
+  color: #ffffff;
+}
+
+.stepItemCompleted .stepLabel {
+  color: #1c2524;
+  font-weight: 600;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 960px) {
+  .cardFrame {
+    padding: 36px 28px;
+    border-radius: 18px;
+  }
+
+  .stepsIndicator {
+    gap: 14px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 14px;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 640px) {
+  .header {
+    height: 70px;
+    padding: 0 16px;
+  }
+
+  .headerSpacer {
+    width: 80px;
+  }
+
+  .btnBackHeader {
+    width: 80px;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .mainContainer {
+    padding: 20px 12px 60px 12px;
+  }
+
+  .cardFrame {
+    padding: 24px 16px;
+    border-radius: 14px;
+  }
+
+  .intakeTopTitle {
+    font-size: 24px;
+    margin-bottom: 18px;
+  }
+
+  .stepsIndicator {
+    gap: 10px;
+  }
+
+  .stepLabel {
+    font-size: 12px;
+  }
+}

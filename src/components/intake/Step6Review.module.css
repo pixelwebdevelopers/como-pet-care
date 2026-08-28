@@ -1,0 +1,274 @@
+/* Step6Review.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease-out;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.headingGroup {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.title {
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 34px;
+  font-weight: 700;
+  color: #1c2524;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: rgba(28, 37, 36, 0.65);
+  max-width: 580px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* Card framing the review sections */
+.reviewCard {
+  background-color: #ffffff;
+  border: 1px solid #efe7d8;
+  border-radius: 16px;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Section */
+.sectionBlock {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f3ece0;
+}
+
+.sectionBlock:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sectionTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sectionIcon {
+  color: #123f3c;
+  display: flex;
+  align-items: center;
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1c2524;
+}
+
+.btnEdit {
+  background: none;
+  border: none;
+  color: #b18a45;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btnEdit:hover {
+  color: #8c6820;
+  background-color: #faf6ed;
+}
+
+/* Row items inside section */
+.rowsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dataRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 4px 0;
+}
+
+.rowLabelGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1c2524;
+  font-weight: 500;
+}
+
+.rowIcon {
+  color: #938977;
+  display: flex;
+  align-items: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.rowValue {
+  color: #554e42;
+  font-weight: 500;
+  text-align: right;
+  max-width: 50%;
+  word-break: break-word;
+}
+
+/* Checkbox Confirmation */
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxInput {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid #123f3c;
+  border-radius: 4px;
+  accent-color: #123f3c;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkboxLabel {
+  font-size: 13px;
+  color: #555047;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+/* Service Info Card */
+.serviceInfoNote {
+  background-color: #faf6ed;
+  border: 1px solid #dfd4be;
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 12px;
+  color: #63553f;
+  text-align: center;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+/* Bottom Buttons Row */
+.buttonsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.btnBack {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  min-width: 140px;
+  background-color: transparent;
+  border: 1.5px solid #123f3c;
+  border-radius: 8px;
+  color: #123f3c;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnBack:hover {
+  background-color: #f7f4ed;
+}
+
+.btnSubmit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 44px;
+  min-width: 220px;
+  background-color: #123f3c;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnSubmit:hover {
+  background-color: #0e332f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(18, 63, 60, 0.2);
+}
+
+.btnSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .title {
+    font-size: 26px;
+  }
+
+  .reviewCard {
+    padding: 18px 16px;
+    border-radius: 12px;
+  }
+
+  .dataRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .rowValue {
+    max-width: 100%;
+    text-align: left;
+    padding-left: 26px;
+  }
+
+  .buttonsRow {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btnBack,
+  .btnSubmit {
+    width: 100%;
+    min-width: auto;
+  }
+}

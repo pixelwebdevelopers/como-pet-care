@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './BookingConfirmation.module.css';
 
 // --- TYPES ---
@@ -159,6 +160,7 @@ export default function BookingConfirmation({
   meetGreetDate,
   meetGreetAddress,
 }: BookingConfirmationProps) {
+  const router = useRouter();
   const dateDisplay = bookingEndDate
     ? `${bookingDate} - ${bookingEndDate} (${numberOfDays} Day)`
     : bookingDate;
@@ -282,10 +284,7 @@ export default function BookingConfirmation({
         {/* Action buttons */}
         <div className={styles.actionBtns}>
           {isNewCustomer && (
-            <button
-              className={styles.btnIntake}
-              onClick={() => alert('Intake form will open here.')}
-            >
+            <button className={styles.btnIntake} onClick={() => router.push('/intake')}>
               Complete Intake Form
             </button>
           )}

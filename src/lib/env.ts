@@ -20,6 +20,12 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
 
   APP_SECRET: z.string().min(12, 'APP_SECRET must be at least 12 characters long'),
+
+  STRIPE_SECRET_KEY: z.string().default(''),
+
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().default(''),
+
+  STRIPE_WEBHOOK_SECRET: z.string().default(''),
 });
 
 // Avoid executing this validation in the browser bundle

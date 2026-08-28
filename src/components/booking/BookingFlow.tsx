@@ -511,7 +511,14 @@ export default function BookingFlow() {
                   additionalPetFee={petFee}
                   puppySurcharge={pupFee}
                   holidaySurcharge={holFee}
-                  onSubmitPayment={() => setBookingScreen('confirmation')}
+                  customerDetails={customerDetails}
+                  bookingDetails={{
+                    serviceName: selectedService.name,
+                    planTitle: selectedPlan.title,
+                    bookingDate: scheduleData.bookingDate || '',
+                    bookingEndDate: scheduleData.bookingEndDate,
+                  }}
+                  onSubmitPayment={(_paymentIntentId) => setBookingScreen('confirmation')}
                 />
               );
             })()}

@@ -1,0 +1,243 @@
+/* IntakeSuccess.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  animation: fadeIn 0.4s ease-out;
+  overflow: hidden;
+  padding: 10px 0 20px 0;
+}
+
+/* Background Paw Prints Watermark */
+.pawWatermarkLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23123f3c'%3E%3Cpath d='M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5.3-86.2 32.6-96.8 70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7.9 78.6 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v.1c0 .2 0 .4 0 .6v.7c-.1 2.9-.3 5.8-.8 8.6-5.4 32.5-35.3 56.3-71.2 56.3H136c-35.9 0-65.7-23.8-71.1-56.3-.5-2.8-.8-5.7-.8-8.6v-.7c0-.2 0-.4 0-.6v-.1c0-10.4 1.6-20.8 5.2-30.5zM381.7 96.8c32.9-10.6 46.9 16.4 32.6 96.8-14.3 42.9-51.7 69.1-84.4 58.5-32.9-10.6-46.9-53.9-32.6-96.8 14.3-42.9 51.7-69.1 84.4-58.5zM490.2 165.3c24.5 14 29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3-29.1-51.7-10.2-84.1 54-47.3 78.5-33.3z'/%3E%3C/svg%3E");
+  background-size: 70px 70px;
+  background-repeat: repeat;
+  z-index: 0;
+}
+
+.headingGroup {
+  text-align: center;
+  margin-bottom: 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.title {
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 36px;
+  font-weight: 700;
+  color: #1c2524;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: rgba(28, 37, 36, 0.65);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* Center Summary Card */
+.summaryCard {
+  background-color: #ffffff;
+  border: 1px solid #efe7d8;
+  border-radius: 16px;
+  padding: 24px 28px;
+  max-width: 490px;
+  width: 100%;
+  box-shadow: 0 4px 18px rgba(28, 37, 36, 0.04);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Card Header */
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #efe7d8;
+  margin-bottom: 16px;
+}
+
+.cardHeaderIcon {
+  color: #123f3c;
+  display: flex;
+  align-items: center;
+}
+
+.cardHeaderTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #123f3c;
+}
+
+/* Booking Reference Highlight Box */
+.refBox {
+  background-color: #faf6ed;
+  border: 1px solid #dfd4be;
+  border-radius: 8px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.refLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1c2524;
+}
+
+.refCode {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1c2524;
+  letter-spacing: 0.5px;
+}
+
+/* Summary Rows List */
+.summaryRowsList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3ece0;
+}
+
+.summaryRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.rowLeftGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1c2524;
+  font-weight: 500;
+}
+
+.rowIcon {
+  color: #938977;
+  display: flex;
+  align-items: center;
+}
+
+.rowValue {
+  color: #1c2524;
+  font-weight: 600;
+}
+
+.rowValueSuccess {
+  color: #123f3c;
+  font-weight: 700;
+}
+
+/* Note Banner Box */
+.noteBox {
+  background-color: #faf6ed;
+  border: 1px solid #dfd4be;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: #63553f;
+  line-height: 1.5;
+  margin: 16px 0 20px 0;
+  text-align: left;
+}
+
+/* Action Buttons */
+.actionBtns {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+}
+
+.btnReturnHome {
+  flex: 1;
+  padding: 13px 20px;
+  background-color: #ffffff;
+  border: 1.5px solid #123f3c;
+  border-radius: 8px;
+  color: #123f3c;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btnReturnHome:hover {
+  background-color: #f7f4ed;
+}
+
+.btnViewBooking {
+  flex: 1;
+  padding: 13px 20px;
+  background-color: #123f3c;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btnViewBooking:hover {
+  background-color: #0e332f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(18, 63, 60, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .title {
+    font-size: 26px;
+  }
+
+  .summaryCard {
+    padding: 20px 16px;
+  }
+
+  .actionBtns {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btnReturnHome,
+  .btnViewBooking {
+    width: 100%;
+  }
+}

@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { getStripeClient } from '@/lib/stripe-client';
+import type { Appearance } from '@stripe/stripe-js';
 import styles from './PaymentForm.module.css';
 
 // --- TYPES ---
@@ -10,7 +13,26 @@ interface PaymentFormProps {
   additionalPetFee: number;
   puppySurcharge: number;
   holidaySurcharge: number;
-  onSubmitPayment: () => void;
+  customerDetails?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+    petName: string;
+    petType: string;
+    petBreed: string;
+    petAge: string;
+    additionalPets: string;
+    puppiesCount: string;
+  };
+  bookingDetails?: {
+    serviceName: string;
+    planTitle: string;
+    bookingDate: string;
+    bookingEndDate?: string;
+  };
+  onSubmitPayment: (paymentIntentId?: string) => void;
 }
 
 // --- ICONS ---
@@ -95,30 +117,224 @@ const OrderSummaryIcon = () => (
   </svg>
 );
 
-// --- COMPONENT ---
+const WarningIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={2}
+    stroke="currentColor"
+    style={{ width: '18px', height: '18px', flexShrink: 0 }}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+    />
+  </svg>
+);
+
+// Stripe appearance customized for Como Pet Care brand identity
+const stripeAppearance: Appearance = {
+  theme: 'stripe',
+  variables: {
+    colorPrimary: '#123f3c',
+    colorBackground: '#faf8f4',
+    colorText: '#1c2524',
+    colorDanger: '#c53030',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    spacingUnit: '4px',
+    borderRadius: '8px',
+  },
+  rules: {
+    '.Input': {
+      border: '1px solid #efe7d8',
+      boxShadow: 'none',
+      fontSize: '14px',
+      padding: '12px 14px',
+      backgroundColor: '#faf8f4',
+    },
+    '.Input:focus': {
+      border: '1px solid #123f3c',
+      boxShadow: '0 0 0 3px rgba(18, 63, 60, 0.06)',
+    },
+    '.Label': {
+      fontSize: '13px',
+      fontWeight: '600',
+      color: '#1c2524',
+      marginBottom: '6px',
+    },
+    '.Tab': {
+      border: '1px solid #efe7d8',
+      backgroundColor: '#faf8f4',
+    },
+    '.Tab--selected': {
+      borderColor: '#123f3c',
+      backgroundColor: '#ffffff',
+    },
+  },
+};
+
+// --- STRIPE EMBEDDED CHECKOUT COMPONENT ---
+interface StripeCheckoutSectionProps {
+  totalPrice: number;
+  onSubmitPayment: (paymentIntentId?: string) => void;
+}
+
+function StripeCheckoutSection({ totalPrice, onSubmitPayment }: StripeCheckoutSectionProps) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setErrorMessage(null);
+
+    try {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        redirect: 'if_required',
+      });
+
+      if (error) {
+        setErrorMessage(error.message || 'Payment processing failed. Please try again.');
+        setIsProcessing(false);
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        onSubmitPayment(paymentIntent.id);
+      } else {
+        // In case of requires_action or other statuses
+        onSubmitPayment(paymentIntent?.id);
+      }
+    } catch (err) {
+      setErrorMessage(
+        err instanceof Error ? err.message : 'An unexpected error occurred during payment.',
+      );
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className={styles.stripeElementWrapper}>
+        <PaymentElement
+          id="payment-element"
+          options={{
+            layout: 'tabs',
+          }}
+        />
+      </div>
+
+      {errorMessage && (
+        <div className={styles.stripeErrorAlert}>
+          <WarningIcon />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      <div className={styles.secureBadge}>
+        <span className={styles.secureBadgeIcon}>
+          <ShieldCheckIcon />
+        </span>
+        Your payment information is encrypted and securely processed via Stripe. We never store your
+        card details.
+      </div>
+
+      <button
+        type="submit"
+        className={styles.btnSubmit}
+        disabled={isProcessing || !stripe || !elements}
+      >
+        {isProcessing ? (
+          <>
+            <span className={styles.spinner} />
+            Processing Secure Payment...
+          </>
+        ) : (
+          <>
+            <LockIcon /> Pay ${totalPrice.toFixed(2)} with Stripe <ArrowRightIcon />
+          </>
+        )}
+      </button>
+    </form>
+  );
+}
+
+// --- MAIN PAYMENT FORM COMPONENT ---
 export default function PaymentForm({
   totalPrice,
   basePrice,
   additionalPetFee,
   puppySurcharge,
   holidaySurcharge,
+  customerDetails,
+  bookingDetails,
   onSubmitPayment,
 }: PaymentFormProps) {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal'>('card');
-  const [cardName, setCardName] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [loadingIntent, setLoadingIntent] = useState<boolean>(true);
+  const [intentError, setIntentError] = useState<string | null>(null);
+  const [isStripeConfiguredState, setIsStripeConfiguredState] = useState<boolean>(true);
 
-  const handleSubmit = () => {
-    if (paymentMethod === 'card') {
-      if (!cardName || !cardNumber || !expiry || !cvv) {
-        alert('Please fill in all card details.');
-        return;
+  // Initialize PaymentIntent on mount
+  useEffect(() => {
+    let isMounted = true;
+    setLoadingIntent(true);
+    setIntentError(null);
+
+    async function initializePaymentIntent() {
+      try {
+        const res = await fetch('/api/payments/create-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: totalPrice,
+            customerDetails,
+            bookingDetails,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!isMounted) return;
+
+        if (res.ok && data.success && data.clientSecret) {
+          setClientSecret(data.clientSecret);
+          setIsStripeConfiguredState(true);
+        } else {
+          if (data.error === 'STRIPE_NOT_CONFIGURED') {
+            setIsStripeConfiguredState(false);
+          } else {
+            setIntentError(data.message || 'Unable to initialize Stripe payment.');
+          }
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        setIntentError(err instanceof Error ? err.message : 'Network error initializing payment.');
+      } finally {
+        if (isMounted) {
+          setLoadingIntent(false);
+        }
       }
     }
-    onSubmitPayment();
-  };
+
+    if (totalPrice > 0) {
+      initializePaymentIntent();
+    } else {
+      setLoadingIntent(false);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [totalPrice, customerDetails, bookingDetails]);
 
   return (
     <div className={styles.container}>
@@ -126,8 +342,8 @@ export default function PaymentForm({
       <div className={styles.headingGroup}>
         <h2 className={styles.title}>Complete Your Payment</h2>
         <p className={styles.subtitle}>
-          Your card will not be charged until your services are confirmed. All transactions are
-          encrypted and secure.
+          Your card will be securely authorized and processed through Stripe. All transactions are
+          end-to-end encrypted.
         </p>
       </div>
 
@@ -145,12 +361,14 @@ export default function PaymentForm({
           {/* Method tabs */}
           <div className={styles.methodTabs}>
             <button
+              type="button"
               className={`${styles.methodTab} ${paymentMethod === 'card' ? styles.methodTabActive : ''}`}
               onClick={() => setPaymentMethod('card')}
             >
-              <CreditCardIcon /> Credit / Debit Card
+              <CreditCardIcon /> Credit / Debit Card (Stripe)
             </button>
             <button
+              type="button"
               className={`${styles.methodTab} ${paymentMethod === 'paypal' ? styles.methodTabActive : ''}`}
               onClick={() => setPaymentMethod('paypal')}
             >
@@ -160,61 +378,62 @@ export default function PaymentForm({
 
           {paymentMethod === 'card' && (
             <>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Cardholder Name</label>
-                <input
-                  className={styles.formInput}
-                  type="text"
-                  placeholder="John Doe"
-                  value={cardName}
-                  onChange={(e) => setCardName(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Card Number</label>
-                <input
-                  className={styles.formInput}
-                  type="text"
-                  placeholder="4242 4242 4242 4242"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  maxLength={19}
-                />
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Expiry Date</label>
-                  <input
-                    className={styles.formInput}
-                    type="text"
-                    placeholder="MM / YY"
-                    value={expiry}
-                    onChange={(e) => setExpiry(e.target.value)}
-                    maxLength={7}
-                  />
+              {loadingIntent && (
+                <div className={styles.stripeLoadingContainer}>
+                  <span className={styles.spinnerPrimary} />
+                  <span>Connecting to secure Stripe gateway...</span>
                 </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>CVV</label>
-                  <input
-                    className={styles.formInput}
-                    type="text"
-                    placeholder="123"
-                    value={cvv}
-                    onChange={(e) => setCvv(e.target.value)}
-                    maxLength={4}
-                  />
-                </div>
-              </div>
+              )}
 
-              <div className={styles.secureBadge}>
-                <span className={styles.secureBadgeIcon}>
-                  <ShieldCheckIcon />
-                </span>
-                Your payment information is encrypted and securely processed via Stripe. We never
-                store your card details.
-              </div>
+              {!loadingIntent && !isStripeConfiguredState && (
+                <div className={styles.configNotice}>
+                  <div className={styles.configNoticeTitle}>
+                    <WarningIcon />
+                    Stripe Setup Information
+                  </div>
+                  <p>
+                    Stripe is configured in the code! To enable real or test card charges, add your
+                    API keys from the Stripe Dashboard to your <code>.env</code> file:
+                  </p>
+                  <code className={styles.configNoticeCode}>
+                    STRIPE_SECRET_KEY=sk_test_...
+                    <br />
+                    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+                  </code>
+                  <p>For testing without live keys right now, you can proceed in sandbox mode:</p>
+                  <button
+                    type="button"
+                    className={styles.btnSandbox}
+                    onClick={() => onSubmitPayment('sandbox_mock_payment_intent')}
+                  >
+                    Simulate Successful Booking Payment
+                  </button>
+                </div>
+              )}
+
+              {!loadingIntent && isStripeConfiguredState && intentError && (
+                <div className={styles.stripeErrorAlert}>
+                  <WarningIcon />
+                  <div>
+                    <strong>Unable to start payment:</strong> {intentError}
+                  </div>
+                </div>
+              )}
+
+              {!loadingIntent && isStripeConfiguredState && clientSecret && (
+                <Elements
+                  stripe={getStripeClient()}
+                  options={{
+                    clientSecret,
+                    appearance: stripeAppearance,
+                  }}
+                >
+                  <StripeCheckoutSection
+                    totalPrice={totalPrice}
+                    onSubmitPayment={onSubmitPayment}
+                  />
+                </Elements>
+              )}
             </>
           )}
 
@@ -223,7 +442,11 @@ export default function PaymentForm({
               <p className={styles.paypalNote}>
                 You will be redirected to PayPal to complete your payment securely.
               </p>
-              <button className={styles.paypalBtn} onClick={handleSubmit}>
+              <button
+                type="button"
+                className={styles.paypalBtn}
+                onClick={() => onSubmitPayment('paypal_simulated_id')}
+              >
                 Pay with PayPal
               </button>
               <p className={styles.paypalNote}>
@@ -265,12 +488,6 @@ export default function PaymentForm({
             <span className={styles.totalLabel}>Total</span>
             <span className={styles.totalAmount}>${totalPrice.toFixed(2)}</span>
           </div>
-
-          {paymentMethod === 'card' && (
-            <button className={styles.btnSubmit} onClick={handleSubmit}>
-              <LockIcon /> Submit Payment <ArrowRightIcon />
-            </button>
-          )}
         </div>
       </div>
     </div>
