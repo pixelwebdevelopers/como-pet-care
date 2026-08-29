@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './SubServiceSelector.module.css';
 
 // --- TSX TYPES & INTERFACES ---
@@ -11,6 +11,7 @@ export interface PlanOption {
   priceText: string;
   savingText?: string;
   badge?: string;
+  basePrice?: number;
 }
 
 interface SubServiceSelectorProps {
@@ -24,6 +25,31 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
 
   // Selected Option local state (for active card highlighting)
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+
+  // Dynamic overrides from database
+  const [dynamicOverrides, setDynamicOverrides] = useState<Record<string, Partial<PlanOption>>>({});
+
+  useEffect(() => {
+    fetch('/api/services?status=active')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.services)) {
+          const map: Record<string, Partial<PlanOption>> = {};
+          for (const s of data.services) {
+            map[s.id] = {
+              title: s.title,
+              description: s.description,
+              priceText: s.priceText,
+              savingText: s.savingText,
+              badge: s.badge,
+              basePrice: Number(s.basePrice),
+            };
+          }
+          setDynamicOverrides(map);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleCardClick = (plan: PlanOption) => {
     setSelectedPlanId(plan.id);
@@ -100,9 +126,8 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       id: 'walk_30_annual',
       title: 'Annual Plan',
       description: 'Choose 1–5 walks each week with annual billing',
-      priceText: 'From $1,054 / year',
-      savingText: '(Save up to $4,511/Year)',
-      badge: 'Best long-term value',
+      priceText: 'From $1,149 / year',
+      savingText: '(Save up to $3,211/Year)',
     },
   ];
 
@@ -118,23 +143,22 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       title: 'Weekly Plan',
       description: 'Choose 1–5 walks each week with weekly billing',
       priceText: 'From $39 / week',
-      savingText: '(Save up to $61/Week)',
+      savingText: '(Save up to $51/Week)',
     },
     {
       id: 'walk_60_monthly',
       title: 'Monthly Plan',
       description: 'Choose 1–5 walks each week with monthly billing',
       priceText: 'From $144 / month',
-      savingText: '(Save up to $301/Month)',
+      savingText: '(Save up to $251/Month)',
       badge: 'Most popular',
     },
     {
       id: 'walk_60_annual',
       title: 'Annual Plan',
       description: 'Choose 1–5 walks each week with annual billing',
-      priceText: 'From $1,454 / year',
-      savingText: '(Save up to $5,511/Year)',
-      badge: 'Best long-term value',
+      priceText: 'From $1,549 / year',
+      savingText: '(Save up to $3,211/Year)',
     },
   ];
 
@@ -143,9 +167,8 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
     {
       id: 'scoop_onetime',
       title: 'One-Time Cleanup',
-      description:
-        'A thorough one-time cleanup that leaves your yard fresh, clean, and ready to enjoy.',
-      priceText: '$49/Cleanup',
+      description: 'Perfect for spring cleanups, special events, or move-outs.',
+      priceText: '$65 One-Time',
     },
     {
       id: 'scoop_weekly',
@@ -173,10 +196,27 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
     },
   ];
 
+  // Helper to merge dynamic database pricing overrides
+  const applyOverrides = (plans: PlanOption[]): PlanOption[] => {
+    return plans.map((p) => {
+      const over = dynamicOverrides[p.id];
+      if (!over) return p;
+      return {
+        ...p,
+        title: over.title || p.title,
+        description: over.description || p.description,
+        priceText: over.priceText || p.priceText,
+        savingText: over.savingText !== undefined ? over.savingText : p.savingText,
+        badge: over.badge !== undefined ? over.badge : p.badge,
+        basePrice: over.basePrice,
+      };
+    });
+  };
+
   // RENDER HELPERS BASED ON SELECTION
   let currentTitle = '';
   let currentSubtitle = '';
-  let currentPlans: PlanOption[] = [];
+  let rawPlans: PlanOption[] = [];
   let isDogWalking = false;
 
   switch (serviceId) {
@@ -184,32 +224,34 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       currentTitle = 'Choose Your Visit Length';
       currentSubtitle =
         'Select the amount of time your pet needs for care, companionship, and attention at home.';
-      currentPlans = dropInPlans;
+      rawPlans = dropInPlans;
       break;
     case '3': // Pet Sitting
       currentTitle = 'Choose The Right Level of Care';
       currentSubtitle =
         "Select the option that best fits your pet's routine and the length of time you'll be away.";
-      currentPlans = petSittingPlans;
+      rawPlans = petSittingPlans;
       break;
     case '4': // Dog Walking
       currentTitle = 'Choose Your Walk Length & Plan';
       currentSubtitle =
         "Choose the plan that best fits your dog's routine, energy, and weekly schedule.";
-      currentPlans = walkLength === '30min' ? dogWalking30Plans : dogWalking60Plans;
+      rawPlans = walkLength === '30min' ? dogWalking30Plans : dogWalking60Plans;
       isDogWalking = true;
       break;
     case '5': // Yard Poop Scooping
       currentTitle = 'Choose Your Cleanup Plan';
       currentSubtitle =
         'Book a one-time cleanup or select recurring service to keep your yard consistently fresh.';
-      currentPlans = yardScoopPlans;
+      rawPlans = yardScoopPlans;
       break;
     default:
       currentTitle = 'Choose Plan Option';
       currentSubtitle = 'Review available package options below.';
-      currentPlans = [];
+      rawPlans = [];
   }
+
+  const currentPlans = applyOverrides(rawPlans);
 
   // Define grid class based on options length
   let gridClass = styles.optionsGrid;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './MeetAndGreet.module.css';
 
 // --- TSX TYPES & INTERFACES ---
@@ -36,8 +36,8 @@ const parseBookingDate = (dateStr?: string) => {
   const parts = dateStr.replace(',', '').split(' ');
   if (parts.length < 3) return null;
   const monthIdx = monthNames.indexOf(parts[0]);
-  const day = parseInt(parts[1]);
-  const year = parseInt(parts[2]);
+  const day = parseInt(parts[1], 10);
+  const year = parseInt(parts[2], 10);
   if (monthIdx === -1 || isNaN(day) || isNaN(year)) return null;
   return { year, month: monthIdx, day };
 };
@@ -46,8 +46,8 @@ const parseTimeToMinutes = (timeStr?: string) => {
   if (!timeStr) return 0;
   const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
   if (!match) return 0;
-  let hours = parseInt(match[1]);
-  const minutes = parseInt(match[2]);
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
   const ampm = match[3].toUpperCase();
   if (ampm === 'PM' && hours < 12) hours += 12;
   if (ampm === 'AM' && hours === 12) hours = 0;
@@ -162,7 +162,6 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
-// --- COMPONENT IMPLEMENTATION ---
 export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGreetProps) {
   const parsedLimit = parseBookingDate(serviceSchedule?.bookingDate);
   const defaultDay = parsedLimit ? (parsedLimit.day > 1 ? parsedLimit.day - 1 : 1) : 9;
@@ -173,6 +172,9 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
 
   const [selectedDay, setSelectedDay] = useState<number>(defaultDay);
   const [startTime, setStartTime] = useState<string>('9:00 AM');
+
+  // Real-time slot availability
+  const [unavailableSlots, setUnavailableSlots] = useState<Record<string, string>>({});
 
   const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
@@ -193,22 +195,69 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
     daysArray.push(d);
   }
 
-  // Action slots list
   const timeSlotsList = [
     '7:00 AM',
     '7:30 AM',
+    '8:00 AM',
+    '8:30 AM',
     '9:00 AM',
+    '9:30 AM',
     '10:00 AM',
+    '10:30 AM',
     '11:00 AM',
-    '5:00 PM',
-    '11:00 PM',
-    '10:00 AM',
+    '11:30 AM',
+    '12:00 PM',
+    '12:30 PM',
+    '1:00 PM',
+    '1:30 PM',
+    '2:00 PM',
+    '2:30 PM',
+    '3:00 PM',
     '3:30 PM',
-    '10:00 PM',
-    '11:00 PM',
+    '4:00 PM',
+    '4:30 PM',
+    '5:00 PM',
+    '5:30 PM',
+    '6:00 PM',
+    '6:30 PM',
+    '7:00 PM',
   ];
 
   const uniqueTimeSlots = Array.from(new Set(timeSlotsList));
+
+  // Query slot collisions for the selected date
+  useEffect(() => {
+    if (!selectedDay) return;
+    const formattedDate = `${monthNames[currentMonth]} ${selectedDay}, ${currentYear}`;
+    let isMounted = true;
+
+    fetch(
+      `/api/availability?date=${encodeURIComponent(
+        formattedDate,
+      )}&serviceId=1&planId=meet_greet&slots=${encodeURIComponent(uniqueTimeSlots.join(','))}`,
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (!isMounted) return;
+        if (data.success && Array.isArray(data.slots)) {
+          const map: Record<string, string> = {};
+          for (const s of data.slots) {
+            if (!s.available) {
+              map[s.time] = s.reason || 'Booked';
+            }
+          }
+          setUnavailableSlots(map);
+          if (map[startTime]) {
+            setStartTime('');
+          }
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedDay, currentMonth, currentYear]);
 
   const handleConfirmClick = () => {
     if (!selectedDay) {
@@ -217,6 +266,10 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
     }
     if (!startTime) {
       alert('Please select a time slot.');
+      return;
+    }
+    if (unavailableSlots[startTime]) {
+      alert('The selected time slot is already booked. Please pick another available slot.');
       return;
     }
     onConfirm({
@@ -241,7 +294,7 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
         </p>
       </div>
 
-      {/* Scheduler Card */}
+      {/* Main Scheduler Panel */}
       <div className={styles.scheduleCard}>
         <div className={styles.schedulerGrid}>
           {/* Column 1: Calendar */}
@@ -256,6 +309,7 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
             <div className={styles.calendarFrame}>
               <div className={styles.calHeader}>
                 <button
+                  type="button"
                   className={styles.btnCalArrow}
                   onClick={() => {
                     if (currentMonth === 0) {
@@ -272,6 +326,7 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
                   {monthNames[currentMonth]} {currentYear}
                 </span>
                 <button
+                  type="button"
                   className={styles.btnCalArrow}
                   onClick={() => {
                     if (currentMonth === 11) {
@@ -298,32 +353,31 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
                     return <div key={`empty-${idx}`} />;
                   }
 
-                  // Dynamic Disabling logic
-                  let isDayDisabled = false;
+                  let isDisabled = false;
                   if (parsedLimit) {
-                    const calDate = new Date(currentYear, currentMonth, day);
-                    const limitDate = new Date(
-                      parsedLimit.year,
-                      parsedLimit.month,
-                      parsedLimit.day,
-                    );
-                    if (calDate.getTime() > limitDate.getTime()) {
-                      isDayDisabled = true;
+                    if (
+                      currentYear > parsedLimit.year ||
+                      (currentYear === parsedLimit.year && currentMonth > parsedLimit.month) ||
+                      (currentYear === parsedLimit.year &&
+                        currentMonth === parsedLimit.month &&
+                        day > parsedLimit.day)
+                    ) {
+                      isDisabled = true;
                     }
                   }
 
                   const isSelected = selectedDay === day;
                   let dayClass = styles.calDayBtn;
                   if (isSelected) dayClass += ` ${styles.calDaySelected}`;
-                  if (isDayDisabled) dayClass += ` ${styles.calDayDisabled}`;
+                  if (isDisabled) dayClass += ` ${styles.calDayDisabled}`;
 
                   return (
                     <button
                       key={day}
                       type="button"
-                      disabled={isDayDisabled}
+                      disabled={isDisabled}
                       className={dayClass}
-                      onClick={() => setSelectedDay(day)}
+                      onClick={() => !isDisabled && setSelectedDay(day)}
                     >
                       {day}
                     </button>
@@ -340,7 +394,7 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
                 <ClockIcon />
                 Select Time
               </h3>
-              <button className={styles.btnClear} onClick={() => setStartTime('')}>
+              <button type="button" className={styles.btnClear} onClick={() => setStartTime('')}>
                 Clear
               </button>
             </div>
@@ -348,7 +402,7 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
 
             <div className={styles.slotsGrid}>
               {uniqueTimeSlots.map((slot, idx) => {
-                let isSlotDisabled = false;
+                let isLimitDisabled = false;
                 if (
                   selectedDay &&
                   parsedLimit &&
@@ -359,21 +413,26 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
                   const slotMin = parseTimeToMinutes(slot);
                   const limitMin = parseTimeToMinutes(serviceSchedule?.startTime);
                   if (slotMin >= limitMin) {
-                    isSlotDisabled = true;
+                    isLimitDisabled = true;
                   }
                 }
+
+                const isBooked = Boolean(unavailableSlots[slot]);
+                const isSlotDisabled = isLimitDisabled || isBooked;
 
                 return (
                   <button
                     key={`meet-${slot}-${idx}`}
                     type="button"
                     disabled={isSlotDisabled}
+                    title={isBooked ? unavailableSlots[slot] : ''}
                     className={`${styles.slotButton} ${
                       startTime === slot ? styles.slotButtonActive : ''
                     } ${isSlotDisabled ? styles.slotButtonDisabled : ''}`}
-                    onClick={() => setStartTime(slot)}
+                    onClick={() => !isSlotDisabled && setStartTime(slot)}
                   >
-                    {slot}
+                    <span>{slot}</span>
+                    {isBooked && <span className={styles.bookedTag}>Booked</span>}
                   </button>
                 );
               })}
@@ -386,50 +445,47 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
               <div className={styles.colHeaderRow}>
                 <h3 className={styles.colTitle}>
                   <BookOpenIcon />
-                  Appointment Summary
+                  Appointment Details
                 </h3>
-                <button className={styles.btnClear} onClick={handleClearAll}>
-                  Clear
+                <button type="button" className={styles.btnClear} onClick={handleClearAll}>
+                  Clear All
                 </button>
               </div>
 
               <div className={styles.summaryList}>
                 <div className={styles.summaryRow}>
-                  <span className={styles.summaryLabel}>Date</span>
+                  <span className={styles.summaryLabel}>Selected Date</span>
                   <span className={styles.summaryVal}>
                     {selectedDay
-                      ? `Tuesday, ${monthNames[currentMonth]} ${selectedDay}`
-                      : 'Not selected'}
+                      ? `${monthNames[currentMonth]} ${selectedDay}, ${currentYear}`
+                      : 'Not Selected'}
                   </span>
                 </div>
 
                 <div className={styles.summaryRow}>
-                  <span className={styles.summaryLabel}>Time</span>
-                  <span className={styles.summaryVal}>{startTime || 'Not selected'}</span>
+                  <span className={styles.summaryLabel}>Selected Time</span>
+                  <span className={styles.summaryVal}>{startTime || 'Not Selected'}</span>
                 </div>
 
                 <div className={styles.summaryRow}>
                   <span className={styles.summaryLabel}>Duration</span>
-                  <span className={styles.summaryVal}>Complimentary first visit</span>
+                  <span className={styles.summaryVal}>30 Minutes</span>
                 </div>
 
                 <div className={styles.summaryRow}>
-                  <span className={styles.summaryLabel}>Price</span>
-                  <span
-                    className={styles.summaryVal}
-                    style={{ fontWeight: 700, color: 'var(--primary, #123f3c)' }}
-                  >
-                    Free
+                  <span className={styles.summaryLabel}>Fee</span>
+                  <span className={styles.summaryVal} style={{ color: '#123f3c' }}>
+                    Free (Complimentary)
                   </span>
                 </div>
               </div>
 
               <p className={styles.summaryFooterDesc}>
-                The Meet &amp; Greet will take place at your service address. Please ensure your pet
-                and any important care information are available during the visit.
+                A dedicated caregiver will come to your home to meet your pet, review routines, and
+                confirm emergency contacts.
               </p>
 
-              <button className={styles.btnConfirm} onClick={handleConfirmClick}>
+              <button type="button" className={styles.btnConfirm} onClick={handleConfirmClick}>
                 Confirm Meet &amp; Greet <ArrowRightIcon />
               </button>
             </div>
@@ -437,17 +493,17 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
         </div>
       </div>
 
-      {/* Gold alert box */}
+      {/* Gold Alert Notice: Compulsory Rule */}
       <div className={styles.goldBanner}>
         <div className={styles.goldIconFrame}>
           <UserWarningIcon />
         </div>
         <div className={styles.goldContent}>
-          <h4 className={styles.goldTitle}>Required for new customers</h4>
+          <h4 className={styles.goldTitle}>Meet &amp; Greet is Required for New Clients</h4>
           <p className={styles.goldDesc}>
-            Your requested services will remain pending until the Meet &amp; Greet is completed.
-            You&apos;ll enter your payment information at checkout, but your card will not be
-            charged yet.
+            To ensure the highest standard of personalized, stress-free care, an in-person Meet &amp;
+            Greet is mandatory before we begin your pet&apos;s first service. It must be scheduled on
+            or prior to your requested start date.
           </p>
         </div>
       </div>

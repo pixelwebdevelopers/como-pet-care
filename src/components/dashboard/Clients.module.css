@@ -535,3 +535,16 @@
     margin-right: 0;
   }
 }
+
+.emptyTd {
+  padding: 70px 20px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  height: 280px !important;
+  background-color: #fdfcfb;
+}
+
+.tableWrapper {
+  min-height: 420px;
+}
+

@@ -1,7 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './WaitlistPage.module.css';
+import {
+  Search,
+  Filter,
+  ArrowUpDown,
+  MoreVertical,
+  CheckCircle2,
+  Clock,
+  Send,
+  Trash2,
+  RefreshCw,
+} from 'lucide-react';
 
 // --- TSX TYPES & INTERFACES ---
 type WaitlistStatus = 'waiting' | 'availability_sent' | 'confirmed' | 'expired' | 'removed';
@@ -14,76 +25,9 @@ interface WaitlistRecord {
   preferredTime: string;
   requestDate: string;
   status: WaitlistStatus;
+  email?: string;
+  phone?: string;
 }
-
-// --- SVG ICON COMPONENTS ---
-const SearchIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    style={{ width: '18px', height: '18px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z"
-    />
-  </svg>
-);
-
-const FilterIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
-    />
-  </svg>
-);
-
-const SortIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
-    />
-  </svg>
-);
-
-const EllipsisIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    style={{ width: '18px', height: '18px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
-    />
-  </svg>
-);
 
 export default function WaitlistPage() {
   // --- STATE ---
@@ -93,102 +37,71 @@ export default function WaitlistPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>('name-asc');
+  const [waitlist, setWaitlist] = useState<WaitlistRecord[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
 
-  // Seed list matching screenshot values
-  const [waitlist, setWaitlist] = useState<WaitlistRecord[]>([
-    {
-      id: '1',
-      customerName: 'Sarah Johnson',
-      requestedService: 'Dog Walking',
-      preferredDate: 'May 20, 2026',
-      preferredTime: '08:00 AM',
-      requestDate: 'May 18, 2026',
-      status: 'confirmed',
-    },
-    {
-      id: '2',
-      customerName: 'Sarah Johnson',
-      requestedService: 'Dog Walking',
-      preferredDate: 'May 20, 2026',
-      preferredTime: '08:00 AM',
-      requestDate: 'May 18, 2026',
-      status: 'confirmed',
-    },
-    {
-      id: '3',
-      customerName: 'Sarah Johnson',
-      requestedService: 'Dog Walking',
-      preferredDate: 'May 20, 2026',
-      preferredTime: '08:00 AM',
-      requestDate: 'May 18, 2026',
-      status: 'confirmed',
-    },
-    {
-      id: '4',
-      customerName: 'Sarah Johnson',
-      requestedService: 'Dog Walking',
-      preferredDate: 'May 20, 2026',
-      preferredTime: '08:00 AM',
-      requestDate: 'May 18, 2026',
-      status: 'confirmed',
-    },
-    {
-      id: '5',
-      customerName: 'Sarah Johnson',
-      requestedService: 'Dog Walking',
-      preferredDate: 'May 20, 2026',
-      preferredTime: '08:00 AM',
-      requestDate: 'May 18, 2026',
-      status: 'confirmed',
-    },
-    {
-      id: '6',
-      customerName: 'Sarah Johnson',
-      requestedService: 'Dog Walking',
-      preferredDate: 'May 20, 2026',
-      preferredTime: '08:00 AM',
-      requestDate: 'May 18, 2026',
-      status: 'confirmed',
-    },
-    {
-      id: '7',
-      customerName: 'Sarah Johnson',
-      requestedService: 'Dog Walking',
-      preferredDate: 'May 20, 2026',
-      preferredTime: '08:00 AM',
-      requestDate: 'May 18, 2026',
-      status: 'confirmed',
-    },
-    {
-      id: '8',
-      customerName: 'John Doe',
-      requestedService: 'Pet Sitting',
-      preferredDate: 'May 24, 2026',
-      preferredTime: '10:00 AM',
-      requestDate: 'May 22, 2026',
-      status: 'waiting',
-    },
-    {
-      id: '9',
-      customerName: 'Elizabeth Watson',
-      requestedService: 'Grooming',
-      preferredDate: 'May 25, 2026',
-      preferredTime: '02:00 PM',
-      requestDate: 'May 23, 2026',
-      status: 'availability_sent',
-    },
-    {
-      id: '10',
-      customerName: 'Lisa Miller',
-      requestedService: 'Training Program',
-      preferredDate: 'May 26, 2026',
-      preferredTime: '09:00 AM',
-      requestDate: 'May 20, 2026',
-      status: 'expired',
-    },
-  ]);
+  // Fetch waitlist from live API
+  const loadWaitlist = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/waitlist?status=${activeTab}&search=${encodeURIComponent(searchQuery)}`,
+      );
+      const data = await res.json();
+      if (data.success && Array.isArray(data.waitlist)) {
+        setWaitlist(
+          data.waitlist.map((item: any) => ({
+            id: String(item.id),
+            customerName: `${item.firstName} ${item.lastName || ''}`.trim(),
+            requestedService: item.serviceName,
+            preferredDate: item.preferredDate,
+            preferredTime: item.preferredTime,
+            requestDate: new Date(item.createdAt).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            }),
+            status: item.status as WaitlistStatus,
+            email: item.email,
+            phone: item.phone,
+          })),
+        );
+      }
+    } catch {
+      console.error('Failed to load waitlist');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // --- HANDLERS ---
+  useEffect(() => {
+    loadWaitlist();
+  }, [activeTab, searchQuery]);
+
+  // Handle status update
+  const handleUpdateStatus = async (id: string, newStatus: WaitlistStatus) => {
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWaitlist((prev) =>
+          prev.map((w) => (w.id === id ? { ...w, status: newStatus } : w)),
+        );
+        setActionMenuOpenId(null);
+      } else {
+        alert(data.message || 'Failed to update waitlist entry status.');
+      }
+    } catch {
+      alert('Network error updating status.');
+    }
+  };
+
+  // Select all / row
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(filteredWaitlist.map((w) => w.id));
@@ -205,52 +118,68 @@ export default function WaitlistPage() {
     }
   };
 
-  // --- FILTER & SORT LOGIC ---
-  const filteredWaitlist = waitlist
-    .filter((w) => {
-      if (activeTab === 'waiting') return w.status === 'waiting';
-      if (activeTab === 'availability_sent') return w.status === 'availability_sent';
-      if (activeTab === 'confirmed') return w.status === 'confirmed';
-      if (activeTab === 'expired') return w.status === 'expired';
-      if (activeTab === 'removed') return w.status === 'removed';
-      return true;
-    })
-    .filter((w) => {
-      const q = searchQuery.toLowerCase();
-      return (
-        w.customerName.toLowerCase().includes(q) ||
-        w.requestedService.toLowerCase().includes(q) ||
-        w.status.toLowerCase().includes(q)
-      );
-    })
-    .sort((a, b) => {
-      if (sortBy === 'name-asc') return a.customerName.localeCompare(b.customerName);
-      if (sortBy === 'name-desc') return b.customerName.localeCompare(a.customerName);
-      if (sortBy === 'date-desc') {
-        return new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime();
-      }
-      return 0;
-    });
+  // Filter & Sort
+  const filteredWaitlist = waitlist.filter((record) => {
+    const matchSearch =
+      record.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      record.requestedService.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      record.preferredDate.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (record.email && record.email.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    if (activeTab === 'all') return matchSearch;
+    return record.status === activeTab && matchSearch;
+  });
+
+  filteredWaitlist.sort((a, b) => {
+    if (sortBy === 'name-asc') return a.customerName.localeCompare(b.customerName);
+    if (sortBy === 'name-desc') return b.customerName.localeCompare(a.customerName);
+    return 0;
+  });
 
   const allSelected =
-    filteredWaitlist.length > 0 && filteredWaitlist.every((w) => selectedIds.includes(w.id));
+    filteredWaitlist.length > 0 && selectedIds.length === filteredWaitlist.length;
 
   return (
     <div className={styles.waitlistContainer}>
-      {/* Title Subheader */}
+      {/* Breadcrumbs & Title Bar */}
       <div className="dashboard-title-bar">
-        <h1 className="dashboard-overview-title">Waitlist</h1>
-        <span className="dashboard-breadcrumb">Home &gt; Waitlist</span>
+        <div className="dashboard-title-group">
+          <h1 className="dashboard-overview-title">Waitlist Management</h1>
+          <span className="dashboard-breadcrumb">Dashboard &gt; Waitlist</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: '#fff9ee',
+              color: '#b45309',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              fontSize: '13px',
+              fontWeight: 600,
+              border: '1px solid #f6d29b',
+            }}
+          >
+            <Clock size={15} />
+            <span>Total Requests: {waitlist.length}</span>
+          </div>
+          <button
+            type="button"
+            className={styles.btnSecondary}
+            onClick={loadWaitlist}
+            style={{ padding: '6px 14px', fontSize: '13px' }}
+          >
+            <RefreshCw size={14} className={loading ? styles.spinIcon : ''} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
+      {/* Main Table Card */}
       <div className={styles.waitlistCard}>
-        {/* Card Titles Block */}
-        <div className={styles.cardHeader}>
-          <h2 className={styles.cardTitle}>Waitlist</h2>
-          <p className={styles.cardSubtitle}>Review and manage your payments record.</p>
-        </div>
-
-        {/* Tab switcher row */}
+        {/* Navigation Tabs Header */}
         <div className={styles.tabsContainer}>
           <div className={styles.tabsList}>
             <button
@@ -266,25 +195,33 @@ export default function WaitlistPage() {
               Waiting
             </button>
             <button
-              className={`${styles.tabButton} ${activeTab === 'availability_sent' ? styles.tabButtonActive : ''}`}
+              className={`${styles.tabButton} ${
+                activeTab === 'availability_sent' ? styles.tabButtonActive : ''
+              }`}
               onClick={() => setActiveTab('availability_sent')}
             >
               Availability Sent
             </button>
             <button
-              className={`${styles.tabButton} ${activeTab === 'confirmed' ? styles.tabButtonActive : ''}`}
+              className={`${styles.tabButton} ${
+                activeTab === 'confirmed' ? styles.tabButtonActive : ''
+              }`}
               onClick={() => setActiveTab('confirmed')}
             >
               Confirmed
             </button>
             <button
-              className={`${styles.tabButton} ${activeTab === 'expired' ? styles.tabButtonActive : ''}`}
+              className={`${styles.tabButton} ${
+                activeTab === 'expired' ? styles.tabButtonActive : ''
+              }`}
               onClick={() => setActiveTab('expired')}
             >
               Expired
             </button>
             <button
-              className={`${styles.tabButton} ${activeTab === 'removed' ? styles.tabButtonActive : ''}`}
+              className={`${styles.tabButton} ${
+                activeTab === 'removed' ? styles.tabButtonActive : ''
+              }`}
               onClick={() => setActiveTab('removed')}
             >
               Removed
@@ -292,15 +229,15 @@ export default function WaitlistPage() {
           </div>
         </div>
 
-        {/* Action Row */}
+        {/* Action Controls Bar */}
         <div className={styles.actionsRow}>
           <div className={styles.searchContainer}>
             <span className={styles.searchIcon}>
-              <SearchIcon />
+              <Search size={16} />
             </span>
             <input
               type="text"
-              placeholder="Search by Booking reference, Customer name, Pet name, Service...."
+              placeholder="Search by customer, service, date..."
               className={styles.searchBar}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -309,35 +246,28 @@ export default function WaitlistPage() {
 
           <div className={styles.filterSortRow}>
             <button
+              type="button"
               className={styles.btnSecondary}
               onClick={() => {
-                setActiveTab((prev) => {
-                  if (prev === 'all') return 'waiting';
-                  if (prev === 'waiting') return 'availability_sent';
-                  if (prev === 'availability_sent') return 'confirmed';
-                  if (prev === 'confirmed') return 'expired';
-                  if (prev === 'expired') return 'removed';
-                  return 'all';
-                });
+                setSortBy((prev) => (prev === 'name-asc' ? 'name-desc' : 'name-asc'));
               }}
             >
-              <FilterIcon />
-              Filters: {activeTab.toUpperCase()}
+              <ArrowUpDown size={15} />
+              <span>Sort: {sortBy === 'name-asc' ? 'Name A-Z' : 'Name Z-A'}</span>
             </button>
 
             <button
+              type="button"
               className={styles.btnSecondary}
-              onClick={() => {
-                setSortBy((prev) => (prev === 'name-asc' ? 'date-desc' : 'name-asc'));
-              }}
+              onClick={() => setActiveTab('all')}
             >
-              <SortIcon />
-              Sort By: {sortBy === 'name-asc' ? 'A-Z' : 'Request Date'}
+              <Filter size={15} />
+              <span>Reset Filter</span>
             </button>
           </div>
         </div>
 
-        {/* Waitlist Table */}
+        {/* Waitlist Data Table Viewport */}
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
             <thead>
@@ -356,28 +286,42 @@ export default function WaitlistPage() {
                 <th className={styles.th}>Preferred Time</th>
                 <th className={styles.th}>Request Date</th>
                 <th className={styles.th}>Current Status</th>
-                <th className={styles.th} style={{ textAlign: 'center' }}>
-                  Action
-                </th>
+                <th className={styles.th}>Action</th>
               </tr>
             </thead>
             <tbody>
-              {filteredWaitlist.length === 0 ? (
+              {loading ? (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '32px' }}>
-                    No waitlist records found.
+                  <td colSpan={8} className={styles.emptyTd}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                      <RefreshCw size={26} className={styles.spinIcon} style={{ color: '#123f3c' }} />
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#123f3c' }}>Loading waitlist records...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredWaitlist.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={styles.emptyTd}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                      <div style={{ width: '52px', height: '52px', borderRadius: '16px', backgroundColor: '#f5eee3', color: '#b18a45', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Clock size={26} />
+                      </div>
+                      <span style={{ fontSize: '16px', fontWeight: 700, color: '#1c2524' }}>No Waitlist Requests Found</span>
+                      <span style={{ fontSize: '13px', color: 'rgba(28, 37, 36, 0.6)', maxWidth: '340px' }}>
+                        No clients are currently on the waitlist for the selected tab or criteria.
+                      </span>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 filteredWaitlist.map((w) => {
                   const isChecked = selectedIds.includes(w.id);
+                  const isMenuOpen = actionMenuOpenId === w.id;
 
                   return (
                     <tr
                       key={w.id}
-                      style={{
-                        backgroundColor: isChecked ? 'rgba(177, 138, 69, 0.03)' : 'transparent',
-                      }}
+                      className={`${styles.tr} ${isChecked ? styles.trSelected : ''}`}
                     >
                       <td className={`${styles.td} ${styles.tdCheckbox}`} data-label="Select">
                         <input
@@ -389,14 +333,23 @@ export default function WaitlistPage() {
                       </td>
 
                       <td className={styles.td} data-label="Customer Name">
-                        <span
-                          className={styles.clientLink}
-                          onClick={() =>
-                            alert(`View details profile for customer: ${w.customerName}`)
-                          }
-                        >
-                          {w.customerName}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span
+                            className={styles.clientLink}
+                            onClick={() =>
+                              alert(
+                                `Customer: ${w.customerName}\nEmail: ${w.email || 'N/A'}\nPhone: ${w.phone || 'N/A'}`,
+                              )
+                            }
+                          >
+                            {w.customerName}
+                          </span>
+                          {w.email && (
+                            <span style={{ fontSize: '11.5px', color: 'rgba(28,37,36,0.5)' }}>
+                              {w.email}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className={styles.td} data-label="Requested Service">
@@ -443,21 +396,92 @@ export default function WaitlistPage() {
                         )}
                       </td>
 
-                      <td className={styles.td} data-label="Action">
+                      <td className={styles.td} data-label="Action" style={{ position: 'relative' }}>
                         <button
+                          type="button"
                           className={styles.btnActionEllipsis}
-                          onClick={() => {
-                            if (window.confirm(`Remove entry from waitlist?`)) {
-                              setWaitlist((prev) =>
-                                prev.map((item) =>
-                                  item.id === w.id ? { ...item, status: 'removed' } : item,
-                                ),
-                              );
-                            }
-                          }}
+                          onClick={() =>
+                            setActionMenuOpenId(isMenuOpen ? null : w.id)
+                          }
+                          title="Actions menu"
                         >
-                          <EllipsisIcon />
+                          <MoreVertical size={16} />
                         </button>
+
+                        {isMenuOpen && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              right: '12px',
+                              top: '40px',
+                              backgroundColor: '#ffffff',
+                              borderRadius: '10px',
+                              boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                              border: '1px solid #efe7d8',
+                              zIndex: 100,
+                              minWidth: '170px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              padding: '6px 0',
+                            }}
+                          >
+                            <button
+                              type="button"
+                              style={{
+                                padding: '8px 14px',
+                                border: 'none',
+                                background: 'transparent',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '13px',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                              }}
+                              onClick={() => handleUpdateStatus(w.id, 'availability_sent')}
+                            >
+                              <Send size={14} color="#b45309" />
+                              <span>Send Availability</span>
+                            </button>
+                            <button
+                              type="button"
+                              style={{
+                                padding: '8px 14px',
+                                border: 'none',
+                                background: 'transparent',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '13px',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                              }}
+                              onClick={() => handleUpdateStatus(w.id, 'confirmed')}
+                            >
+                              <CheckCircle2 size={14} color="#15803d" />
+                              <span>Mark Confirmed</span>
+                            </button>
+                            <button
+                              type="button"
+                              style={{
+                                padding: '8px 14px',
+                                border: 'none',
+                                background: 'transparent',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '13px',
+                                color: '#b91c1c',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                              }}
+                              onClick={() => handleUpdateStatus(w.id, 'removed')}
+                            >
+                              <Trash2 size={14} color="#b91c1c" />
+                              <span>Remove</span>
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );

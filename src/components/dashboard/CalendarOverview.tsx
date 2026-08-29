@@ -1,49 +1,32 @@
 'use client';
 
 import React from 'react';
-
-// --- CALENDAR SVG ICONS ---
-const GridIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-    style={{
-      width: '18px',
-      height: '18px',
-      display: 'inline-block',
-      verticalAlign: 'middle',
-      marginRight: '6px',
-    }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
-    />
-  </svg>
-);
+import { CalendarDays } from 'lucide-react';
 
 export default function CalendarOverview() {
-  const days = [
-    { name: 'Sun', num: '18', active: false },
-    { name: 'Mon', num: '19', active: false },
-    { name: 'Tue', num: '20', active: false },
-    { name: 'Wed', num: '21', active: false },
-    { name: 'Thu', num: '22', active: false },
-    { name: 'Fri', num: '23', active: true },
-    { name: 'Sat', num: '24', active: false },
-  ];
+  const today = new Date();
+  const currentDayOfWeek = today.getDay(); // 0 is Sunday
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - currentDayOfWeek);
 
-  const hours = ['8 AM', '10 AM', '12 AM', '2 PM', '4 PM', '6 PM'];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(startOfWeek);
+    d.setDate(startOfWeek.getDate() + i);
+    return {
+      name: dayNames[i],
+      num: String(d.getDate()),
+      active: d.toDateString() === today.toDateString(),
+    };
+  });
+
+  const hours = ['8 AM', '10 AM', '12 PM', '2 PM', '4 PM', '6 PM'];
 
   return (
     <div className="dashboard-card calendar-overview-card">
       <div className="card-header-row">
         <div className="card-title-group">
-          <GridIcon />
+          <CalendarDays size={18} style={{ marginRight: '6px', color: 'var(--primary)' }} />
           <h2 className="card-title">Calendar Overview</h2>
         </div>
         <select className="calendar-view-select" defaultValue="Weekly">
@@ -69,146 +52,110 @@ export default function CalendarOverview() {
           <div key={idx} className="calendar-grid-row">
             <span className="calendar-row-time-lbl">{hour}</span>
             <div className="calendar-row-slots">
-              {/* Event Block 1 (Dog Walking - Green) at 8:00 AM on Mon (idx 1) */}
+              {/* Event Block 1 (Dog Walking - Green) */}
               {idx === 0 && (
                 <div
                   className="calendar-event-block event-dogwalking"
-                  style={{ left: '15.5%', width: '10%', top: '25%' }}
-                  title="Dog Walking"
+                  style={{ left: '15.5%', width: '12%', top: '20%' }}
+                  title="Dog Walking (Active Booking)"
                 />
               )}
-              {/* Event Block 2 (Pet Sitting - Cream) at 10:00 AM on Thu (idx 4) */}
+              {/* Event Block 2 (Pet Sitting - Cream) */}
               {idx === 0 && (
                 <div
                   className="calendar-event-block event-petsitting"
-                  style={{ left: '72.5%', width: '10%', top: '25%' }}
+                  style={{ left: '72.5%', width: '12%', top: '20%' }}
                   title="Pet Sitting"
                 />
               )}
 
-              {/* Event Block 3 (Drop-in - Gold/Beige) at 10:00 AM on Mon (idx 1) */}
+              {/* Event Block 3 (Drop-in - Gold/Beige) */}
               {idx === 1 && (
                 <div
                   className="calendar-event-block event-dropin"
-                  style={{ left: '15.5%', width: '10%', top: '25%' }}
+                  style={{ left: '15.5%', width: '12%', top: '20%' }}
                   title="Drop-In Visit"
                 />
               )}
-              {/* Event Block 4 (Pet Sitting - Cream) at 10:00 AM on Wed (idx 3) */}
+              {/* Event Block 4 (Pet Sitting - Cream) */}
               {idx === 1 && (
                 <div
                   className="calendar-event-block event-petsitting"
-                  style={{ left: '58.5%', width: '10%', top: '25%' }}
+                  style={{ left: '58.5%', width: '12%', top: '20%' }}
                   title="Pet Sitting"
                 />
               )}
-              {/* Event Block 5 (Pet Sitting - Cream) at 10:00 AM on Sat (idx 6) */}
+              {/* Event Block 5 (Pet Sitting - Cream) */}
               {idx === 1 && (
                 <div
                   className="calendar-event-block event-petsitting"
-                  style={{ left: '86.5%', width: '10%', top: '25%' }}
+                  style={{ left: '86.5%', width: '10%', top: '20%' }}
                   title="Pet Sitting"
                 />
               )}
 
-              {/* Event Block 6 (Pet Sitting - Cream) at 12:00 PM on Sun (idx 0) */}
+              {/* Event Block 6 (Pet Sitting - Cream) */}
               {idx === 2 && (
                 <div
                   className="calendar-event-block event-petsitting"
-                  style={{ left: '1.5%', width: '10%', top: '25%' }}
+                  style={{ left: '1.5%', width: '12%', top: '20%' }}
                   title="Pet Sitting"
                 />
               )}
-              {/* Event Block 7 (Drop-In - Gold/Beige) at 12:00 PM on Tue (idx 2) */}
+              {/* Event Block 7 (Drop-In - Gold/Beige) */}
               {idx === 2 && (
                 <div
                   className="calendar-event-block event-dropin"
-                  style={{ left: '29.5%', width: '10%', top: '25%' }}
+                  style={{ left: '29.5%', width: '12%', top: '20%' }}
                   title="Drop-In Visit"
                 />
               )}
 
-              {/* Event Block 8 (Pet Sitting - Cream) at 2:00 PM on Wed (idx 3) */}
+              {/* Event Block 8 (Pet Sitting - Cream) */}
               {idx === 3 && (
                 <div
                   className="calendar-event-block event-petsitting"
-                  style={{ left: '44%', width: '10%', top: '25%' }}
+                  style={{ left: '44%', width: '12%', top: '20%' }}
                   title="Pet Sitting"
                 />
               )}
-              {/* Event Block 9 (Drop-In - Gold/Beige) at 2:00 PM on Fri (idx 5) */}
+              {/* Event Block 9 (Drop-In - Gold/Beige) */}
               {idx === 3 && (
                 <div
                   className="calendar-event-block event-dropin"
-                  style={{ left: '72.5%', width: '10%', top: '25%' }}
+                  style={{ left: '72.5%', width: '12%', top: '20%' }}
                   title="Drop-In Visit"
                 />
               )}
 
-              {/* Event Block 10 (Drop-In - Gold/Beige) at 4:00 PM on Sun (idx 0) */}
+              {/* Event Block 10 (Dog Walking - Green) */}
               {idx === 4 && (
-                <div
-                  className="calendar-event-block event-dropin"
-                  style={{ left: '1.5%', width: '10%', top: '25%' }}
-                  title="Drop-In Visit"
-                />
-              )}
-              {/* Event Block 11 (Drop-In - Gold/Beige) at 4:00 PM on Thu (idx 4) */}
-              {idx === 4 && (
-                <div
-                  className="calendar-event-block event-dropin"
-                  style={{ left: '58.5%', width: '10%', top: '25%' }}
-                  title="Drop-In Visit"
-                />
-              )}
-              {/* Event Block 12 (Yard Scoop - Grey) at 4:00 PM on Sat (idx 6) */}
-              {idx === 4 && (
-                <div
-                  className="calendar-event-block event-yardscoop"
-                  style={{ left: '86.5%', width: '10%', top: '25%' }}
-                  title="Yard Poop Scooping"
-                />
-              )}
-
-              {/* Event Block 13 (Dog Walking - Green) at 6:00 PM on Mon (idx 1) */}
-              {idx === 5 && (
                 <div
                   className="calendar-event-block event-dogwalking"
-                  style={{ left: '15.5%', width: '10%', top: '25%' }}
+                  style={{ left: '29.5%', width: '12%', top: '20%' }}
                   title="Dog Walking"
                 />
               )}
-              {/* Event Block 14 (Pet Sitting - Cream) at 6:00 PM on Sat (idx 6) */}
-              {idx === 5 && (
+              {/* Event Block 11 (Pet Sitting - Cream) */}
+              {idx === 4 && (
                 <div
                   className="calendar-event-block event-petsitting"
-                  style={{ left: '72.5%', width: '10%', top: '25%' }}
+                  style={{ left: '86.5%', width: '10%', top: '20%' }}
                   title="Pet Sitting"
+                />
+              )}
+
+              {/* Event Block 12 (Drop-In - Gold/Beige) */}
+              {idx === 5 && (
+                <div
+                  className="calendar-event-block event-dropin"
+                  style={{ left: '44%', width: '12%', top: '20%' }}
+                  title="Drop-In Visit"
                 />
               )}
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Legend markers */}
-      <div className="calendar-legend-row">
-        <div className="legend-item">
-          <span className="legend-dot dot-dogwalking" />
-          <span>Dog Walking</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot dot-dropin" />
-          <span>Drop-In Visit</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot dot-petsitting" />
-          <span>Pet Sitting</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot dot-yardscoop" />
-          <span>Yard Poop Scooping</span>
-        </div>
       </div>
     </div>
   );

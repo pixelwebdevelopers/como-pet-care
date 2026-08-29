@@ -1,10 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './DetailsForm.module.css';
 
 // --- TSX TYPES & INTERFACES ---
 interface DetailsFormProps {
+  initialData?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    columbiaConfirmed?: boolean;
+    petName?: string;
+    petType?: string;
+    petBreed?: string;
+    petAge?: string;
+    additionalPets?: string;
+    puppiesCount?: string;
+    specialNotes?: string;
+  };
+  isNewCustomer?: boolean;
   onContinue: (details: {
     firstName: string;
     lastName: string;
@@ -70,22 +86,42 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
-export default function DetailsForm({ onContinue }: DetailsFormProps) {
+export default function DetailsForm({ initialData, isNewCustomer = true, onContinue }: DetailsFormProps) {
   // Input fields hook states
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [columbiaConfirmed, setColumbiaConfirmed] = useState(false);
+  const [firstName, setFirstName] = useState(initialData?.firstName || '');
+  const [lastName, setLastName] = useState(initialData?.lastName || '');
+  const [email, setEmail] = useState(initialData?.email || '');
+  const [phone, setPhone] = useState(initialData?.phone || '');
+  const [address, setAddress] = useState(initialData?.address || '');
+  const [columbiaConfirmed, setColumbiaConfirmed] = useState(
+    initialData?.columbiaConfirmed !== undefined ? initialData.columbiaConfirmed : true,
+  );
 
-  const [petName, setPetName] = useState('');
-  const [petType, setPetType] = useState('');
-  const [petBreed, setPetBreed] = useState('');
-  const [petAge, setPetAge] = useState('');
-  const [additionalPets, setAdditionalPets] = useState('');
-  const [puppiesCount, setPuppiesCount] = useState('');
-  const [specialNotes, setSpecialNotes] = useState('');
+  const [petName, setPetName] = useState(initialData?.petName || '');
+  const [petType, setPetType] = useState(initialData?.petType || 'Dog');
+  const [petBreed, setPetBreed] = useState(initialData?.petBreed || '');
+  const [petAge, setPetAge] = useState(initialData?.petAge || '');
+  const [additionalPets, setAdditionalPets] = useState(initialData?.additionalPets || '0');
+  const [puppiesCount, setPuppiesCount] = useState(initialData?.puppiesCount || '0');
+  const [specialNotes, setSpecialNotes] = useState(initialData?.specialNotes || '');
+
+  // Keep state in sync if initialData changes
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.firstName) setFirstName(initialData.firstName);
+      if (initialData.lastName) setLastName(initialData.lastName);
+      if (initialData.email) setEmail(initialData.email);
+      if (initialData.phone) setPhone(initialData.phone);
+      if (initialData.address) setAddress(initialData.address);
+      if (initialData.petName) setPetName(initialData.petName);
+      if (initialData.petType) setPetType(initialData.petType);
+      if (initialData.petBreed) setPetBreed(initialData.petBreed);
+      if (initialData.petAge) setPetAge(initialData.petAge);
+      if (initialData.additionalPets !== undefined) setAdditionalPets(initialData.additionalPets);
+      if (initialData.puppiesCount !== undefined) setPuppiesCount(initialData.puppiesCount);
+      if (initialData.specialNotes) setSpecialNotes(initialData.specialNotes);
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,7 +156,13 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
       <div className={styles.headingGroup}>
         <h2 className={styles.title}>Customer &amp; Pet Information</h2>
         <p className={styles.subtitle}>
-          Enter your contact, service-address, and pet details so we can provide personalized care.
+          {!isNewCustomer ? (
+            <span style={{ color: '#123f3c', fontWeight: 600 }}>
+              Returning Customer: Your intake information is already on file. Review or update your booking details below.
+            </span>
+          ) : (
+            'Enter your contact, service-address, and pet details so we can provide personalized care.'
+          )}
         </p>
       </div>
 
@@ -136,11 +178,11 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
 
             <div className={styles.fieldsList}>
               <div className={styles.formGroup}>
-                <label className={styles.label}>First Name</label>
+                <label className={styles.label}>First Name *</label>
                 <input
                   type="text"
                   required
-                  placeholder="Enter here"
+                  placeholder="Enter first name"
                   className={styles.input}
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
@@ -148,11 +190,11 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Last Name</label>
+                <label className={styles.label}>Last Name *</label>
                 <input
                   type="text"
                   required
-                  placeholder="Enter here"
+                  placeholder="Enter last name"
                   className={styles.input}
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
@@ -160,11 +202,11 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Email Address</label>
+                <label className={styles.label}>Email Address *</label>
                 <input
                   type="email"
                   required
-                  placeholder="Enter here"
+                  placeholder="name@example.com"
                   className={styles.input}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -172,11 +214,11 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Phone Number</label>
+                <label className={styles.label}>Phone Number *</label>
                 <input
                   type="tel"
                   required
-                  placeholder="Enter here"
+                  placeholder="(573) 000-0000"
                   className={styles.input}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -184,11 +226,11 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Service Address</label>
+                <label className={styles.label}>Service Address *</label>
                 <input
                   type="text"
                   required
-                  placeholder="Enter here"
+                  placeholder="Street address, Columbia, MO"
                   className={styles.input}
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
@@ -204,7 +246,7 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
                   onChange={(e) => setColumbiaConfirmed(e.target.checked)}
                 />
                 <label htmlFor="columbiaConfirmed" className={styles.checkboxLabel}>
-                  I Confirm that my service area is within Columbia, Missouri
+                  I confirm that my service area is within Columbia, Missouri
                 </label>
               </div>
             </div>
@@ -220,11 +262,11 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
             <div className={styles.fieldsList}>
               <div className={styles.fieldsRow}>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Pet Name</label>
+                  <label className={styles.label}>Pet Name *</label>
                   <input
                     type="text"
                     required
-                    placeholder="Enter here"
+                    placeholder="e.g. Bella"
                     className={styles.input}
                     value={petName}
                     onChange={(e) => setPetName(e.target.value)}
@@ -235,7 +277,7 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
                   <label className={styles.label}>Pet Type</label>
                   <input
                     type="text"
-                    placeholder="Enter here"
+                    placeholder="Dog, Cat, etc."
                     className={styles.input}
                     value={petType}
                     onChange={(e) => setPetType(e.target.value)}
@@ -248,7 +290,7 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
                   <label className={styles.label}>Breed</label>
                   <input
                     type="text"
-                    placeholder="Enter here"
+                    placeholder="e.g. Golden Retriever"
                     className={styles.input}
                     value={petBreed}
                     onChange={(e) => setPetBreed(e.target.value)}
@@ -259,7 +301,7 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
                   <label className={styles.label}>Age</label>
                   <input
                     type="text"
-                    placeholder="Enter here"
+                    placeholder="e.g. 3 Years"
                     className={styles.input}
                     value={petAge}
                     onChange={(e) => setPetAge(e.target.value)}
@@ -270,8 +312,9 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
               <div className={styles.formGroup}>
                 <label className={styles.label}>Number of Additional Pets</label>
                 <input
-                  type="text"
-                  placeholder="Enter here"
+                  type="number"
+                  min="0"
+                  placeholder="0"
                   className={styles.input}
                   value={additionalPets}
                   onChange={(e) => setAdditionalPets(e.target.value)}
@@ -281,8 +324,9 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
               <div className={styles.formGroup}>
                 <label className={styles.label}>Number of puppies requiring additional care</label>
                 <input
-                  type="text"
-                  placeholder="Enter here"
+                  type="number"
+                  min="0"
+                  placeholder="0"
                   className={styles.input}
                   value={puppiesCount}
                   onChange={(e) => setPuppiesCount(e.target.value)}
@@ -290,9 +334,9 @@ export default function DetailsForm({ onContinue }: DetailsFormProps) {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Basic Care/Special Instruction Notes</label>
+                <label className={styles.label}>Basic Care / Special Instruction Notes</label>
                 <textarea
-                  placeholder="Enter here"
+                  placeholder="Dietary notes, leash instructions, home quirks..."
                   className={`${styles.input} ${styles.textarea}`}
                   value={specialNotes}
                   onChange={(e) => setSpecialNotes(e.target.value)}

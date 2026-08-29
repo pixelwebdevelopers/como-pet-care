@@ -1,57 +1,39 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
+import { Clock, User, ArrowRight } from 'lucide-react';
 
-// --- TODAY'S SCHEDULE SVG ICONS ---
-const ClockIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-    style={{
-      width: '18px',
-      height: '18px',
-      display: 'inline-block',
-      verticalAlign: 'middle',
-      marginRight: '4px',
-    }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-    />
-  </svg>
-);
-
-interface ScheduleItem {
+export interface ScheduleItem {
   id: string;
   time: string;
   service: string;
   duration: string;
   provider: {
     name: string;
-    avatar: string;
     role: string;
   };
+  petName?: string;
   status: 'Confirmed' | 'Pending' | 'In Progress';
+  reference?: string;
 }
 
-export default function TodaySchedule() {
-  const schedule: ScheduleItem[] = [
+interface TodayScheduleProps {
+  items?: ScheduleItem[];
+  onViewAll?: () => void;
+}
+
+export default function TodaySchedule({ items, onViewAll }: TodayScheduleProps) {
+  const defaultSchedule: ScheduleItem[] = [
     {
       id: '1',
-      time: '8:00 PM',
-      service: 'Dog Walking',
+      time: '9:00 AM',
+      service: 'Drop-In Visits',
       duration: '30 min',
       provider: {
         name: 'Sarah John',
-        avatar: '/assets/walker-avatar.jpg',
-        role: 'Buddy',
+        role: 'Client',
       },
+      petName: 'Max',
       status: 'Confirmed',
     },
     {
@@ -60,47 +42,29 @@ export default function TodaySchedule() {
       service: 'Dog Walking',
       duration: '30 min',
       provider: {
-        name: 'Sarah John',
-        avatar: '/assets/walker-avatar.jpg',
-        role: 'Buddy',
+        name: 'Clark Kent',
+        role: 'Client',
       },
-      status: 'Pending',
-    },
-    {
-      id: '3',
-      time: '2:00 PM',
-      service: 'Dog Walking',
-      duration: '30 min',
-      provider: {
-        name: 'Sarah John',
-        avatar: '/assets/walker-avatar.jpg',
-        role: 'Buddy',
-      },
+      petName: 'Krypto',
       status: 'In Progress',
     },
-    {
-      id: '4',
-      time: '4:00 PM',
-      service: 'Dog Walking',
-      duration: '30 min',
-      provider: {
-        name: 'Sarah John',
-        avatar: '/assets/walker-avatar.jpg',
-        role: 'Buddy',
-      },
-      status: 'Confirmed',
-    },
   ];
+
+  const schedule = items && items.length > 0 ? items : defaultSchedule;
 
   return (
     <div className="dashboard-card today-schedule-card">
       <div className="card-header-row">
         <div className="card-title-group">
-          <ClockIcon />
+          <Clock size={18} style={{ marginRight: '6px', color: 'var(--primary)' }} />
           <h2 className="card-title">Today&apos;s Schedule</h2>
         </div>
-        <button className="card-header-link" onClick={() => alert('View all schedule')}>
-          View all →
+        <button
+          className="card-header-link"
+          onClick={() => onViewAll?.() || alert('Showing all active bookings')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+        >
+          View all <ArrowRight size={14} />
         </button>
       </div>
 
@@ -117,20 +81,29 @@ export default function TodaySchedule() {
                 <span className="schedule-item-duration">{item.duration}</span>
               </div>
 
-              {/* Provider Info */}
+              {/* Provider / Client Info */}
               <div className="schedule-item-provider">
-                <div className="provider-avatar-frame">
-                  <Image
-                    src={item.provider.avatar}
-                    alt={item.provider.name}
-                    fill
-                    sizes="24px"
-                    className="provider-avatar-img"
-                  />
+                <div
+                  className="provider-avatar-frame"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#e6edea',
+                    color: '#123f3c',
+                    borderRadius: '50%',
+                    width: '26px',
+                    height: '26px',
+                    flexShrink: 0,
+                  }}
+                >
+                  <User size={14} />
                 </div>
                 <div className="provider-name-details">
                   <span className="provider-name">{item.provider.name}</span>
-                  <span className="provider-role-badge">{item.provider.role}</span>
+                  <span className="provider-role-badge">
+                    {item.petName ? `${item.petName} (${item.provider.role})` : item.provider.role}
+                  </span>
                 </div>
               </div>
 

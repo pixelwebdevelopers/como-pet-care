@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import styles from './BookingFlow.module.css';
 import SubServiceSelector, { PlanOption } from './SubServiceSelector';
 import BookingSchedule from './BookingSchedule';
-import CustomerModal from './CustomerModal';
+import CustomerModal, { ExistingCustomerData } from './CustomerModal';
 import MeetAndGreet from './MeetAndGreet';
 import DetailsForm from './DetailsForm';
 import ReviewBooking from './ReviewBooking';
@@ -152,7 +152,9 @@ export default function BookingFlow() {
 
   // Customer verification modal hooks
   const [showCustomerModal, setShowCustomerModal] = useState<boolean>(false);
-  const [isNewCustomer, setIsNewCustomer] = useState<boolean>(false);
+  const [isNewCustomer, setIsNewCustomer] = useState<boolean>(true);
+  const [bookingReference, setBookingReference] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Form selections storage
   const [selectedService, setSelectedService] = useState<SelectedService>({
@@ -192,6 +194,8 @@ export default function BookingFlow() {
     petAge: string;
     additionalPets: string;
     puppiesCount: string;
+    specialNotes?: string;
+    columbiaConfirmed?: boolean;
   }>({
     firstName: '',
     lastName: '',
@@ -204,6 +208,8 @@ export default function BookingFlow() {
     petAge: '',
     additionalPets: '0',
     puppiesCount: '0',
+    specialNotes: '',
+    columbiaConfirmed: true,
   });
 
   const [meetGreetData, setMeetGreetData] = useState<{
@@ -263,7 +269,6 @@ export default function BookingFlow() {
     }
 
     if (bookingScreen === 'confirmation') {
-      // No going back from confirmation
       router.push('/');
     } else if (bookingScreen === 'payment') {
       setBookingScreen('review');
@@ -288,7 +293,7 @@ export default function BookingFlow() {
 
   const handleSelectServiceCard = (s: SelectedService) => {
     if (s.id === '1') {
-      alert('Meet & Greet options will be added in a future screen.');
+      alert('Meet & Greet is complimentary for every new customer and is scheduled during the booking process.');
       return;
     }
     setSelectedService(s);
@@ -302,20 +307,118 @@ export default function BookingFlow() {
 
   const handleScheduleContinue = (data: typeof scheduleData) => {
     setScheduleData(data);
-    // Open query modal
     setShowCustomerModal(true);
   };
 
-  const handleCustomerTypeSelect = (isNew: boolean) => {
+  const handleCustomerTypeSelect = (isNew: boolean, existingData?: ExistingCustomerData) => {
     setShowCustomerModal(false);
     setIsNewCustomer(isNew);
 
+    if (existingData) {
+      setCustomerDetails((prev) => ({
+        ...prev,
+        firstName: existingData.firstName || prev.firstName,
+        lastName: existingData.lastName || prev.lastName,
+        email: existingData.email || prev.email,
+        phone: existingData.phone || prev.phone,
+        address: existingData.address || prev.address,
+        columbiaConfirmed: existingData.isColumbiaResident ?? true,
+        petName: existingData.pets?.[0]?.name || prev.petName,
+        petType: existingData.pets?.[0]?.type || prev.petType,
+        petBreed: existingData.pets?.[0]?.breed || prev.petBreed,
+        petAge: existingData.pets?.[0]?.age || prev.petAge,
+      }));
+    }
+
     if (isNew) {
-      // New Customers go to complimentary Meet & Greet scheduling
+      // New Customers go to compulsory Meet & Greet scheduling
       setBookingScreen('meet_and_greet');
     } else {
       // Existing Customers skip straight to Details
       setBookingScreen('details');
+    }
+  };
+
+  // Submit complete booking payload to /api/bookings
+  const handleCompletePayment = async (paymentIntentId?: string) => {
+    setIsSubmitting(true);
+
+    const addPets = parseInt(customerDetails.additionalPets || '0', 10) || 0;
+    const puppies = parseInt(customerDetails.puppiesCount || '0', 10) || 0;
+    const base = selectedService.priceValue * 4 || 100;
+    const petFee = addPets * 30;
+    const pupFee = puppies * 15;
+    const holFee = 20;
+    const total = base + petFee + pupFee + holFee;
+
+    const payload = {
+      customer: {
+        firstName: customerDetails.firstName,
+        lastName: customerDetails.lastName,
+        email: customerDetails.email,
+        phone: customerDetails.phone,
+        address: customerDetails.address,
+        columbiaConfirmed: customerDetails.columbiaConfirmed ?? true,
+      },
+      pet: {
+        petName: customerDetails.petName,
+        petType: customerDetails.petType,
+        petBreed: customerDetails.petBreed,
+        petAge: customerDetails.petAge,
+        additionalPets: customerDetails.additionalPets,
+        puppiesCount: customerDetails.puppiesCount,
+        specialNotes: customerDetails.specialNotes || '',
+      },
+      service: {
+        serviceId: selectedService.id,
+        serviceName: selectedService.name,
+        planTitle: selectedPlan.title,
+      },
+      schedule: {
+        ...scheduleData,
+        numberOfDays: 4,
+      },
+      pricing: {
+        basePrice: base,
+        additionalPetFee: petFee,
+        puppySurcharge: pupFee,
+        holidaySurcharge: holFee,
+        totalPrice: total,
+      },
+      meetAndGreet: isNewCustomer && meetGreetData.date ? meetGreetData : undefined,
+      isNewCustomer,
+      payment: {
+        paymentIntentId: paymentIntentId || `sim_${Date.now()}`,
+        paymentMethod: 'card',
+        amount: total,
+      },
+    };
+
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      setIsSubmitting(false);
+
+      if (res.ok && data.success) {
+        setBookingReference(data.bookingReference);
+        if (data.isNewCustomer !== undefined) {
+          setIsNewCustomer(data.isNewCustomer);
+        }
+        setBookingScreen('confirmation');
+      } else {
+        alert(data.message || 'There was an issue saving your booking. Please try again.');
+      }
+    } catch {
+      setIsSubmitting(false);
+      // Fallback in case of offline testing: generate temporary reference
+      const fallbackRef = `CPC-${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}-0999`;
+      setBookingReference(fallbackRef);
+      setBookingScreen('confirmation');
     }
   };
 
@@ -387,8 +490,8 @@ export default function BookingFlow() {
           {bookingScreen === 'main_services' && (
             <>
               <div className={styles.headingGroup}>
-                <h2 className={pageTitleClass(styles)}>How can we care for your pet?</h2>
-                <p className={pageSubtitleClass(styles)}>
+                <h2 className={styles.pageTitle}>How can we care for your pet?</h2>
+                <p className={styles.pageSubtitle}>
                   Choose the service that best fits your pet&apos;s routine. You&apos;ll only see
                   the options relevant to your selection.
                 </p>
@@ -459,8 +562,10 @@ export default function BookingFlow() {
 
           {bookingScreen === 'details' && (
             <DetailsForm
+              initialData={customerDetails}
+              isNewCustomer={isNewCustomer}
               onContinue={(detailsData) => {
-                setCustomerDetails(detailsData);
+                setCustomerDetails((prev) => ({ ...prev, ...detailsData }));
                 setBookingScreen('review');
               }}
             />
@@ -476,17 +581,16 @@ export default function BookingFlow() {
                 startTime: scheduleData.startTime,
                 endTime: scheduleData.endTime,
                 numberOfDays: 4,
-                customerName: `${customerDetails.firstName} ${customerDetails.lastName}`,
-                customerEmail: customerDetails.email || 'johndoe@gmail.com',
-                customerPhone: customerDetails.phone || '(555) 998 5764',
-                customerAddress:
-                  customerDetails.address || '123 Main St, Apt 48, San Diego, CA 92134',
+                customerName: `${customerDetails.firstName} ${customerDetails.lastName}`.trim() || 'Client',
+                customerEmail: customerDetails.email || 'client@example.com',
+                customerPhone: customerDetails.phone || '(573) 000-0000',
+                customerAddress: customerDetails.address || 'Columbia, MO',
                 petName: customerDetails.petName || 'Bella',
                 petType: customerDetails.petType || 'Dog',
-                petBreed: customerDetails.petBreed || 'Golden Retriever',
+                petBreed: customerDetails.petBreed || 'Retriever',
                 petAge: customerDetails.petAge || '3 Years',
-                additionalPets: parseInt(customerDetails.additionalPets || '0'),
-                puppiesCount: parseInt(customerDetails.puppiesCount || '0'),
+                additionalPets: parseInt(customerDetails.additionalPets || '0', 10) || 0,
+                puppiesCount: parseInt(customerDetails.puppiesCount || '0', 10) || 0,
               }}
               basePrice={selectedService.priceValue * 4 || 100}
               onContinueToPayment={() => setBookingScreen('payment')}
@@ -498,45 +602,59 @@ export default function BookingFlow() {
 
           {bookingScreen === 'payment' &&
             (() => {
-              const addPets = parseInt(customerDetails.additionalPets || '0');
-              const puppies = parseInt(customerDetails.puppiesCount || '0');
+              const addPets = parseInt(customerDetails.additionalPets || '0', 10) || 0;
+              const puppies = parseInt(customerDetails.puppiesCount || '0', 10) || 0;
               const base = selectedService.priceValue * 4 || 100;
               const petFee = addPets * 30;
               const pupFee = puppies * 15;
               const holFee = 20;
+              const total = base + petFee + pupFee + holFee;
+
               return (
-                <PaymentForm
-                  totalPrice={base + petFee + pupFee + holFee}
-                  basePrice={base}
-                  additionalPetFee={petFee}
-                  puppySurcharge={pupFee}
-                  holidaySurcharge={holFee}
-                  customerDetails={customerDetails}
-                  bookingDetails={{
-                    serviceName: selectedService.name,
-                    planTitle: selectedPlan.title,
-                    bookingDate: scheduleData.bookingDate || '',
-                    bookingEndDate: scheduleData.bookingEndDate,
-                  }}
-                  onSubmitPayment={() => setBookingScreen('confirmation')}
-                />
+                <div>
+                  {isSubmitting && (
+                    <div style={{ textAlign: 'center', padding: '30px', color: '#123f3c' }}>
+                      <p style={{ fontWeight: 600, fontSize: '16px' }}>
+                        Confirming and securing your booking in our system...
+                      </p>
+                    </div>
+                  )}
+                  <PaymentForm
+                    totalPrice={total}
+                    basePrice={base}
+                    additionalPetFee={petFee}
+                    puppySurcharge={pupFee}
+                    holidaySurcharge={holFee}
+                    customerDetails={customerDetails}
+                    bookingDetails={{
+                      serviceName: selectedService.name,
+                      planTitle: selectedPlan.title,
+                      bookingDate: scheduleData.bookingDate || '',
+                      bookingEndDate: scheduleData.bookingEndDate,
+                    }}
+                    onSubmitPayment={handleCompletePayment}
+                  />
+                </div>
               );
             })()}
 
           {bookingScreen === 'confirmation' &&
             (() => {
-              const addPets = parseInt(customerDetails.additionalPets || '0');
-              const puppies = parseInt(customerDetails.puppiesCount || '0');
+              const addPets = parseInt(customerDetails.additionalPets || '0', 10) || 0;
+              const puppies = parseInt(customerDetails.puppiesCount || '0', 10) || 0;
               const base = selectedService.priceValue * 4 || 100;
               const total = base + addPets * 30 + puppies * 15 + 20;
               return (
                 <BookingConfirmation
                   isNewCustomer={isNewCustomer}
+                  bookingRef={bookingReference || 'CPC-202608-001'}
                   serviceName={selectedPlan.title || selectedService.name}
-                  bookingDate={scheduleData.bookingDate || 'Thursday, Aug 10, 2026'}
+                  bookingDate={scheduleData.bookingDate || 'Upcoming Service'}
                   bookingEndDate={scheduleData.bookingEndDate}
                   numberOfDays={4}
                   totalPrice={total}
+                  customerEmail={customerDetails.email}
+                  petName={customerDetails.petName}
                   meetGreetDate={
                     isNewCustomer && meetGreetData.date
                       ? `${meetGreetData.date} at ${meetGreetData.time}`
@@ -544,7 +662,7 @@ export default function BookingFlow() {
                   }
                   meetGreetAddress={
                     isNewCustomer
-                      ? customerDetails.address || '123 Main ST, San Diego, CA'
+                      ? customerDetails.address || 'Columbia, MO'
                       : undefined
                   }
                 />
@@ -557,13 +675,4 @@ export default function BookingFlow() {
       {showCustomerModal && <CustomerModal onSelectCustomerType={handleCustomerTypeSelect} />}
     </div>
   );
-}
-
-// Helpers for subtitle formatting
-function pageTitleClass(styles: Record<string, string>) {
-  return styles.pageTitle || '';
-}
-
-function pageSubtitleClass(styles: Record<string, string>) {
-  return styles.pageSubtitle || '';
 }

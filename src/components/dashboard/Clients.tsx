@@ -1,7 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './Clients.module.css';
+import {
+  Search,
+  Filter,
+  ArrowUpDown,
+  User,
+  Users,
+  Mail,
+  Phone,
+  MapPin,
+  PawPrint,
+  RefreshCw,
+  MoreVertical,
+  Calendar,
+} from 'lucide-react';
 
 // --- TSX TYPES & INTERFACES ---
 type ClientStatus = 'active' | 'inactive' | 'new';
@@ -9,191 +23,49 @@ type ClientStatus = 'active' | 'inactive' | 'new';
 interface Client {
   id: string;
   name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
+  address: string;
   petsCount: number;
+  pets: string;
+  totalSpent: string;
+  bookingsCount: number;
   upcomingBooking: string;
   status: ClientStatus;
 }
 
-// --- SVG ICON COMPONENTS ---
-const SearchIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    style={{ width: '18px', height: '18px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z"
-    />
-  </svg>
-);
-
-const FilterIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
-    />
-  </svg>
-);
-
-const SortIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
-    />
-  </svg>
-);
-
-const PlusIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px' }}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-  </svg>
-);
-
-const EllipsisIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    style={{ width: '18px', height: '18px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
-    />
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    style={{ width: '18px', height: '18px' }}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-  </svg>
-);
-
 export default function Clients() {
   // --- STATE ---
-  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'new' | 'inactive'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'new'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>('name-asc');
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Seed list matching screenshot values
-  const [clients, setClients] = useState<Client[]>([
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      email: 'sarahjohnson@gmail.com',
-      phone: '555 2564 2648',
-      petsCount: 2,
-      upcomingBooking: 'Dog Walking · Aug 10, 9:00 AM',
-      status: 'active',
-    },
-    {
-      id: '2',
-      name: 'Sarah Johnson',
-      email: 'sarahjohnson@gmail.com',
-      phone: '555 2564 2648',
-      petsCount: 2,
-      upcomingBooking: 'Dog Walking · Aug 10, 9:00 AM',
-      status: 'active',
-    },
-    {
-      id: '3',
-      name: 'Sarah Johnson',
-      email: 'sarahjohnson@gmail.com',
-      phone: '555 2564 2648',
-      petsCount: 2,
-      upcomingBooking: 'Dog Walking · Aug 10, 9:00 AM',
-      status: 'inactive',
-    },
-    {
-      id: '4',
-      name: 'Sarah Johnson',
-      email: 'sarahjohnson@gmail.com',
-      phone: '555 2564 2648',
-      petsCount: 2,
-      upcomingBooking: 'Dog Walking · Aug 10, 9:00 AM',
-      status: 'new',
-    },
-    {
-      id: '5',
-      name: 'Sarah Johnson',
-      email: 'sarahjohnson@gmail.com',
-      phone: '555 2564 2648',
-      petsCount: 2,
-      upcomingBooking: 'Dog Walking · Aug 10, 9:00 AM',
-      status: 'active',
-    },
-    {
-      id: '6',
-      name: 'Sarah Johnson',
-      email: 'sarahjohnson@gmail.com',
-      phone: '555 2564 2648',
-      petsCount: 2,
-      upcomingBooking: 'Dog Walking · Aug 10, 9:00 AM',
-      status: 'active',
-    },
-    {
-      id: '7',
-      name: 'Sarah Johnson',
-      email: 'sarahjohnson@gmail.com',
-      phone: '555 2564 2648',
-      petsCount: 2,
-      upcomingBooking: 'Dog Walking · Aug 10, 9:00 AM',
-      status: 'active',
-    },
-  ]);
+  // Fetch live clients from API
+  const loadClients = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/clients?search=${encodeURIComponent(searchQuery)}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.clients)) {
+        setClients(data.clients);
+      }
+    } catch {
+      console.error('Failed to load clients');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [newName, setNewName] = useState<string>('');
-  const [newEmail, setNewEmail] = useState<string>('');
-  const [newPhone, setNewPhone] = useState<string>('');
-  const [newPetsCount, setNewPetsCount] = useState<number>(1);
-  const [newStatus, setNewStatus] = useState<ClientStatus>('active');
+  useEffect(() => {
+    loadClients();
+  }, [searchQuery]);
 
-  // --- HANDLERS ---
+  // Select all / row
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(filteredClients.map((c) => c.id));
@@ -210,116 +82,87 @@ export default function Clients() {
     }
   };
 
-  const handleAddClient = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newName || !newEmail || !newPhone) {
-      alert('Please fill out all required fields.');
-      return;
-    }
+  // Filter & Sort
+  const filteredClients = clients.filter((client) => {
+    const matchSearch =
+      client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.pets.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const newClient: Client = {
-      id: String(clients.length + 1),
-      name: newName,
-      email: newEmail,
-      phone: newPhone,
-      petsCount: Number(newPetsCount),
-      upcomingBooking: 'None',
-      status: newStatus,
-    };
+    if (activeTab === 'all') return matchSearch;
+    return client.status === activeTab && matchSearch;
+  });
 
-    setClients((prev) => [newClient, ...prev]);
-    setIsModalOpen(false);
-
-    // Reset Form
-    setNewName('');
-    setNewEmail('');
-    setNewPhone('');
-    setNewPetsCount(1);
-    setNewStatus('active');
-  };
-
-  // --- FILTER & SORT LOGIC ---
-  const filteredClients = clients
-    .filter((c) => {
-      // Tab filter
-      if (activeTab === 'active') return c.status === 'active';
-      if (activeTab === 'new') return c.status === 'new';
-      if (activeTab === 'inactive') return c.status === 'inactive';
-      return true;
-    })
-    .filter((c) => {
-      // Search filter
-      const q = searchQuery.toLowerCase();
-      return (
-        c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.phone.includes(q)
-      );
-    })
-    .sort((a, b) => {
-      // Sorting
-      if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
-      if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
-      if (sortBy === 'pets-desc') return b.petsCount - a.petsCount;
-      if (sortBy === 'pets-asc') return a.petsCount - b.petsCount;
-      return 0;
-    });
+  filteredClients.sort((a, b) => {
+    if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
+    if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
+    return 0;
+  });
 
   const allSelected =
-    filteredClients.length > 0 && filteredClients.every((c) => selectedIds.includes(c.id));
+    filteredClients.length > 0 && selectedIds.length === filteredClients.length;
 
   return (
     <div className={styles.clientsContainer}>
-      {/* Title Subheader */}
+      {/* Title Bar */}
       <div className="dashboard-title-bar">
-        <h1 className="dashboard-overview-title">Clients</h1>
-        <span className="dashboard-breadcrumb">Home &gt; Clients</span>
+        <div className="dashboard-title-group">
+          <h1 className="dashboard-overview-title">Clients Management</h1>
+          <span className="dashboard-breadcrumb">Dashboard &gt; Clients</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            className={styles.btnSecondary}
+            onClick={loadClients}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <RefreshCw size={14} className={loading ? styles.spinIcon : ''} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
+      {/* Main Table Card */}
       <div className={styles.clientsCard}>
-        {/* Card Title Block */}
-        <div className={styles.cardHeader}>
-          <h2 className={styles.cardTitle}>Clients</h2>
-          <p className={styles.cardSubtitle}>Review and manage your clients</p>
-        </div>
-
-        {/* Tab row */}
+        {/* Navigation Tabs Header */}
         <div className={styles.tabsContainer}>
           <div className={styles.tabsList}>
             <button
               className={`${styles.tabButton} ${activeTab === 'all' ? styles.tabButtonActive : ''}`}
               onClick={() => setActiveTab('all')}
             >
-              All
+              All Clients ({clients.length})
             </button>
             <button
-              className={`${styles.tabButton} ${activeTab === 'active' ? styles.tabButtonActive : ''}`}
+              className={`${styles.tabButton} ${
+                activeTab === 'active' ? styles.tabButtonActive : ''
+              }`}
               onClick={() => setActiveTab('active')}
             >
-              Active
+              Active ({clients.filter((c) => c.status === 'active').length})
             </button>
             <button
-              className={`${styles.tabButton} ${activeTab === 'new' ? styles.tabButtonActive : ''}`}
+              className={`${styles.tabButton} ${
+                activeTab === 'new' ? styles.tabButtonActive : ''
+              }`}
               onClick={() => setActiveTab('new')}
             >
-              New
-            </button>
-            <button
-              className={`${styles.tabButton} ${activeTab === 'inactive' ? styles.tabButtonActive : ''}`}
-              onClick={() => setActiveTab('inactive')}
-            >
-              In Active
+              New Clients ({clients.filter((c) => c.status === 'new').length})
             </button>
           </div>
         </div>
 
-        {/* Search and Secondary Action Buttons */}
+        {/* Action Controls Bar */}
         <div className={styles.actionsRow}>
           <div className={styles.searchContainer}>
             <span className={styles.searchIcon}>
-              <SearchIcon />
+              <Search size={16} />
             </span>
             <input
               type="text"
-              placeholder="Search by Booking reference, Customer name, Pet name, Service...."
+              placeholder="Search by client name, email, phone, pet..."
               className={styles.searchBar}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -328,34 +171,23 @@ export default function Clients() {
 
           <div className={styles.filterSortRow}>
             <button
-              className={styles.btnSecondary}
-              onClick={() => {
-                // simple cycle filter toggler
-                setActiveTab((prev) => {
-                  if (prev === 'all') return 'active';
-                  if (prev === 'active') return 'new';
-                  if (prev === 'new') return 'inactive';
-                  return 'all';
-                });
-              }}
-            >
-              <FilterIcon />
-              Filters: {activeTab.toUpperCase()}
-            </button>
-
-            <button
+              type="button"
               className={styles.btnSecondary}
               onClick={() => {
                 setSortBy((prev) => (prev === 'name-asc' ? 'name-desc' : 'name-asc'));
               }}
             >
-              <SortIcon />
-              Sort By: {sortBy === 'name-asc' ? 'A-Z' : 'Z-A'}
+              <ArrowUpDown size={15} />
+              <span>Sort: {sortBy === 'name-asc' ? 'Name A-Z' : 'Name Z-A'}</span>
             </button>
 
-            <button className={styles.btnPrimary} onClick={() => setIsModalOpen(true)}>
-              <PlusIcon />
-              Add New Client
+            <button
+              type="button"
+              className={styles.btnSecondary}
+              onClick={() => setActiveTab('all')}
+            >
+              <Filter size={15} />
+              <span>Reset Filter</span>
             </button>
           </div>
         </div>
@@ -373,24 +205,37 @@ export default function Clients() {
                     onChange={(e) => handleSelectAll(e.target.checked)}
                   />
                 </th>
-                <th className={styles.th}>Client name</th>
-                <th className={styles.th}>Email address</th>
-                <th className={styles.th}>Phone number</th>
-                <th className={styles.th} style={{ textAlign: 'center' }}>
-                  Number of pets
-                </th>
-                <th className={styles.th}>Upcoming Booking</th>
-                <th className={styles.th}>Client Status</th>
-                <th className={styles.th} style={{ textAlign: 'center' }}>
-                  Action
-                </th>
+                <th className={styles.th}>Client Name</th>
+                <th className={styles.th}>Contact Details</th>
+                <th className={styles.th}>Address</th>
+                <th className={styles.th}>Pets</th>
+                <th className={styles.th}>Total Spent</th>
+                <th className={styles.th}>Latest Visit</th>
+                <th className={styles.th}>Status</th>
               </tr>
             </thead>
             <tbody>
-              {filteredClients.length === 0 ? (
+              {loading ? (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '32px' }}>
-                    No clients found.
+                  <td colSpan={8} className={styles.emptyTd}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                      <RefreshCw size={26} className={styles.spinIcon} style={{ color: '#123f3c' }} />
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#123f3c' }}>Loading client records from database...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredClients.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={styles.emptyTd}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                      <div style={{ width: '52px', height: '52px', borderRadius: '16px', backgroundColor: '#f5eee3', color: '#b18a45', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Users size={26} />
+                      </div>
+                      <span style={{ fontSize: '16px', fontWeight: 700, color: '#1c2524' }}>No Clients Found</span>
+                      <span style={{ fontSize: '13px', color: 'rgba(28, 37, 36, 0.6)', maxWidth: '340px' }}>
+                        No client accounts match your active search or filter criteria.
+                      </span>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -400,11 +245,9 @@ export default function Clients() {
                   return (
                     <tr
                       key={c.id}
-                      style={{
-                        backgroundColor: isChecked ? 'rgba(177, 138, 69, 0.03)' : 'transparent',
-                      }}
+                      className={`${styles.tr} ${isChecked ? styles.trSelected : ''}`}
                     >
-                      <td className={`${styles.td} ${styles.tdCheckbox}`} data-label="Select">
+                      <td className={`${styles.td} ${styles.tdCheckbox}`}>
                         <input
                           type="checkbox"
                           className={styles.customCheckbox}
@@ -413,62 +256,81 @@ export default function Clients() {
                         />
                       </td>
 
-                      <td className={styles.td} data-label="Client name">
-                        <span
-                          className={styles.clientLink}
-                          onClick={() => alert(`View details profile for client: ${c.name}`)}
-                        >
-                          {c.name}
+                      <td className={styles.td}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div
+                            style={{
+                              width: '34px',
+                              height: '34px',
+                              borderRadius: '50%',
+                              backgroundColor: '#e6edea',
+                              color: '#123f3c',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 700,
+                              fontSize: '13px',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <User size={16} />
+                          </div>
+                          <div>
+                            <span className={styles.clientLink}>{c.name}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className={styles.td}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px' }}>
+                            <Mail size={13} style={{ color: 'rgba(28,37,36,0.5)' }} />
+                            <span>{c.email}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'rgba(28,37,36,0.6)' }}>
+                            <Phone size={12} style={{ color: 'rgba(28,37,36,0.5)' }} />
+                            <span>{c.phone}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className={styles.td}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12.5px', color: 'rgba(28,37,36,0.7)' }}>
+                          <MapPin size={13} style={{ flexShrink: 0, color: 'rgba(28,37,36,0.4)' }} />
+                          <span>{c.address || 'Columbia, MO'}</span>
+                        </div>
+                      </td>
+
+                      <td className={styles.td}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <PawPrint size={14} style={{ color: '#b45309' }} />
+                          <span style={{ fontWeight: 600 }}>{c.petsCount} {c.petsCount === 1 ? 'pet' : 'pets'}</span>
+                          <span style={{ fontSize: '11.5px', color: 'rgba(28,37,36,0.5)' }}>({c.pets})</span>
+                        </div>
+                      </td>
+
+                      <td className={styles.td}>
+                        <span className={styles.boldText} style={{ color: 'var(--primary)' }}>
+                          {c.totalSpent}
                         </span>
                       </td>
 
-                      <td className={styles.td} data-label="Email address">
-                        {c.email}
+                      <td className={styles.td}>
+                        <span style={{ fontSize: '12.5px' }}>{c.upcomingBooking}</span>
                       </td>
 
-                      <td className={styles.td} data-label="Phone number">
-                        {c.phone}
-                      </td>
-
-                      <td
-                        className={styles.td}
-                        data-label="Number of pets"
-                        style={{ textAlign: 'center', fontWeight: 600 }}
-                      >
-                        {c.petsCount}
-                      </td>
-
-                      <td className={styles.td} data-label="Upcoming Booking">
-                        {c.upcomingBooking}
-                      </td>
-
-                      <td className={styles.td} data-label="Client Status">
-                        {c.status === 'active' && (
-                          <span className={`${styles.statusTag} ${styles.statusActive}`}>
-                            Active
-                          </span>
-                        )}
-                        {c.status === 'inactive' && (
-                          <span className={`${styles.statusTag} ${styles.statusInactive}`}>
-                            In Active
-                          </span>
-                        )}
-                        {c.status === 'new' && (
-                          <span className={`${styles.statusTag} ${styles.statusNew}`}>New</span>
-                        )}
-                      </td>
-
-                      <td className={styles.td} data-label="Action">
-                        <button
-                          className={styles.btnActionEllipsis}
-                          onClick={() => {
-                            if (window.confirm(`Delete client record ${c.name}?`)) {
-                              setClients((prev) => prev.filter((item) => item.id !== c.id));
-                            }
-                          }}
+                      <td className={styles.td}>
+                        <span
+                          className={`${styles.statusTag} ${
+                            c.status === 'active'
+                              ? styles.statusActive
+                              : c.status === 'new'
+                                ? styles.statusNew
+                                : styles.statusInactive
+                          }`}
                         >
-                          <EllipsisIcon />
-                        </button>
+                          {c.status.toUpperCase()}
+                        </span>
                       </td>
                     </tr>
                   );
@@ -478,95 +340,6 @@ export default function Clients() {
           </table>
         </div>
       </div>
-
-      {/* Add New Client Modal */}
-      {isModalOpen && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Add New Client</h3>
-              <button className={styles.btnCloseModal} onClick={() => setIsModalOpen(false)}>
-                <CloseIcon />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddClient} className={styles.form}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Client Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter full name"
-                  className={styles.formInput}
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Email Address *</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@gmail.com"
-                  className={styles.formInput}
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Phone Number *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="555 2564 2648"
-                  className={styles.formInput}
-                  value={newPhone}
-                  onChange={(e) => setNewPhone(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Number of Pets</label>
-                <input
-                  type="number"
-                  min="0"
-                  className={styles.formInput}
-                  value={newPetsCount}
-                  onChange={(e) => setNewPetsCount(Number(e.target.value))}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Client Status</label>
-                <select
-                  className={styles.formSelect}
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value as ClientStatus)}
-                >
-                  <option value="active">Active</option>
-                  <option value="new">New</option>
-                  <option value="inactive">In Active</option>
-                </select>
-              </div>
-
-              <div className={styles.modalActions}>
-                <button
-                  type="button"
-                  className={styles.btnSecondary}
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className={styles.btnPrimary}>
-                  Save Client
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

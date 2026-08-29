@@ -1,8 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
 import styles from './Pets.module.css';
+import {
+  Search,
+  Filter,
+  ArrowUpDown,
+  PawPrint,
+  User,
+  RefreshCw,
+  Heart,
+  Calendar,
+  Info,
+} from 'lucide-react';
 
 // --- TSX TYPES & INTERFACES ---
 interface Pet {
@@ -11,196 +21,44 @@ interface Pet {
   type: string;
   breed: string;
   age: string;
+  isPuppy: boolean;
   ownerName: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  careInstructions?: string;
   upcomingService: string;
-  avatar: string;
 }
-
-// --- SVG ICON COMPONENTS ---
-const SearchIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    style={{ width: '18px', height: '18px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z"
-    />
-  </svg>
-);
-
-const FilterIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
-    />
-  </svg>
-);
-
-const SortIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
-    />
-  </svg>
-);
-
-const PlusIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px' }}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-  </svg>
-);
-
-const EllipsisIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    style={{ width: '18px', height: '18px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
-    />
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    style={{ width: '18px', height: '18px' }}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-  </svg>
-);
 
 export default function Pets() {
   // --- STATE ---
+  const [activeTab, setActiveTab] = useState<'all' | 'dog' | 'cat'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>('name-asc');
-  const [petTypeFilter, setPetTypeFilter] = useState<string>('all');
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Seed list matching screenshot values
-  const [pets, setPets] = useState<Pet[]>([
-    {
-      id: '1',
-      name: 'Buddy',
-      type: 'Dog',
-      breed: 'Siberian Husky',
-      age: '5 Years Old',
-      ownerName: 'Sarah Micheal',
-      upcomingService: 'Dog Walking · Aug 10, 9:00 AM',
-      avatar: '/assets/dog-avatar.jpg',
-    },
-    {
-      id: '2',
-      name: 'Buddy',
-      type: 'Dog',
-      breed: 'Siberian Husky',
-      age: '5 Years Old',
-      ownerName: 'Sarah Micheal',
-      upcomingService: 'Dog Walking · Aug 10, 9:00 AM',
-      avatar: '/assets/dog-avatar.jpg',
-    },
-    {
-      id: '3',
-      name: 'Buddy',
-      type: 'Dog',
-      breed: 'Siberian Husky',
-      age: '5 Years Old',
-      ownerName: 'Sarah Micheal',
-      upcomingService: 'Dog Walking · Aug 10, 9:00 AM',
-      avatar: '/assets/dog-avatar.jpg',
-    },
-    {
-      id: '4',
-      name: 'Buddy',
-      type: 'Dog',
-      breed: 'Siberian Husky',
-      age: '5 Years Old',
-      ownerName: 'Sarah Micheal',
-      upcomingService: 'Dog Walking · Aug 10, 9:00 AM',
-      avatar: '/assets/dog-avatar.jpg',
-    },
-    {
-      id: '5',
-      name: 'Buddy',
-      type: 'Dog',
-      breed: 'Siberian Husky',
-      age: '5 Years Old',
-      ownerName: 'Sarah Micheal',
-      upcomingService: 'Dog Walking · Aug 10, 9:00 AM',
-      avatar: '/assets/dog-avatar.jpg',
-    },
-    {
-      id: '6',
-      name: 'Buddy',
-      type: 'Dog',
-      breed: 'Siberian Husky',
-      age: '5 Years Old',
-      ownerName: 'Sarah Micheal',
-      upcomingService: 'Dog Walking · Aug 10, 9:00 AM',
-      avatar: '/assets/dog-avatar.jpg',
-    },
-    {
-      id: '7',
-      name: 'Buddy',
-      type: 'Dog',
-      breed: 'Siberian Husky',
-      age: '5 Years Old',
-      ownerName: 'Sarah Micheal',
-      upcomingService: 'Dog Walking · Aug 10, 9:00 AM',
-      avatar: '/assets/dog-avatar.jpg',
-    },
-  ]);
+  // Fetch live pets from API
+  const loadPets = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/pets?search=${encodeURIComponent(searchQuery)}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.pets)) {
+        setPets(data.pets);
+      }
+    } catch {
+      console.error('Failed to load pets');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Modal form states
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [newName, setNewName] = useState<string>('');
-  const [newType, setNewType] = useState<string>('Dog');
-  const [newBreed, setNewBreed] = useState<string>('');
-  const [newAge, setNewAge] = useState<string>('');
-  const [newOwner, setNewOwner] = useState<string>('');
+  useEffect(() => {
+    loadPets();
+  }, [searchQuery]);
 
-  // --- HANDLERS ---
+  // Select all / row
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(filteredPets.map((p) => p.id));
@@ -217,109 +75,82 @@ export default function Pets() {
     }
   };
 
-  const handleAddPet = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newName || !newBreed || !newAge || !newOwner) {
-      alert('Please fill out all fields.');
-      return;
-    }
+  // Filter & Sort
+  const filteredPets = pets.filter((pet) => {
+    const matchSearch =
+      pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pet.breed.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pet.ownerName.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const newPet: Pet = {
-      id: String(pets.length + 1),
-      name: newName,
-      type: newType,
-      breed: newBreed,
-      age: newAge.includes('Years') || newAge.includes('Months') ? newAge : `${newAge} Years Old`,
-      ownerName: newOwner,
-      upcomingService: 'None',
-      avatar: '/assets/dog-avatar.jpg', // Seed default avatar
-    };
+    if (activeTab === 'all') return matchSearch;
+    return pet.type.toLowerCase().includes(activeTab) && matchSearch;
+  });
 
-    setPets((prev) => [newPet, ...prev]);
-    setIsModalOpen(false);
-
-    // Reset Form
-    setNewName('');
-    setNewType('Dog');
-    setNewBreed('');
-    setNewAge('');
-    setNewOwner('');
-  };
-
-  // --- FILTER & SORT LOGIC ---
-  const filteredPets = pets
-    .filter((p) => {
-      // Type filter
-      if (petTypeFilter === 'all') return true;
-      return p.type.toLowerCase() === petTypeFilter.toLowerCase();
-    })
-    .filter((p) => {
-      // Search query
-      const q = searchQuery.toLowerCase();
-      return (
-        p.name.toLowerCase().includes(q) ||
-        p.breed.toLowerCase().includes(q) ||
-        p.ownerName.toLowerCase().includes(q)
-      );
-    })
-    .sort((a, b) => {
-      if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
-      if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
-      if (sortBy === 'breed') return a.breed.localeCompare(b.breed);
-      return 0;
-    });
+  filteredPets.sort((a, b) => {
+    if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
+    if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
+    return 0;
+  });
 
   const allSelected =
-    filteredPets.length > 0 && filteredPets.every((p) => selectedIds.includes(p.id));
+    filteredPets.length > 0 && selectedIds.length === filteredPets.length;
 
   return (
     <div className={styles.petsContainer}>
-      {/* Subheader titles */}
+      {/* Title Bar */}
       <div className="dashboard-title-bar">
-        <h1 className="dashboard-overview-title">Pets</h1>
-        <span className="dashboard-breadcrumb">Home &gt; Pets</span>
+        <div className="dashboard-title-group">
+          <h1 className="dashboard-overview-title">Pets Directory</h1>
+          <span className="dashboard-breadcrumb">Dashboard &gt; Pets</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            className={styles.btnSecondary}
+            onClick={loadPets}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <RefreshCw size={14} className={loading ? styles.spinIcon : ''} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
+      {/* Main Table Card */}
       <div className={styles.petsCard}>
-        {/* Card Header Title and Description */}
-        <div className={styles.cardHeader}>
-          <h2 className={styles.cardTitle}>Pets</h2>
-          <p className={styles.cardSubtitle}>Review and manage your pets</p>
-        </div>
-
-        {/* Tab Header row */}
+        {/* Navigation Tabs Header */}
         <div className={styles.tabsContainer}>
           <div className={styles.tabsList}>
             <button
-              className={`${styles.tabButton} ${petTypeFilter === 'all' ? styles.tabButtonActive : ''}`}
-              onClick={() => setPetTypeFilter('all')}
+              className={`${styles.tabButton} ${activeTab === 'all' ? styles.tabButtonActive : ''}`}
+              onClick={() => setActiveTab('all')}
             >
-              All
+              All Pets ({pets.length})
             </button>
             <button
-              className={`${styles.tabButton} ${petTypeFilter === 'dog' ? styles.tabButtonActive : ''}`}
-              onClick={() => setPetTypeFilter('dog')}
+              className={`${styles.tabButton} ${activeTab === 'dog' ? styles.tabButtonActive : ''}`}
+              onClick={() => setActiveTab('dog')}
             >
-              Dogs
+              Dogs ({pets.filter((p) => p.type.toLowerCase().includes('dog')).length})
             </button>
             <button
-              className={`${styles.tabButton} ${petTypeFilter === 'cat' ? styles.tabButtonActive : ''}`}
-              onClick={() => setPetTypeFilter('cat')}
+              className={`${styles.tabButton} ${activeTab === 'cat' ? styles.tabButtonActive : ''}`}
+              onClick={() => setActiveTab('cat')}
             >
-              Cats
+              Cats ({pets.filter((p) => p.type.toLowerCase().includes('cat')).length})
             </button>
           </div>
         </div>
 
-        {/* Actions row */}
+        {/* Action Controls Bar */}
         <div className={styles.actionsRow}>
           <div className={styles.searchContainer}>
             <span className={styles.searchIcon}>
-              <SearchIcon />
+              <Search size={16} />
             </span>
             <input
               type="text"
-              placeholder="Search by Booking reference, Customer name, Pet name, Service...."
+              placeholder="Search by pet name, breed, or owner..."
               className={styles.searchBar}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -328,37 +159,28 @@ export default function Pets() {
 
           <div className={styles.filterSortRow}>
             <button
-              className={styles.btnSecondary}
-              onClick={() => {
-                setPetTypeFilter((prev) => {
-                  if (prev === 'all') return 'dog';
-                  if (prev === 'dog') return 'cat';
-                  return 'all';
-                });
-              }}
-            >
-              <FilterIcon />
-              Filters: {petTypeFilter.toUpperCase()}
-            </button>
-
-            <button
+              type="button"
               className={styles.btnSecondary}
               onClick={() => {
                 setSortBy((prev) => (prev === 'name-asc' ? 'name-desc' : 'name-asc'));
               }}
             >
-              <SortIcon />
-              Sort By: {sortBy === 'name-asc' ? 'A-Z' : 'Z-A'}
+              <ArrowUpDown size={15} />
+              <span>Sort: {sortBy === 'name-asc' ? 'Name A-Z' : 'Name Z-A'}</span>
             </button>
 
-            <button className={styles.btnPrimary} onClick={() => setIsModalOpen(true)}>
-              <PlusIcon />
-              Add New Pet
+            <button
+              type="button"
+              className={styles.btnSecondary}
+              onClick={() => setActiveTab('all')}
+            >
+              <Filter size={15} />
+              <span>Reset Filter</span>
             </button>
           </div>
         </div>
 
-        {/* Pets Table */}
+        {/* Pets Data Table */}
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
             <thead>
@@ -371,22 +193,36 @@ export default function Pets() {
                     onChange={(e) => handleSelectAll(e.target.checked)}
                   />
                 </th>
-                <th className={styles.th}>Pet Name</th>
-                <th className={styles.th}>Pet Type</th>
-                <th className={styles.th}>Breed</th>
+                <th className={styles.th}>Pet Profile</th>
+                <th className={styles.th}>Breed &amp; Species</th>
                 <th className={styles.th}>Age</th>
-                <th className={styles.th}>Owner name</th>
-                <th className={styles.th}>Upcoming service</th>
-                <th className={styles.th} style={{ textAlign: 'center' }}>
-                  Action
-                </th>
+                <th className={styles.th}>Owner Name</th>
+                <th className={styles.th}>Care / Feeding Notes</th>
+                <th className={styles.th}>Latest / Upcoming Visit</th>
               </tr>
             </thead>
             <tbody>
-              {filteredPets.length === 0 ? (
+              {loading ? (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '32px' }}>
-                    No pets found.
+                  <td colSpan={7} className={styles.emptyTd}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                      <RefreshCw size={26} className={styles.spinIcon} style={{ color: '#123f3c' }} />
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#123f3c' }}>Loading pet records from database...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredPets.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={styles.emptyTd}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                      <div style={{ width: '52px', height: '52px', borderRadius: '16px', backgroundColor: '#f5eee3', color: '#b18a45', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <PawPrint size={26} />
+                      </div>
+                      <span style={{ fontSize: '16px', fontWeight: 700, color: '#1c2524' }}>No Pets Found</span>
+                      <span style={{ fontSize: '13px', color: 'rgba(28, 37, 36, 0.6)', maxWidth: '340px' }}>
+                        No pet profiles match your active search or filter criteria.
+                      </span>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -396,11 +232,9 @@ export default function Pets() {
                   return (
                     <tr
                       key={p.id}
-                      style={{
-                        backgroundColor: isChecked ? 'rgba(177, 138, 69, 0.03)' : 'transparent',
-                      }}
+                      className={`${styles.tr} ${isChecked ? styles.trSelected : ''}`}
                     >
-                      <td className={`${styles.td} ${styles.tdCheckbox}`} data-label="Select">
+                      <td className={`${styles.td} ${styles.tdCheckbox}`}>
                         <input
                           type="checkbox"
                           className={styles.customCheckbox}
@@ -409,57 +243,82 @@ export default function Pets() {
                         />
                       </td>
 
-                      <td className={styles.td} data-label="Pet Name">
-                        <div className={styles.petInfoCell}>
-                          <div className={styles.avatarFrame}>
-                            <Image
-                              src={p.avatar}
-                              alt={`Pet face profile avatar ${p.name}`}
-                              fill
-                              sizes="36px"
-                              style={{ objectFit: 'cover' }}
-                            />
-                          </div>
-                          <span
-                            className={styles.petLink}
-                            onClick={() => alert(`View details profile for pet: ${p.name}`)}
+                      <td className={styles.td}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '50%',
+                              backgroundColor: '#f5eee3',
+                              color: '#b18a45',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
                           >
-                            {p.name}
+                            <PawPrint size={18} />
+                          </div>
+                          <div>
+                            <span className={styles.petLink}>{p.name}</span>
+                            {p.isPuppy && (
+                              <span
+                                style={{
+                                  display: 'inline-block',
+                                  marginLeft: '6px',
+                                  fontSize: '10.5px',
+                                  color: '#b45309',
+                                  backgroundColor: '#fef3c7',
+                                  padding: '1px 6px',
+                                  borderRadius: '8px',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Puppy
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className={styles.td}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span className={styles.boldText}>{p.breed}</span>
+                          <span style={{ fontSize: '11.5px', color: 'rgba(28,37,36,0.5)' }}>
+                            {p.type}
                           </span>
                         </div>
                       </td>
 
-                      <td className={styles.td} data-label="Pet Type">
-                        <span className={styles.boldText}>{p.type}</span>
+                      <td className={styles.td}>{p.age}</td>
+
+                      <td className={styles.td}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <User size={13} style={{ color: 'rgba(28,37,36,0.45)' }} />
+                          <span style={{ fontWeight: 600 }}>{p.ownerName}</span>
+                        </div>
                       </td>
 
-                      <td className={styles.td} data-label="Breed">
-                        {p.breed}
-                      </td>
-
-                      <td className={styles.td} data-label="Age">
-                        {p.age}
-                      </td>
-
-                      <td className={styles.td} data-label="Owner name">
-                        {p.ownerName}
-                      </td>
-
-                      <td className={styles.td} data-label="Upcoming service">
-                        {p.upcomingService}
-                      </td>
-
-                      <td className={styles.td} data-label="Action">
-                        <button
-                          className={styles.btnActionEllipsis}
-                          onClick={() => {
-                            if (window.confirm(`Delete pet record ${p.name}?`)) {
-                              setPets((prev) => prev.filter((item) => item.id !== p.id));
-                            }
+                      <td className={styles.td} style={{ maxWidth: '240px' }}>
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            color: 'rgba(28,37,36,0.7)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            lineHeight: 1.35,
                           }}
                         >
-                          <EllipsisIcon />
-                        </button>
+                          {p.careInstructions}
+                        </span>
+                      </td>
+
+                      <td className={styles.td}>
+                        <span style={{ fontSize: '12.5px' }}>{p.upcomingService}</span>
                       </td>
                     </tr>
                   );
@@ -469,97 +328,6 @@ export default function Pets() {
           </table>
         </div>
       </div>
-
-      {/* Add New Pet Modal Overlay */}
-      {isModalOpen && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Add New Pet</h3>
-              <button className={styles.btnCloseModal} onClick={() => setIsModalOpen(false)}>
-                <CloseIcon />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddPet} className={styles.form}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Pet Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Buddy"
-                  className={styles.formInput}
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Pet Type</label>
-                <select
-                  className={styles.formSelect}
-                  value={newType}
-                  onChange={(e) => setNewType(e.target.value)}
-                >
-                  <option value="Dog">Dog</option>
-                  <option value="Cat">Cat</option>
-                  <option value="Bird">Bird</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Breed *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Siberian Husky"
-                  className={styles.formInput}
-                  value={newBreed}
-                  onChange={(e) => setNewBreed(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Age *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="5 Years Old"
-                  className={styles.formInput}
-                  value={newAge}
-                  onChange={(e) => setNewAge(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Owner Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Sarah Micheal"
-                  className={styles.formInput}
-                  value={newOwner}
-                  onChange={(e) => setNewOwner(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.modalActions}>
-                <button
-                  type="button"
-                  className={styles.btnSecondary}
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className={styles.btnPrimary}>
-                  Save Pet
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

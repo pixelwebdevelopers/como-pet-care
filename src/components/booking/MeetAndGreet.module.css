@@ -225,15 +225,32 @@
 }
 
 .slotButtonDisabled {
-  color: rgba(28, 37, 36, 0.2) !important;
+  color: #a8a29e !important;
   border-color: #efe7d8 !important;
-  background-color: #fafafa !important;
+  background-color: #f7f5f0 !important;
   cursor: not-allowed !important;
+  opacity: 0.7;
+  text-decoration: line-through;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
 }
 
 .slotButtonDisabled:hover {
   border-color: #efe7d8 !important;
-  background-color: #fafafa !important;
+  background-color: #f7f5f0 !important;
+}
+
+.bookedTag {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #c53030;
+  text-decoration: none !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
 }
 
 /* Appointment Summary Sidebar Card */

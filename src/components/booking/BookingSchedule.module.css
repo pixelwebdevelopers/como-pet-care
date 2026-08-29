@@ -263,6 +263,36 @@
   box-shadow: 0 2px 6px rgba(18, 63, 60, 0.15);
 }
 
+.slotButtonUnavailable {
+  background-color: #fff9ee !important;
+  border: 1.5px solid #f6d29b !important;
+  color: #92400e !important;
+  cursor: pointer !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  transition: all 0.2s ease;
+}
+
+.slotButtonUnavailable:hover {
+  background-color: #fef3c7 !important;
+  border-color: #b45309 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(180, 83, 9, 0.12);
+}
+
+.bookedTag {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b45309;
+  text-decoration: none !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+}
+
 /* Overnight Summary sidebar */
 .overnightSummaryCard {
   background-color: #ffffff;
@@ -303,7 +333,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  border-top: 1px dashed #efe7d8;
+  border-top: 1px solid #efe7d8;
   padding-top: 16px;
 }
 
@@ -311,29 +341,18 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  position: relative;
-  padding-left: 20px;
-}
-
-.stayRow::before {
-  content: '•';
-  position: absolute;
-  left: 4px;
-  top: 0;
-  color: var(--antique-gold, #b18a45);
-  font-size: 16px;
 }
 
 .stayRowLabel {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
-  color: var(--antique-gold, #b18a45);
+  color: var(--text-muted, rgba(28, 37, 36, 0.5));
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
 
 .stayRowDate {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--foreground, #1c2524);
 }
@@ -343,7 +362,11 @@
   color: var(--text-muted, rgba(28, 37, 36, 0.6));
 }
 
-/* Bottom summary row recap bar */
+.stayRowTime strong {
+  color: var(--primary, #123f3c);
+}
+
+/* Bottom summary recap bar */
 .recapBar {
   background-color: #ffffff;
   border-top: 1px solid #efe7d8;
@@ -351,14 +374,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
 }
 
 .recapText {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--foreground, #1c2524);
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
   margin: 0;
 }
 
@@ -372,7 +392,7 @@
   color: #ffffff;
   border: none;
   border-radius: 30px;
-  padding: 12px 36px;
+  padding: 12px 32px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -388,16 +408,19 @@
   box-shadow: 0 4px 12px rgba(18, 63, 60, 0.15);
 }
 
-/* Case C & D: Recurrent Walk Freq & Weekday selector */
+/* ==========================================================================
+   RECURRING SCHEDULE STYLING (Dog Walking & Poop Scooping)
+   ========================================================================== */
+
 .recurringCard {
   background-color: #ffffff;
   border: 1px solid #efe7d8;
   border-radius: 20px;
   padding: 40px;
+  box-shadow: 0 4px 12px rgba(28, 37, 36, 0.02);
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  box-shadow: 0 4px 12px rgba(28, 37, 36, 0.02);
+  gap: 32px;
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
@@ -413,81 +436,75 @@
   font-size: 14px;
   font-weight: 700;
   color: var(--foreground, #1c2524);
-  margin: 0;
 }
 
 .freqPillsList {
   display: flex;
-  background-color: #efe7d8;
-  border-radius: 30px;
-  padding: 6px;
-  gap: 4px;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .freqPillBtn {
-  background: none;
-  border: none;
-  border-radius: 24px;
-  padding: 10px 16px;
-  font-size: 13px;
-  font-weight: 700;
+  background-color: #ffffff;
+  border: 1px solid #efe7d8;
+  border-radius: 30px;
+  padding: 10px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
   color: var(--foreground, #1c2524);
   cursor: pointer;
-  transition: all 0.25s ease;
-  flex: 1;
-  text-align: center;
-  white-space: nowrap;
+  transition: all 0.2s ease;
   font-family: inherit;
 }
 
-.freqPillActive {
-  background-color: var(--primary, #123f3c);
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(18, 63, 60, 0.15);
+.freqPillBtn:hover {
+  border-color: var(--primary, #123f3c);
+  background-color: var(--warm-ivory, #f7f4ed);
 }
 
+.freqPillActive {
+  background-color: var(--primary, #123f3c) !important;
+  color: #ffffff !important;
+  border-color: var(--primary, #123f3c) !important;
+}
+
+/* Weekdays vertical stack */
 .weekdaysSelectorContainer {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  max-width: 500px;
-  margin: 0 auto;
-  width: 100%;
+  gap: 12px;
 }
 
 .weekdaysHeader {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--foreground, #1c2524);
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
 }
 
 .weekdaysBox {
-  border: 1.5px solid #efe7d8;
-  border-radius: 16px;
-  padding: 24px;
-  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .weekdayRowBtn {
   background-color: #ffffff;
   border: 1px solid #efe7d8;
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 14px 20px;
   font-size: 14px;
   font-weight: 600;
   color: var(--foreground, #1c2524);
   cursor: pointer;
   transition: all 0.2s ease;
-  text-align: center;
+  text-align: left;
   font-family: inherit;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .weekdayRowBtn:hover {
@@ -496,10 +513,15 @@
 }
 
 .weekdayRowActive {
+  background-color: var(--primary, #123f3c) !important;
+  color: #ffffff !important;
   border-color: var(--primary, #123f3c) !important;
-  background-color: rgba(18, 63, 60, 0.02) !important;
-  color: var(--primary, #123f3c) !important;
-  font-weight: 700;
+}
+
+.wizardActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 
 /* ==========================================================================
@@ -519,8 +541,11 @@
     padding: 20px;
   }
 
-  .slotButton,
-  .weekdayRowBtn {
+  .recapBar {
+    padding: 16px 20px;
+  }
+
+  .slotButton {
     padding: 10px 4px;
     font-size: 12px;
   }
@@ -529,15 +554,18 @@
     font-size: 11.5px;
   }
 
-  .btnContinue {
-    padding: 10px 24px;
-    font-size: 13px;
+  .recurringCard {
+    padding: 32px;
   }
 }
 
 @media (max-width: 1200px) {
   .schedulerGrid {
     grid-template-columns: 1fr 0.95fr 0.95fr;
+  }
+
+  .schedulerGrid2Col {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -546,7 +574,8 @@
    ========================================================================== */
 
 @media (max-width: 992px) {
-  .schedulerGrid {
+  .schedulerGrid,
+  .schedulerGrid2Col {
     grid-template-columns: 1fr;
   }
 
@@ -593,4 +622,363 @@
     padding: 8px 24px;
     font-size: 13px;
   }
+}
+
+
+/* ==========================================================================
+   WAITLIST MODALS STYLING (Unavailable Slot & Join Waitlist)
+   ========================================================================== */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(28, 37, 36, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modalCard {
+  background-color: #ffffff;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px 28px;
+  box-shadow: 0 20px 40px rgba(18, 63, 60, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+.modalCardWide {
+  max-width: 540px;
+}
+
+.modalHeaderBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #efe7d8;
+  padding-bottom: 12px;
+}
+
+.modalHeaderTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted, rgba(28, 37, 36, 0.5));
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.modalCloseBtn:hover {
+  background-color: #faf8f5;
+  color: #123f3c;
+}
+
+.modalHeroBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.modalHeroIconFrame {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: #fef3c7;
+  color: #b45309;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.modalHeroTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin: 0;
+}
+
+.modalHeroSubtitle {
+  font-size: 13.5px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.65));
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Selected Booking Summary Box (Cream card) */
+.summaryBoxCard {
+  background-color: #fbf8f2;
+  border: 1px solid #ebdcc5;
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summaryBoxHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summaryBoxTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary, #123f3c);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summaryRowsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summaryItemRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+}
+
+.summaryItemLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.7));
+  font-weight: 600;
+}
+
+.summaryItemValue {
+  color: var(--foreground, #1c2524);
+  font-weight: 700;
+}
+
+.btnChangePref {
+  background-color: #ffffff;
+  border: 1px solid #123f3c;
+  color: #123f3c;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: center;
+  margin-top: 4px;
+  transition: all 0.2s;
+}
+
+.btnChangePref:hover {
+  background-color: #123f3c;
+  color: #ffffff;
+}
+
+/* Modal Form Sections */
+.formSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin-top: 4px;
+}
+
+.formFieldsGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modalFieldRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modalFieldLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted, rgba(28, 37, 36, 0.7));
+}
+
+.modalInput {
+  background-color: #ffffff;
+  border: 1px solid #efe7d8;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: var(--foreground, #1c2524);
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.modalInput:focus {
+  border-color: var(--primary, #123f3c);
+  box-shadow: 0 0 0 3px rgba(18, 63, 60, 0.08);
+}
+
+.securityNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.55));
+  line-height: 1.4;
+}
+
+/* Time Pills */
+.timePillsWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.timePill {
+  background-color: #ffffff;
+  border: 1px solid #efe7d8;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--foreground, #1c2524);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.timePill:hover {
+  border-color: #123f3c;
+  background-color: #f7f4ed;
+}
+
+.timePillActive {
+  background-color: #123f3c !important;
+  color: #ffffff !important;
+  border-color: #123f3c !important;
+}
+
+/* Radio Group */
+.radioOptionsRow {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground, #1c2524);
+  cursor: pointer;
+}
+
+.termsCheckboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.65));
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+/* Buttons */
+.modalActionsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.btnTealPrimary {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  border: none;
+  border-radius: 30px;
+  padding: 13px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-family: inherit;
+  width: 100%;
+}
+
+.btnTealPrimary:hover {
+  background-color: #0c2b29;
+  box-shadow: 0 4px 12px rgba(18, 63, 60, 0.2);
+}
+
+.btnOutlinedSecondary {
+  background-color: transparent;
+  color: var(--primary, #123f3c);
+  border: 1.5px solid var(--primary, #123f3c);
+  border-radius: 30px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-family: inherit;
+  width: 100%;
+}
+
+.btnOutlinedSecondary:hover {
+  background-color: #f7f4ed;
+}
+
+.footerInfoNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  text-align: center;
 }

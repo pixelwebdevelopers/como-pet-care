@@ -37,3 +37,212 @@ model VerificationCode {
 
   @@map("verification_codes")
 }
+
+model Customer {
+  id                 Int             @id @default(autoincrement())
+  email              String          @unique
+  firstName          String
+  lastName           String
+  phone              String
+  address            String
+  city               String          @default("Columbia")
+  state              String          @default("MO")
+  zip                String?
+  isColumbiaResident Boolean         @default(true)
+  isNewCustomer      Boolean         @default(true)
+  notes              String?         @db.Text
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  pets               Pet[]
+  bookings           Booking[]
+  transactions       Transaction[]
+  meetAndGreets      MeetAndGreet[]
+  intakeProfiles     IntakeProfile[]
+
+  @@map("customers")
+}
+
+model Pet {
+  id               Int       @id @default(autoincrement())
+  customerId       Int
+  name             String
+  type             String    // Dog, Cat, etc.
+  breed            String?
+  age              String?
+  isPuppy          Boolean   @default(false)
+  photoUrl         String?   @db.Text
+  feedingRoutine   String?   @db.Text
+  exerciseRoutine  String?   @db.Text
+  temperamentNotes String?   @db.Text
+  careInstructions String?   @db.Text
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  customer         Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("pets")
+}
+
+model Booking {
+  id                  Int             @id @default(autoincrement())
+  reference           String          @unique // e.g. CPC-202608-0142
+  customerId          Int
+  serviceId           String          // '1', '2', '3', '4', '5'
+  serviceName         String
+  planTitle           String?
+  status              String          @default("PENDING") // PENDING, PENDING_MEET_GREET, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED
+  bookingDate         String
+  bookingEndDate      String?
+  startTime           String?
+  endTime             String?
+  walkFrequency       String?
+  preferredWeekdays   String?         @db.Text
+  numberOfDays        Int             @default(1)
+  additionalPetsCount Int             @default(0)
+  puppiesCount        Int             @default(0)
+  specialNotes        String?         @db.Text
+  basePrice           Decimal         @db.Decimal(10, 2)
+  additionalPetFee    Decimal         @default(0.00) @db.Decimal(10, 2)
+  puppySurcharge      Decimal         @default(0.00) @db.Decimal(10, 2)
+  holidaySurcharge    Decimal         @default(0.00) @db.Decimal(10, 2)
+  totalPrice          Decimal         @db.Decimal(10, 2)
+  paymentStatus       String          @default("UNPAID") // UNPAID, PAID, REFUNDED, PARTIALLY_REFUNDED
+  isNewCustomer       Boolean         @default(true)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  customer            Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  meetAndGreet        MeetAndGreet?
+  transactions        Transaction[]
+  intakeProfiles      IntakeProfile[]
+
+  @@map("bookings")
+}
+
+model MeetAndGreet {
+  id         Int       @id @default(autoincrement())
+  bookingId  Int       @unique
+  customerId Int
+  date       String
+  time       String
+  address    String
+  status     String    @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED, RESCHEDULED
+  notes      String?   @db.Text
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  booking    Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("meet_and_greets")
+}
+
+model Transaction {
+  id              Int       @id @default(autoincrement())
+  bookingId       Int
+  customerId      Int
+  paymentIntentId String    @unique // Stripe PaymentIntent ID (or test token)
+  chargeId        String?
+  paymentMethod   String    @default("card") // card, paypal, sandbox
+  amount          Decimal   @db.Decimal(10, 2)
+  currency        String    @default("usd")
+  status          String    @default("SUCCEEDED") // SUCCEEDED, REQUIRES_CAPTURE, FAILED, REFUNDED, PARTIALLY_REFUNDED
+  refundedAmount  Decimal   @default(0.00) @db.Decimal(10, 2)
+  refundId        String?
+  refundReason    String?
+  receiptUrl      String?   @db.Text
+  rawResponse     String?   @db.Text // JSON string of Stripe webhook / response
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  booking         Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+model IntakeProfile {
+  id                    Int       @id @default(autoincrement())
+  customerId            Int
+  bookingId             Int?
+  bookingRef            String?
+  // Health & Veterinary
+  takesMedication       String?
+  medicationName        String?
+  dosageInstructions    String?   @db.Text
+  knownAllergies        String?   @db.Text
+  medicalConditions     String?   @db.Text
+  veterinarianName      String?
+  veterinaryClinic      String?
+  veterinaryPhone       String?
+  additionalHealthNotes String?   @db.Text
+  // Home Access
+  primaryEntryMethod    String?
+  secondaryEntryMethod  String?
+  entryInstructions     String?   @db.Text
+  doorCode              String?
+  garageCode            String?
+  alarmCode             String?
+  keyLockboxLocation    String?
+  parkingInstructions   String?   @db.Text
+  additionalHomeNotes   String?   @db.Text
+  // Emergency Contact
+  primaryName           String?
+  primaryRelationship   String?
+  primaryPhone          String?
+  primaryEmail          String?
+  secondaryName         String?
+  secondaryRelationship String?
+  secondaryPhone        String?
+  vetAuthorization      String?
+  altKeyHolder          String?
+  emergencyNotes        String?   @db.Text
+  confirmedAccuracy     Boolean   @default(true)
+  status                String    @default("COMPLETED") // PENDING, COMPLETED, VERIFIED
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  customer              Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  booking               Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@map("intake_profiles")
+}
+
+model WaitlistEntry {
+  id               Int      @id @default(autoincrement())
+  firstName        String
+  lastName         String?
+  email            String
+  phone            String?
+  serviceName      String
+  serviceDuration  String?  // e.g. "30 Minutes", "60 Minutes"
+  preferredDate    String   // e.g. "May 24, 2026"
+  preferredTime    String   // e.g. "2:00 PM"
+  timePreference   String   @default("specific") // specific, morning, afternoon, evening, any
+  notifyMethod     String   @default("email_sms") // email, sms, email_sms
+  status           String   @default("waiting") // waiting, availability_sent, confirmed, expired, removed
+  notes            String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("waitlist_entries")
+}
+
+model ServiceConfiguration {
+  id          String   @id
+  serviceId   String
+  serviceName String
+  title       String
+  description String   @db.Text
+  duration    String
+  basePrice   Decimal  @db.Decimal(10, 2)
+  priceText   String
+  savingText  String?
+  badge       String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("service_configurations")
+}

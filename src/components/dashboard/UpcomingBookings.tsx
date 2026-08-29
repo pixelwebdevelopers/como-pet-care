@@ -1,46 +1,9 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
+import { CalendarCheck, ChevronRight, PawPrint, ArrowRight } from 'lucide-react';
 
-// --- UPCOMING BOOKINGS SVG ICONS ---
-const BookingIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-    style={{
-      width: '18px',
-      height: '18px',
-      display: 'inline-block',
-      verticalAlign: 'middle',
-      marginRight: '4px',
-    }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3m-3-6h5.25m-6.75 3h.008v.008H6V12Zm0 3h.008v.008H6V15Zm0-6h.008v.008H6V9m.75-3h10.5a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 16.5 21h-10.5A2.25 2.25 0 0 1 3.75 18.75V8.25A2.25 2.25 0 0 1 6 6Z"
-    />
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px', color: 'rgba(28, 37, 36, 0.4)' }}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-  </svg>
-);
-
-interface UpcomingItem {
+export interface UpcomingItem {
   id: string;
   clientName: string;
   petName: string;
@@ -48,31 +11,54 @@ interface UpcomingItem {
   time: string;
   service: string;
   duration: string;
-  avatar: string;
+  status?: string;
+  reference?: string;
 }
 
-export default function UpcomingBookings() {
-  const bookings: UpcomingItem[] = Array(5)
-    .fill({
-      clientName: 'Michael',
-      petName: 'Buddy',
-      date: 'May 24, 2026',
-      time: '8:00 AM',
+interface UpcomingBookingsProps {
+  bookings?: UpcomingItem[];
+  onViewAll?: () => void;
+}
+
+export default function UpcomingBookings({ bookings: initialBookings, onViewAll }: UpcomingBookingsProps) {
+  const defaultBookings: UpcomingItem[] = [
+    {
+      id: '1',
+      clientName: 'Sarah John',
+      petName: 'Bella',
+      date: 'Aug 10, 2026',
+      time: '9:00 AM',
+      service: 'Drop-In Visits',
+      duration: '30 min',
+      status: 'CONFIRMED',
+    },
+    {
+      id: '2',
+      clientName: 'Clark Kent',
+      petName: 'Krypto',
+      date: 'Aug 12, 2026',
+      time: '11:00 AM',
       service: 'Dog Walking',
       duration: '30 min',
-      avatar: '/assets/dog-avatar.jpg',
-    })
-    .map((item, idx) => ({ ...item, id: String(idx + 1) }));
+      status: 'CONFIRMED',
+    },
+  ];
+
+  const bookings = initialBookings && initialBookings.length > 0 ? initialBookings : defaultBookings;
 
   return (
     <div className="dashboard-card upcoming-bookings-card">
       <div className="card-header-row">
         <div className="card-title-group">
-          <BookingIcon />
-          <h2 className="card-title">Upcoming Booking</h2>
+          <CalendarCheck size={18} style={{ marginRight: '6px', color: 'var(--primary)' }} />
+          <h2 className="card-title">Upcoming Bookings</h2>
         </div>
-        <button className="card-header-link" onClick={() => alert('View all bookings')}>
-          View all →
+        <button
+          className="card-header-link"
+          onClick={() => onViewAll?.() || alert('Showing all bookings')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+        >
+          View all <ArrowRight size={14} />
         </button>
       </div>
 
@@ -81,31 +67,43 @@ export default function UpcomingBookings() {
           <div
             key={booking.id}
             className="upcoming-booking-item"
-            onClick={() => alert(`Details for booking ${booking.id}`)}
+            onClick={() => alert(`Booking ${booking.reference || booking.id}: ${booking.clientName} - ${booking.service}`)}
           >
-            <div className="booking-pet-avatar-frame">
-              <Image
-                src={booking.avatar}
-                alt={`${booking.clientName}'s pet ${booking.petName}`}
-                fill
-                sizes="36px"
-                className="booking-pet-avatar-img"
-              />
+            {/* Pet Avatar Icon Frame */}
+            <div
+              className="booking-pet-avatar-frame"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#f5eee3',
+                color: '#b18a45',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                flexShrink: 0,
+              }}
+            >
+              <PawPrint size={18} />
             </div>
+
             <div className="booking-info-cell client-info">
               <span className="booking-client-name">{booking.clientName}</span>
-              <span className="booking-pet-name">{booking.petName}</span>
+              <span className="booking-pet-name">🐾 {booking.petName}</span>
             </div>
+
             <div className="booking-info-cell date-info">
               <span className="booking-date">{booking.date}</span>
               <span className="booking-time">{booking.time}</span>
             </div>
+
             <div className="booking-info-cell service-info">
               <span className="booking-service">{booking.service}</span>
               <span className="booking-duration">{booking.duration}</span>
             </div>
+
             <div className="booking-action-cell">
-              <ChevronRightIcon />
+              <ChevronRight size={16} style={{ color: 'rgba(28, 37, 36, 0.4)' }} />
             </div>
           </div>
         ))}

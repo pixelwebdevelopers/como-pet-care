@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getStripeServer } from '@/lib/stripe';
+import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import Stripe from 'stripe';
 
@@ -31,7 +32,25 @@ export async function POST(req: Request) {
         logger.info(
           `Webhook: PaymentIntent ${paymentIntent.id} succeeded for $${(paymentIntent.amount / 100).toFixed(2)}`,
         );
-        // Here, bookings could be updated or confirmation emails dispatched
+
+        // Update transaction and booking if they exist
+        const tx = await prisma.transaction.findUnique({
+          where: { paymentIntentId: paymentIntent.id },
+        });
+
+        if (tx) {
+          await prisma.transaction.update({
+            where: { id: tx.id },
+            data: {
+              status: 'SUCCEEDED',
+              rawResponse: JSON.stringify(paymentIntent),
+            },
+          });
+          await prisma.booking.update({
+            where: { id: tx.bookingId },
+            data: { paymentStatus: 'PAID' },
+          });
+        }
         break;
       }
 
@@ -40,6 +59,49 @@ export async function POST(req: Request) {
         logger.warn(
           `Webhook: PaymentIntent ${paymentIntent.id} failed. Reason: ${paymentIntent.last_payment_error?.message}`,
         );
+        const tx = await prisma.transaction.findUnique({
+          where: { paymentIntentId: paymentIntent.id },
+        });
+        if (tx) {
+          await prisma.transaction.update({
+            where: { id: tx.id },
+            data: { status: 'FAILED' },
+          });
+          await prisma.booking.update({
+            where: { id: tx.bookingId },
+            data: { paymentStatus: 'UNPAID' },
+          });
+        }
+        break;
+      }
+
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge;
+        const paymentIntentId =
+          typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
+        if (paymentIntentId) {
+          const tx = await prisma.transaction.findUnique({
+            where: { paymentIntentId },
+          });
+          if (tx) {
+            const refundedAmount = charge.amount_refunded / 100;
+            const isFull = charge.refunded;
+            await prisma.transaction.update({
+              where: { id: tx.id },
+              data: {
+                status: isFull ? 'REFUNDED' : 'PARTIALLY_REFUNDED',
+                refundedAmount,
+              },
+            });
+            await prisma.booking.update({
+              where: { id: tx.bookingId },
+              data: {
+                paymentStatus: isFull ? 'REFUNDED' : 'PARTIALLY_REFUNDED',
+                status: isFull ? 'CANCELLED' : undefined,
+              },
+            });
+          }
+        }
         break;
       }
 

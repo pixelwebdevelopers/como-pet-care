@@ -7,13 +7,17 @@ import styles from './BookingConfirmation.module.css';
 // --- TYPES ---
 interface BookingConfirmationProps {
   isNewCustomer: boolean;
+  bookingRef?: string;
   serviceName: string;
   bookingDate: string;
   bookingEndDate?: string;
   numberOfDays: number;
   totalPrice: number;
+  paymentStatusText?: string;
   meetGreetDate?: string;
   meetGreetAddress?: string;
+  customerEmail?: string;
+  petName?: string;
 }
 
 // --- ICONS ---
@@ -149,23 +153,32 @@ const PawPrintSvg = ({ size = 60 }: { size?: number }) => (
   </svg>
 );
 
-// --- COMPONENT ---
 export default function BookingConfirmation({
   isNewCustomer,
+  bookingRef = 'CPC-2026-0001',
   serviceName,
   bookingDate,
   bookingEndDate,
   numberOfDays,
   totalPrice,
+  paymentStatusText = 'Paid via Secure Payment',
   meetGreetDate,
   meetGreetAddress,
+  customerEmail,
+  petName,
 }: BookingConfirmationProps) {
   const router = useRouter();
   const dateDisplay = bookingEndDate
     ? `${bookingDate} - ${bookingEndDate} (${numberOfDays} Day)`
     : bookingDate;
 
-  const bookingRef = 'PSB-2026-3453-001';
+  const handleGoToIntake = () => {
+    const params = new URLSearchParams();
+    if (bookingRef) params.set('bookingRef', bookingRef);
+    if (customerEmail) params.set('email', customerEmail);
+    if (petName) params.set('petName', petName);
+    router.push(`/intake?${params.toString()}`);
+  };
 
   return (
     <div className={styles.container}>
@@ -199,10 +212,15 @@ export default function BookingConfirmation({
 
       {/* Heading */}
       <div className={styles.headingGroup}>
-        <h2 className={styles.title}>Your pet-sitting request has been submitted</h2>
+        <h2 className={styles.title}>
+          {isNewCustomer
+            ? 'Your booking has been received & Meet & Greet is scheduled'
+            : 'Your pet-sitting booking is confirmed!'}
+        </h2>
         <p className={styles.subtitle}>
-          We&apos;ve emailed and texted your booking details and the next steps
-          {isNewCustomer ? ' for your Meet & Greet.' : '.'}
+          {isNewCustomer
+            ? 'We have sent your confirmation email. Next step: Please complete the mandatory customer intake form below before our visit.'
+            : 'Welcome back! Your intake information is already on file and your service schedule is set.'}
         </p>
       </div>
 
@@ -243,7 +261,7 @@ export default function BookingConfirmation({
             <span className={styles.confirmRowIcon}>
               <PriceTagIcon />
             </span>
-            <span className={styles.confirmRowLabel}>Estimated Total</span>
+            <span className={styles.confirmRowLabel}>Total Amount</span>
             <span className={styles.confirmRowValueHighlight}>${totalPrice.toFixed(2)}</span>
           </div>
 
@@ -252,9 +270,7 @@ export default function BookingConfirmation({
               <CreditCardIcon />
             </span>
             <span className={styles.confirmRowLabel}>Payment Status</span>
-            <span className={styles.confirmRowValue}>
-              Payment Method Saved | No Payment Captured
-            </span>
+            <span className={styles.confirmRowValue}>{paymentStatusText}</span>
           </div>
 
           <div className={styles.confirmRow}>
@@ -283,16 +299,20 @@ export default function BookingConfirmation({
 
         {/* Action buttons */}
         <div className={styles.actionBtns}>
-          {isNewCustomer && (
-            <button className={styles.btnIntake} onClick={() => router.push('/intake')}>
-              Complete Intake Form
+          {isNewCustomer ? (
+            <button className={styles.btnIntake} onClick={handleGoToIntake}>
+              Complete Mandatory Intake Form &rarr;
+            </button>
+          ) : (
+            <button className={styles.btnIntake} onClick={() => router.push('/')}>
+              Return to Homepage
             </button>
           )}
           <button
             className={styles.btnViewDetails}
-            onClick={() => alert('Booking details page coming soon.')}
+            onClick={() => router.push('/')}
           >
-            View Booking Details
+            Finished
           </button>
         </div>
       </div>

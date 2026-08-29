@@ -1,11 +1,27 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './CustomerModal.module.css';
 
 // --- TSX TYPES & INTERFACES ---
+export interface ExistingCustomerData {
+  id?: number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  isColumbiaResident?: boolean;
+  pets?: Array<{
+    name: string;
+    type?: string;
+    breed?: string;
+    age?: string;
+  }>;
+}
+
 interface CustomerModalProps {
-  onSelectCustomerType: (isNew: boolean) => void;
+  onSelectCustomerType: (isNew: boolean, existingData?: ExistingCustomerData) => void;
 }
 
 // User Avatar SVG Icon
@@ -27,6 +43,41 @@ const UserAvatarIcon = () => (
 );
 
 export default function CustomerModal({ onSelectCustomerType }: CustomerModalProps) {
+  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  const handleLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes('@')) {
+      setStatusMessage('Please enter a valid email address.');
+      return;
+    }
+
+    setLoading(true);
+    setStatusMessage(null);
+
+    try {
+      const res = await fetch(`/api/customers/lookup?email=${encodeURIComponent(email.trim())}`);
+      const data = await res.json();
+      setLoading(false);
+
+      if (res.ok && data.success && data.exists && data.customer) {
+        onSelectCustomerType(false, data.customer);
+      } else {
+        // Customer not found or error, let them continue as existing and type details
+        setStatusMessage('No account found for this email. You can still proceed or select New Customer.');
+        setTimeout(() => {
+          onSelectCustomerType(false, { email: email.trim() });
+        }, 1200);
+      }
+    } catch {
+      setLoading(false);
+      onSelectCustomerType(false, { email: email.trim() });
+    }
+  };
+
   return (
     <div className={styles.overlay}>
       <div className={styles.dialog}>
@@ -36,22 +87,56 @@ export default function CustomerModal({ onSelectCustomerType }: CustomerModalPro
 
         <h3 className={styles.heading}>Are you a new or existing customer?</h3>
 
-        <div className={styles.buttonRow}>
-          <button
-            type="button"
-            className={styles.btnNew}
-            onClick={() => onSelectCustomerType(true)}
-          >
-            New Customer
-          </button>
-          <button
-            type="button"
-            className={styles.btnExisting}
-            onClick={() => onSelectCustomerType(false)}
-          >
-            Existing Customer
-          </button>
-        </div>
+        {!showEmailInput ? (
+          <>
+            <p className={styles.subtext}>
+              New customers receive a complimentary Meet &amp; Greet prior to service. Returning clients can fast-track their booking.
+            </p>
+            <div className={styles.buttonRow}>
+              <button
+                type="button"
+                className={styles.btnNew}
+                onClick={() => onSelectCustomerType(true)}
+              >
+                New Customer
+              </button>
+              <button
+                type="button"
+                className={styles.btnExisting}
+                onClick={() => setShowEmailInput(true)}
+              >
+                Existing Customer
+              </button>
+            </div>
+          </>
+        ) : (
+          <form className={styles.lookupBox} onSubmit={handleLookup}>
+            <p className={styles.subtext}>
+              Enter your email address to pull up your profile, address, and pet information:
+            </p>
+            <input
+              type="email"
+              placeholder="Enter your account email"
+              className={styles.lookupInput}
+              value={email}
+              autoFocus
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {statusMessage && <div className={styles.lookupStatus}>{statusMessage}</div>}
+            <div className={styles.lookupActions}>
+              <button type="submit" className={styles.lookupBtn} disabled={loading}>
+                {loading ? 'Finding account...' : 'Find My Account'}
+              </button>
+              <button
+                type="button"
+                className={styles.cancelBtn}
+                onClick={() => onSelectCustomerType(false)}
+              >
+                Skip Lookup
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

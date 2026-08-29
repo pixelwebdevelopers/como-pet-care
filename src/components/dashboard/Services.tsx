@@ -1,301 +1,206 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './Services.module.css';
+import {
+  Search,
+  Filter,
+  ArrowUpDown,
+  Edit3,
+  Clock,
+  DollarSign,
+  CheckCircle2,
+  X,
+  RefreshCw,
+  Tag,
+  AlertCircle,
+} from 'lucide-react';
 
 // --- TSX TYPES & INTERFACES ---
-interface Service {
+export interface ServiceItem {
   id: string;
-  name: string;
-  category: string;
+  serviceId: string;
+  serviceName: string;
+  title: string;
+  description: string;
   duration: string;
-  price: string;
+  basePrice: number | string;
+  priceText: string;
+  savingText?: string;
+  badge?: string;
   status: 'active' | 'inactive';
 }
-
-// --- SVG ICON COMPONENTS ---
-const SearchIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    style={{ width: '18px', height: '18px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z"
-    />
-  </svg>
-);
-
-const FilterIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
-    />
-  </svg>
-);
-
-const SortIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.75}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
-    />
-  </svg>
-);
-
-const PlusIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    style={{ width: '16px', height: '16px' }}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-  </svg>
-);
-
-const EllipsisIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    style={{ width: '18px', height: '18px' }}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
-    />
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    style={{ width: '18px', height: '18px' }}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-  </svg>
-);
 
 export default function Services() {
   // --- STATE ---
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'inactive'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<string>('name-asc');
+  const [sortBy, setSortBy] = useState<string>('service-asc');
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Seed list matching screenshot values
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: '1',
-      name: '30-Minute Drop-In Visit',
-      category: 'Drop-In Visits',
-      duration: '30 Minutes',
-      price: '$34',
-      status: 'active',
-    },
-    {
-      id: '2',
-      name: '30-Minute Drop-In Visit',
-      category: 'Drop-In Visits',
-      duration: '30 Minutes',
-      price: '$34',
-      status: 'active',
-    },
-    {
-      id: '3',
-      name: '30-Minute Drop-In Visit',
-      category: 'Drop-In Visits',
-      duration: '30 Minutes',
-      price: '$34',
-      status: 'inactive',
-    },
-    {
-      id: '4',
-      name: '30-Minute Drop-In Visit',
-      category: 'Drop-In Visits',
-      duration: '30 Minutes',
-      price: '$34',
-      status: 'active',
-    },
-    {
-      id: '5',
-      name: '30-Minute Drop-In Visit',
-      category: 'Drop-In Visits',
-      duration: '30 Minutes',
-      price: '$34',
-      status: 'active',
-    },
-    {
-      id: '6',
-      name: '30-Minute Drop-In Visit',
-      category: 'Drop-In Visits',
-      duration: '30 Minutes',
-      price: '$34',
-      status: 'inactive',
-    },
-    {
-      id: '7',
-      name: '30-Minute Drop-In Visit',
-      category: 'Drop-In Visits',
-      duration: '30 Minutes',
-      price: '$34',
-      status: 'active',
-    },
-  ]);
+  // Edit Modal State
+  const [editingService, setEditingService] = useState<ServiceItem | null>(null);
+  const [editTitle, setEditTitle] = useState<string>('');
+  const [editDescription, setEditDescription] = useState<string>('');
+  const [editDuration, setEditDuration] = useState<string>('');
+  const [editBasePrice, setEditBasePrice] = useState<string>('');
+  const [editPriceText, setEditPriceText] = useState<string>('');
+  const [editStatus, setEditStatus] = useState<'active' | 'inactive'>('active');
+  const [editBadge, setEditBadge] = useState<string>('');
+  const [savingEdit, setSavingEdit] = useState<boolean>(false);
+  const [saveSuccessNotice, setSaveSuccessNotice] = useState<string>('');
 
-  // Modal form states
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [newName, setNewName] = useState<string>('');
-  const [newCategory, setNewCategory] = useState<string>('Drop-In Visits');
-  const [newDuration, setNewDuration] = useState<string>('30 Minutes');
-  const [newPrice, setNewPrice] = useState<string>('');
-  const [newStatus, setNewStatus] = useState<'active' | 'inactive'>('active');
-
-  // --- HANDLERS ---
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(filteredServices.map((s) => s.id));
-    } else {
-      setSelectedIds([]);
+  // Fetch services from live database API
+  const loadServices = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/services');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.services)) {
+        setServices(
+          data.services.map((s: any) => ({
+            ...s,
+            basePrice: Number(s.basePrice),
+          })),
+        );
+      }
+    } catch (err) {
+      console.error('Failed to load services from database:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSelectRow = (id: string, checked: boolean) => {
-    if (checked) {
-      setSelectedIds((prev) => [...prev, id]);
-    } else {
-      setSelectedIds((prev) => prev.filter((item) => item !== id));
-    }
+  useEffect(() => {
+    loadServices();
+  }, []);
+
+  // Open Edit Modal
+  const handleOpenEdit = (s: ServiceItem) => {
+    setEditingService(s);
+    setEditTitle(s.title);
+    setEditDescription(s.description || '');
+    setEditDuration(s.duration || '');
+    setEditBasePrice(String(s.basePrice));
+    setEditPriceText(s.priceText || '');
+    setEditStatus(s.status);
+    setEditBadge(s.badge || '');
+    setSaveSuccessNotice('');
   };
 
-  const handleAddService = (e: React.FormEvent) => {
+  // Submit Edit
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName || !newPrice) {
-      alert('Please fill out all required fields.');
-      return;
+    if (!editingService) return;
+
+    setSavingEdit(true);
+    try {
+      const res = await fetch('/api/services', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingService.id,
+          title: editTitle,
+          description: editDescription,
+          duration: editDuration,
+          basePrice: parseFloat(editBasePrice) || 0,
+          priceText: editPriceText,
+          status: editStatus,
+          badge: editBadge.trim() || null,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.service) {
+        setServices((prev) =>
+          prev.map((s) =>
+            s.id === editingService.id
+              ? {
+                  ...s,
+                  ...data.service,
+                  basePrice: Number(data.service.basePrice),
+                }
+              : s,
+          ),
+        );
+        setSaveSuccessNotice('Pricing & details updated successfully! Changes reflect on customer booking.');
+        setTimeout(() => {
+          setEditingService(null);
+          setSaveSuccessNotice('');
+        }, 1800);
+      } else {
+        alert(data.message || 'Failed to update service');
+      }
+    } catch {
+      alert('Network error saving service updates');
+    } finally {
+      setSavingEdit(false);
     }
-
-    const newService: Service = {
-      id: String(services.length + 1),
-      name: newName,
-      category: newCategory,
-      duration: newDuration,
-      price: newPrice.startsWith('$') ? newPrice : `$${newPrice}`,
-      status: newStatus,
-    };
-
-    setServices((prev) => [newService, ...prev]);
-    setIsModalOpen(false);
-
-    // Reset Form
-    setNewName('');
-    setNewCategory('Drop-In Visits');
-    setNewDuration('30 Minutes');
-    setNewPrice('');
-    setNewStatus('active');
   };
 
-  // --- FILTER & SORT LOGIC ---
-  const filteredServices = services
-    .filter((s) => {
-      if (activeTab === 'active') return s.status === 'active';
-      if (activeTab === 'inactive') return s.status === 'inactive';
-      return true;
-    })
-    .filter((s) => {
-      const q = searchQuery.toLowerCase();
-      return (
-        s.name.toLowerCase().includes(q) ||
-        s.category.toLowerCase().includes(q) ||
-        s.duration.toLowerCase().includes(q)
-      );
-    })
-    .sort((a, b) => {
-      if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
-      if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
-      if (sortBy === 'price-desc') {
-        const priceA = parseFloat(a.price.replace('$', ''));
-        const priceB = parseFloat(b.price.replace('$', ''));
-        return priceB - priceA;
-      }
-      if (sortBy === 'price-asc') {
-        const priceA = parseFloat(a.price.replace('$', ''));
-        const priceB = parseFloat(b.price.replace('$', ''));
-        return priceA - priceB;
-      }
-      return 0;
-    });
+  // Filter & Sort
+  const filteredServices = services.filter((s) => {
+    const matchSearch =
+      s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.serviceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.priceText.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.duration.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const allSelected =
-    filteredServices.length > 0 && filteredServices.every((s) => selectedIds.includes(s.id));
+    if (activeTab === 'all') return matchSearch;
+    return s.status === activeTab && matchSearch;
+  });
+
+  filteredServices.sort((a, b) => {
+    if (sortBy === 'price-asc') return Number(a.basePrice) - Number(b.basePrice);
+    if (sortBy === 'price-desc') return Number(b.basePrice) - Number(a.basePrice);
+    if (sortBy === 'title-asc') return a.title.localeCompare(b.title);
+    return a.serviceName.localeCompare(b.serviceName);
+  });
 
   return (
     <div className={styles.servicesContainer}>
-      {/* Dynamic titles bar */}
+      {/* Title Bar */}
       <div className="dashboard-title-bar">
-        <h1 className="dashboard-overview-title">Services & Pricing</h1>
-        <span className="dashboard-breadcrumb">Home &gt; Services & Pricing</span>
+        <div className="dashboard-title-group">
+          <h1 className="dashboard-overview-title">Services &amp; Pricing Management</h1>
+          <span className="dashboard-breadcrumb">Dashboard &gt; Services &amp; Pricing</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            className={styles.btnSecondary}
+            onClick={loadServices}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <RefreshCw size={14} className={loading ? styles.spinIcon : ''} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
+      {/* Main Table Card */}
       <div className={styles.servicesCard}>
-        {/* Card Header title */}
-        <div className={styles.cardHeader}>
-          <h2 className={styles.cardTitle}>Services & Pricing</h2>
-          <p className={styles.cardSubtitle}>Review and manage your services & pricing</p>
-        </div>
-
-        {/* Status Tabs row */}
+        {/* Tabs */}
         <div className={styles.tabsContainer}>
           <div className={styles.tabsList}>
             <button
               className={`${styles.tabButton} ${activeTab === 'all' ? styles.tabButtonActive : ''}`}
               onClick={() => setActiveTab('all')}
             >
-              All
+              All Plans ({services.length})
             </button>
             <button
               className={`${styles.tabButton} ${activeTab === 'active' ? styles.tabButtonActive : ''}`}
               onClick={() => setActiveTab('active')}
             >
-              Active
+              Active ({services.filter((s) => s.status === 'active').length})
             </button>
             <button
               className={`${styles.tabButton} ${activeTab === 'inactive' ? styles.tabButtonActive : ''}`}
               onClick={() => setActiveTab('inactive')}
             >
-              In Active
+              Inactive ({services.filter((s) => s.status === 'inactive').length})
             </button>
           </div>
         </div>
@@ -304,11 +209,11 @@ export default function Services() {
         <div className={styles.actionsRow}>
           <div className={styles.searchContainer}>
             <span className={styles.searchIcon}>
-              <SearchIcon />
+              <Search size={16} />
             </span>
             <input
               type="text"
-              placeholder="Search by Booking reference, Customer name, Pet name, Service...."
+              placeholder="Search services, plans, or prices..."
               className={styles.searchBar}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -317,32 +222,23 @@ export default function Services() {
 
           <div className={styles.filterSortRow}>
             <button
+              type="button"
               className={styles.btnSecondary}
               onClick={() => {
-                setActiveTab((prev) => {
-                  if (prev === 'all') return 'active';
-                  if (prev === 'active') return 'inactive';
-                  return 'all';
-                });
+                setSortBy((prev) => (prev === 'price-asc' ? 'price-desc' : 'price-asc'));
               }}
             >
-              <FilterIcon />
-              Filters: {activeTab.toUpperCase()}
+              <ArrowUpDown size={15} />
+              <span>Sort: {sortBy === 'price-asc' ? 'Price: Low to High' : 'Price: High to Low'}</span>
             </button>
 
             <button
+              type="button"
               className={styles.btnSecondary}
-              onClick={() => {
-                setSortBy((prev) => (prev === 'name-asc' ? 'price-desc' : 'name-asc'));
-              }}
+              onClick={() => setActiveTab('all')}
             >
-              <SortIcon />
-              Sort By: {sortBy === 'name-asc' ? 'A-Z' : 'Price'}
-            </button>
-
-            <button className={styles.btnPrimary} onClick={() => setIsModalOpen(true)}>
-              <PlusIcon />
-              Add New Service
+              <Filter size={15} />
+              <span>Reset Filter</span>
             </button>
           </div>
         </div>
@@ -352,196 +248,296 @@ export default function Services() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={`${styles.th} ${styles.thCheckbox}`}>
-                  <input
-                    type="checkbox"
-                    className={styles.customCheckbox}
-                    checked={allSelected}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                  />
-                </th>
-                <th className={styles.th}>Service name</th>
-                <th className={styles.th}>Service category</th>
+                <th className={styles.th}>Service Category</th>
+                <th className={styles.th}>Plan Title</th>
                 <th className={styles.th}>Duration</th>
-                <th className={styles.th}>Price</th>
-                <th className={styles.th}>Service Status</th>
-                <th className={styles.th} style={{ textAlign: 'center' }}>
-                  Action
-                </th>
+                <th className={styles.th}>Display Price</th>
+                <th className={styles.th}>Base Rate</th>
+                <th className={styles.th}>Status</th>
+                <th className={styles.th}>Action</th>
               </tr>
             </thead>
             <tbody>
-              {filteredServices.length === 0 ? (
+              {loading ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '32px' }}>
-                    No services found.
+                  <td colSpan={7} className={styles.emptyTd}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                      <RefreshCw size={26} className={styles.spinIcon} style={{ color: '#123f3c' }} />
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#123f3c' }}>Loading services from database...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredServices.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={styles.emptyTd}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                      <div style={{ width: '52px', height: '52px', borderRadius: '16px', backgroundColor: '#f5eee3', color: '#b18a45', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Tag size={26} />
+                      </div>
+                      <span style={{ fontSize: '16px', fontWeight: 700, color: '#1c2524' }}>No Services Found</span>
+                      <span style={{ fontSize: '13px', color: 'rgba(28, 37, 36, 0.6)', maxWidth: '340px' }}>
+                        No service plans match your active category or search query.
+                      </span>
+                    </div>
                   </td>
                 </tr>
               ) : (
-                filteredServices.map((s) => {
-                  const isChecked = selectedIds.includes(s.id);
+                filteredServices.map((s) => (
+                  <tr key={s.id} className={styles.tr}>
+                    <td className={styles.td} data-label="Category">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Tag size={15} style={{ color: 'var(--primary)' }} />
+                        <span className={styles.boldText}>{s.serviceName}</span>
+                      </div>
+                    </td>
 
-                  return (
-                    <tr
-                      key={s.id}
-                      style={{
-                        backgroundColor: isChecked ? 'rgba(177, 138, 69, 0.03)' : 'transparent',
-                      }}
-                    >
-                      <td className={`${styles.td} ${styles.tdCheckbox}`} data-label="Select">
-                        <input
-                          type="checkbox"
-                          className={styles.customCheckbox}
-                          checked={isChecked}
-                          onChange={(e) => handleSelectRow(s.id, e.target.checked)}
-                        />
-                      </td>
-
-                      <td className={styles.td} data-label="Service name">
-                        <span
-                          className={styles.serviceLink}
-                          onClick={() => alert(`View detail details for: ${s.name}`)}
-                        >
-                          {s.name}
-                        </span>
-                      </td>
-
-                      <td className={styles.td} data-label="Service category">
-                        {s.category}
-                      </td>
-
-                      <td className={styles.td} data-label="Duration">
-                        {s.duration}
-                      </td>
-
-                      <td className={styles.td} data-label="Price" style={{ fontWeight: 700 }}>
-                        {s.price}
-                      </td>
-
-                      <td className={styles.td} data-label="Service Status">
-                        {s.status === 'active' ? (
-                          <span className={`${styles.statusTag} ${styles.statusActive}`}>
-                            Active
-                          </span>
-                        ) : (
-                          <span className={`${styles.statusTag} ${styles.statusInactive}`}>
-                            In Active
+                    <td className={styles.td} data-label="Plan Title">
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontWeight: 600 }}>{s.title}</span>
+                        {s.badge && (
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              color: '#b45309',
+                              backgroundColor: '#fef3c7',
+                              padding: '1px 6px',
+                              borderRadius: '10px',
+                              width: 'fit-content',
+                              marginTop: '2px',
+                            }}
+                          >
+                            {s.badge}
                           </span>
                         )}
-                      </td>
+                      </div>
+                    </td>
 
-                      <td className={styles.td} data-label="Action">
-                        <button
-                          className={styles.btnActionEllipsis}
-                          onClick={() => {
-                            if (window.confirm(`Delete service: ${s.name}?`)) {
-                              setServices((prev) => prev.filter((item) => item.id !== s.id));
-                            }
-                          }}
-                        >
-                          <EllipsisIcon />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
+                    <td className={styles.td} data-label="Duration">
+                      <span style={{ color: 'rgba(28,37,36,0.7)' }}>{s.duration}</span>
+                    </td>
+
+                    <td className={styles.td} data-label="Display Price">
+                      <span className={styles.boldText} style={{ color: 'var(--primary)' }}>
+                        {s.priceText}
+                      </span>
+                    </td>
+
+                    <td className={styles.td} data-label="Base Rate">
+                      <span>${Number(s.basePrice).toFixed(2)}</span>
+                    </td>
+
+                    <td className={styles.td} data-label="Status">
+                      <span
+                        className={`${styles.statusTag} ${
+                          s.status === 'active' ? styles.statusActive : styles.statusInactive
+                        }`}
+                      >
+                        {s.status === 'active' ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+
+                    <td className={styles.td} data-label="Action">
+                      <button
+                        type="button"
+                        className={styles.btnSecondary}
+                        style={{ padding: '6px 12px', fontSize: '12.5px', gap: '6px' }}
+                        onClick={() => handleOpenEdit(s)}
+                        title="Edit price & details"
+                      >
+                        <Edit3 size={14} />
+                        <span>Edit</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Add New Service Modal Overlay */}
-      {isModalOpen && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
+      {/* EDIT SERVICE PRICING MODAL */}
+      {editingService && (
+        <div className={styles.modalOverlay} onClick={() => setEditingService(null)}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Add New Service</h3>
-              <button className={styles.btnCloseModal} onClick={() => setIsModalOpen(false)}>
-                <CloseIcon />
+              <div className={styles.modalTitleGroup}>
+                <div className={styles.modalIconBadge}>
+                  <Edit3 size={20} />
+                </div>
+                <div className={styles.modalTitleText}>
+                  <h3 className={styles.modalTitle}>Edit Service &amp; Pricing</h3>
+                  <p className={styles.modalSubtitle}>
+                    Adjust pricing, duration, and customer-facing details
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setEditingService(null)}
+                title="Close modal"
+              >
+                <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleAddService} className={styles.form}>
+            {saveSuccessNotice && (
+              <div
+                style={{
+                  backgroundColor: '#edf7ed',
+                  color: '#1e4620',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  border: '1px solid #c8e6c9',
+                }}
+              >
+                <CheckCircle2 size={18} color="#2e7d32" />
+                <span>{saveSuccessNotice}</span>
+              </div>
+            )}
+
+            <div className={styles.metaBanner}>
+              <div className={styles.metaBannerItem}>
+                <span className={styles.metaBannerLabel}>Category:</span>
+                <span className={styles.metaBannerValue}>{editingService.serviceName}</span>
+              </div>
+              <div className={styles.metaBannerItem}>
+                <span className={styles.metaBannerLabel}>Plan Key:</span>
+                <code
+                  style={{
+                    fontSize: '12px',
+                    backgroundColor: '#efe7d8',
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    color: '#123f3c',
+                    fontWeight: 600,
+                  }}
+                >
+                  {editingService.id}
+                </code>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className={styles.modalForm}>
+              {/* Row 1: Plan Title + Duration (2 inputs) */}
+              <div className={styles.formRowTwoCol}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Plan Title</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 30 Minute Visit"
+                    className={styles.formInput}
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Duration / Schedule Unit</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 30 min, Overnight"
+                    className={styles.formInput}
+                    value={editDuration}
+                    onChange={(e) => setEditDuration(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Base Price + Display Price (2 inputs) */}
+              <div className={styles.formRowTwoCol}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Base Price ($ USD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="34.00"
+                    className={styles.formInput}
+                    value={editBasePrice}
+                    onChange={(e) => setEditBasePrice(e.target.value)}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Display Price Label</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. $34 / walk"
+                    className={styles.formInput}
+                    value={editPriceText}
+                    onChange={(e) => setEditPriceText(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Status + Highlight Badge (2 inputs) */}
+              <div className={styles.formRowTwoCol}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Availability Status</label>
+                  <select
+                    className={styles.formSelect}
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value as 'active' | 'inactive')}
+                  >
+                    <option value="active">Active (Available)</option>
+                    <option value="inactive">Inactive (Hidden)</option>
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Badge / Highlight (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Most popular"
+                    className={styles.formInput}
+                    value={editBadge}
+                    onChange={(e) => setEditBadge(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Row 4: Description (compact) */}
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Service Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="30-Minute Drop-In Visit"
-                  className={styles.formInput}
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
+                <label className={styles.formLabel}>Plan Description</label>
+                <textarea
+                  className={styles.formTextarea}
+                  rows={2}
+                  placeholder="Describe the plan benefits and what is included..."
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
                 />
               </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Service Category *</label>
-                <select
-                  className={styles.formSelect}
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                >
-                  <option value="Drop-In Visits">Drop-In Visits</option>
-                  <option value="Dog Walking">Dog Walking</option>
-                  <option value="Cat Care">Cat Care</option>
-                  <option value="Pet Sitting">Pet Sitting</option>
-                  <option value="Grooming & Baths">Grooming & Baths</option>
-                  <option value="Training Programs">Training Programs</option>
-                </select>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Duration *</label>
-                <select
-                  className={styles.formSelect}
-                  value={newDuration}
-                  onChange={(e) => setNewDuration(e.target.value)}
-                >
-                  <option value="15 Minutes">15 Minutes</option>
-                  <option value="30 Minutes">30 Minutes</option>
-                  <option value="45 Minutes">45 Minutes</option>
-                  <option value="60 Minutes">60 Minutes</option>
-                  <option value="1 Hour">1 Hour</option>
-                  <option value="2 Hours">2 Hours</option>
-                  <option value="Full Day">Full Day</option>
-                </select>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Price *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="34"
-                  className={styles.formInput}
-                  value={newPrice}
-                  onChange={(e) => setNewPrice(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Service Status</label>
-                <select
-                  className={styles.formSelect}
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value as 'active' | 'inactive')}
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">In Active</option>
-                </select>
+              <div className={styles.infoNotice}>
+                <AlertCircle size={15} style={{ flexShrink: 0 }} />
+                <span>
+                  Price and title updates will immediately reflect across customer booking forms and checkout summaries.
+                </span>
               </div>
 
               <div className={styles.modalActions}>
                 <button
                   type="button"
-                  className={styles.btnSecondary}
-                  onClick={() => setIsModalOpen(false)}
+                  className={styles.btnModalCancel}
+                  onClick={() => setEditingService(null)}
                 >
                   Cancel
                 </button>
-                <button type="submit" className={styles.btnPrimary}>
-                  Save Service
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className={styles.btnModalSave}
+                >
+                  {savingEdit ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>
