@@ -15,6 +15,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Environment variables must be present during build if they affect static rendering
+ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Generate Prisma Client and run next build
