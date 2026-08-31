@@ -17,7 +17,10 @@ export function getStripeClient(): Promise<Stripe | null> {
   }
 
   if (!stripePromise) {
-    stripePromise = loadStripe(publishableKey);
+    stripePromise = loadStripe(publishableKey).catch((err) => {
+      console.error('Failed to load Stripe.js:', err);
+      return null;
+    });
   }
 
   return stripePromise;

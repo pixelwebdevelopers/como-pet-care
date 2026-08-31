@@ -147,23 +147,27 @@
 
 /* Active & Completed step states */
 .stepItemActive .stepCircle {
-  background-color: #123f3c;
+  background-color: var(--primary, #123f3c);
   color: #ffffff;
 }
 
 .stepItemActive .stepLabel {
-  color: #1c2524;
+  color: var(--primary, #123f3c);
   font-weight: 700;
 }
 
 .stepItemCompleted .stepCircle {
-  background-color: #123f3c;
+  background-color: var(--antique-gold, #b18a45);
   color: #ffffff;
 }
 
 .stepItemCompleted .stepLabel {
-  color: #1c2524;
+  color: var(--antique-gold, #b18a45);
   font-weight: 600;
+}
+
+.mobileStepBanner {
+  display: none;
 }
 
 /* Responsive Breakpoints */
@@ -175,14 +179,11 @@
 
   .stepsIndicator {
     gap: 14px;
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding-bottom: 14px;
-    -webkit-overflow-scrolling: touch;
+    justify-content: center;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .header {
     height: 70px;
     padding: 0 16px;
@@ -204,19 +205,58 @@
 
   .cardFrame {
     padding: 24px 16px;
-    border-radius: 14px;
+    border-radius: 16px;
   }
 
   .intakeTopTitle {
-    font-size: 24px;
-    margin-bottom: 18px;
+    font-size: 22px;
+    margin-bottom: 14px;
   }
 
+  /* Match BookingFlow progress bar on mobile */
   .stepsIndicator {
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    width: 100%;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f3ece0;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stepItem {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .stepCircle {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
   }
 
   .stepLabel {
-    font-size: 12px;
+    font-size: 10px;
+    text-align: center;
+    display: none; /* Hide labels on mobile to avoid overflow and wrapping */
+  }
+
+  .mobileStepBanner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--primary, #123f3c);
+    margin: 0 auto 20px auto;
+    padding: 6px 14px;
+    background-color: var(--warm-ivory, #fbf9f4);
+    border: 1px solid var(--card-border, #efe7d8);
+    border-radius: 20px;
+    width: fit-content;
   }
 }

@@ -284,6 +284,12 @@ export default function IntakeFlow() {
             })}
           </div>
 
+          {currentStep <= 6 && (
+            <div className={styles.mobileStepBanner}>
+              Step {currentStep} of 6: <strong>{stepsList.find((s) => s.id === currentStep)?.label}</strong>
+            </div>
+          )}
+
           {/* Step 1: Owner Information */}
           {currentStep === 1 && (
             <Step1OwnerInfo
