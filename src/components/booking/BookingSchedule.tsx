@@ -16,6 +16,7 @@ import {
   X,
   CheckCircle2,
   CalendarDays,
+  MapPin,
 } from 'lucide-react';
 
 // --- TSX TYPES & INTERFACES ---
@@ -30,6 +31,7 @@ interface BookingScheduleProps {
     endTime?: string;
     walkFrequency?: string;
     preferredWeekdays?: string[];
+    numberOfDays?: number;
   }) => void;
 }
 
@@ -77,6 +79,14 @@ export default function BookingSchedule({
   const [waitlistSubmitting, setWaitlistSubmitting] = useState<boolean>(false);
   const [waitlistSuccessMessage, setWaitlistSuccessMessage] = useState<string>('');
 
+  // Time Period Filter (Morning / Afternoon / Evening / All)
+  const [timePeriodFilter, setTimePeriodFilter] = useState<
+    'all' | 'morning' | 'afternoon' | 'evening'
+  >('all');
+  const [endTimePeriodFilter, setEndTimePeriodFilter] = useState<
+    'all' | 'morning' | 'afternoon' | 'evening'
+  >('all');
+
   // --- MONTH DATA ---
   const monthNames = [
     'January',
@@ -93,7 +103,7 @@ export default function BookingSchedule({
     'December',
   ];
 
-  const timeSlotsList = [
+  const [timeSlotsList, setTimeSlotsList] = useState<string[]>([
     '7:00 AM',
     '7:30 AM',
     '8:00 AM',
@@ -119,9 +129,13 @@ export default function BookingSchedule({
     '6:00 PM',
     '6:30 PM',
     '7:00 PM',
-    '10:00 PM',
-    '11:00 PM',
-  ];
+  ]);
+
+  const [enabledSections, setEnabledSections] = useState<string[]>([
+    'morning',
+    'afternoon',
+    'evening',
+  ]);
 
   // Resolve user-friendly duration
   const serviceDurationText =
@@ -135,24 +149,54 @@ export default function BookingSchedule({
             ? 'Overnight'
             : '30 Minutes';
 
+  // Helpers for time period filtering
+  const isMorningSlot = (s: string) => s.includes('AM');
+  const isAfternoonSlot = (s: string) => {
+    if (!s.includes('PM')) return false;
+    const hour = parseInt(s.split(':')[0], 10);
+    return hour === 12 || (hour >= 1 && hour <= 4);
+  };
+  const isEveningSlot = (s: string) => {
+    if (!s.includes('PM')) return false;
+    return !isAfternoonSlot(s);
+  };
+
+  const getFilteredSlots = (filter: 'all' | 'morning' | 'afternoon' | 'evening') => {
+    if (filter === 'morning') return timeSlotsList.filter(isMorningSlot);
+    if (filter === 'afternoon') return timeSlotsList.filter(isAfternoonSlot);
+    if (filter === 'evening') return timeSlotsList.filter(isEveningSlot);
+    return timeSlotsList;
+  };
+
   // Fetch slot availability whenever the chosen day or service changes
   useEffect(() => {
     if (!selectedDay) return;
     const formattedDate = `${monthNames[currentMonth]} ${selectedDay}, ${currentYear}`;
     let isMounted = true;
-    setLoadingAvailability(true);
+    Promise.resolve().then(() => {
+      if (isMounted) setLoadingAvailability(true);
+    });
 
-    const candidateSlotsQuery = encodeURIComponent(timeSlotsList.join(','));
     fetch(
       `/api/availability?date=${encodeURIComponent(
         formattedDate,
-      )}&serviceId=${serviceId}&planId=${selectedPlanId}&slots=${candidateSlotsQuery}`,
+      )}&serviceId=${serviceId}&planId=${selectedPlanId}`,
     )
       .then((res) => res.json())
       .then((data) => {
         if (!isMounted) return;
         setLoadingAvailability(false);
+
+        if (Array.isArray(data.enabledSections)) {
+          setEnabledSections(data.enabledSections);
+        }
+
         if (data.success && Array.isArray(data.slots)) {
+          const newSlots = data.slots.map((s: { time: string }) => s.time);
+          if (newSlots.length > 0) {
+            setTimeSlotsList(newSlots);
+          }
+
           const map: Record<string, string> = {};
           for (const s of data.slots) {
             if (!s.available) {
@@ -178,6 +222,7 @@ export default function BookingSchedule({
       isMounted = false;
     };
   }, [selectedDay, currentMonth, currentYear, serviceId, selectedPlanId]);
+
 
   const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
@@ -313,23 +358,27 @@ export default function BookingSchedule({
         alert('Please select at least one preferred weekday.');
         return;
       }
-      onContinue({ walkFrequency, preferredWeekdays });
+      const freqMatch = walkFrequency.match(/(\d+)/);
+      const walksCount = freqMatch ? parseInt(freqMatch[1], 10) : 1;
+      onContinue({ walkFrequency, preferredWeekdays, numberOfDays: walksCount });
     } else if (isRecurringScoop) {
       if (preferredWeekdays.length === 0) {
         alert('Please select your preferred cleanup weekday.');
         return;
       }
-      onContinue({ preferredWeekdays });
+      onContinue({ preferredWeekdays, numberOfDays: 1 });
     } else if (isOvernight) {
       if (!rangeStart || !rangeEnd) {
         alert('Please select your arrival and departure dates.');
         return;
       }
+      const calculatedDays = Math.max(1, rangeEnd - rangeStart);
       onContinue({
         bookingDate: `${monthNames[currentMonth]} ${rangeStart}, ${currentYear}`,
         bookingEndDate: `${monthNames[currentMonth]} ${rangeEnd}, ${currentYear}`,
         startTime,
         endTime,
+        numberOfDays: calculatedDays,
       });
     } else {
       if (!selectedDay) {
@@ -349,6 +398,7 @@ export default function BookingSchedule({
         bookingDate: `${monthNames[currentMonth]} ${selectedDay}, ${currentYear}`,
         startTime,
         endTime,
+        numberOfDays: 1,
       });
     }
   };
@@ -397,8 +447,8 @@ export default function BookingSchedule({
               </div>
               <h3 className={styles.modalHeroTitle}>This time is no longer available</h3>
               <p className={styles.modalHeroSubtitle}>
-                That appointment has already been reserved. Choose another available time or join the
-                waitlist for your preferred date.
+                That appointment has already been reserved. Choose another available time or join
+                the waitlist for your preferred date.
               </p>
             </div>
 
@@ -460,7 +510,10 @@ export default function BookingSchedule({
 
             <div className={styles.footerInfoNote}>
               <AlertCircle size={14} />
-              <span>We&apos;ll contact you by email or text if availability opens for your requested date.</span>
+              <span>
+                We&apos;ll contact you by email or text if availability opens for your requested
+                date.
+              </span>
             </div>
           </div>
         </div>
@@ -560,7 +613,10 @@ export default function BookingSchedule({
             </div>
 
             {/* Waitlist Form */}
-            <form onSubmit={handleJoinWaitlistSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form
+              onSubmit={handleJoinWaitlistSubmit}
+              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+            >
               {/* Customer Information */}
               <div className={styles.formSectionTitle}>
                 <User size={16} />
@@ -605,7 +661,9 @@ export default function BookingSchedule({
 
                 <div className={styles.securityNote}>
                   <ShieldCheck size={14} style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <span>We&apos;ll use these details only to contact you about this waitlist request.</span>
+                  <span>
+                    We&apos;ll use these details only to contact you about this waitlist request.
+                  </span>
                 </div>
               </div>
 
@@ -639,24 +697,20 @@ export default function BookingSchedule({
                 <div className={styles.modalFieldRow}>
                   <label className={styles.modalFieldLabel}>Preferred Time</label>
                   <div className={styles.timePillsWrap}>
-                    {[
-                      'Specific Time',
-                      'Morning',
-                      'Afternoon',
-                      'Evening',
-                      'Any Available Time',
-                    ].map((pill) => (
-                      <button
-                        key={pill}
-                        type="button"
-                        className={`${styles.timePill} ${
-                          waitlistTimePref === pill ? styles.timePillActive : ''
-                        }`}
-                        onClick={() => setWaitlistTimePref(pill)}
-                      >
-                        {pill}
-                      </button>
-                    ))}
+                    {['Specific Time', 'Morning', 'Afternoon', 'Evening', 'Any Available Time'].map(
+                      (pill) => (
+                        <button
+                          key={pill}
+                          type="button"
+                          className={`${styles.timePill} ${
+                            waitlistTimePref === pill ? styles.timePillActive : ''
+                          }`}
+                          onClick={() => setWaitlistTimePref(pill)}
+                        >
+                          {pill}
+                        </button>
+                      ),
+                    )}
                   </div>
                 </div>
 
@@ -859,6 +913,8 @@ export default function BookingSchedule({
               <div className={styles.calendarFrame}>
                 <div className={styles.calHeader}>
                   <button
+                    type="button"
+                    aria-label="Previous Month"
                     className={styles.btnCalArrow}
                     onClick={() => {
                       if (currentMonth === 0) {
@@ -869,12 +925,15 @@ export default function BookingSchedule({
                       }
                     }}
                   >
-                    <ChevronLeft size={16} />
+                    <ChevronLeft size={18} />
                   </button>
-                  <span className={styles.calMonth}>
-                    {monthNames[currentMonth]} {currentYear}
-                  </span>
+                  <div className={styles.calMonthDisplay}>
+                    <span className={styles.calMonth}>{monthNames[currentMonth]}</span>
+                    <span className={styles.calYear}>{currentYear}</span>
+                  </div>
                   <button
+                    type="button"
+                    aria-label="Next Month"
                     className={styles.btnCalArrow}
                     onClick={() => {
                       if (currentMonth === 11) {
@@ -885,7 +944,7 @@ export default function BookingSchedule({
                       }
                     }}
                   >
-                    <ChevronRight size={16} />
+                    <ChevronRight size={18} />
                   </button>
                 </div>
 
@@ -898,7 +957,7 @@ export default function BookingSchedule({
 
                   {daysArray.map((day, idx) => {
                     if (day === null) {
-                      return <div key={`empty-${idx}`} />;
+                      return <div key={`empty-${idx}`} className={styles.calEmptyCell} />;
                     }
 
                     const isStart = rangeStart === day;
@@ -939,17 +998,19 @@ export default function BookingSchedule({
                 <p className={styles.timeInfo}>All times shown are in Central Time (CT)</p>
               </div>
 
-              <div className={styles.slotsGrid}>
-                {timeSlotsList.map((slot) => (
-                  <button
-                    key={`start-${slot}`}
-                    type="button"
-                    className={`${styles.slotButton} ${startTime === slot ? styles.slotButtonActive : ''}`}
-                    onClick={() => setStartTime(slot)}
-                  >
-                    {slot}
-                  </button>
-                ))}
+              <div className={styles.slotsScrollContainer}>
+                <div className={styles.slotsGrid}>
+                  {timeSlotsList.map((slot) => (
+                    <button
+                      key={`start-${slot}`}
+                      type="button"
+                      className={`${styles.slotButton} ${startTime === slot ? styles.slotButtonActive : ''}`}
+                      onClick={() => setStartTime(slot)}
+                    >
+                      <span className={styles.slotTimeText}>{slot}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div style={{ marginTop: '10px' }}>
@@ -965,17 +1026,19 @@ export default function BookingSchedule({
                 <p className={styles.timeInfo}>All times shown are in Central Time (CT)</p>
               </div>
 
-              <div className={styles.slotsGrid}>
-                {timeSlotsList.map((slot) => (
-                  <button
-                    key={`end-${slot}`}
-                    type="button"
-                    className={`${styles.slotButton} ${endTime === slot ? styles.slotButtonActive : ''}`}
-                    onClick={() => setEndTime(slot)}
-                  >
-                    {slot}
-                  </button>
-                ))}
+              <div className={styles.slotsScrollContainer}>
+                <div className={styles.slotsGrid}>
+                  {timeSlotsList.map((slot) => (
+                    <button
+                      key={`end-${slot}`}
+                      type="button"
+                      className={`${styles.slotButton} ${endTime === slot ? styles.slotButtonActive : ''}`}
+                      onClick={() => setEndTime(slot)}
+                    >
+                      <span className={styles.slotTimeText}>{slot}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -998,25 +1061,43 @@ export default function BookingSchedule({
           </div>
 
           <div className={styles.recapBar}>
-            <p className={styles.recapText}>
-              {rangeStart && rangeEnd ? (
-                <>
-                  Arrival:{' '}
-                  <span className={styles.recapHighlight}>
-                    {monthNames[currentMonth]} {rangeStart}
-                  </span>{' '}
-                  ({startTime}) • Departure:{' '}
-                  <span className={styles.recapHighlight}>
-                    {monthNames[currentMonth]} {rangeEnd}
-                  </span>{' '}
-                  ({endTime})
-                </>
-              ) : (
-                'Select date range above'
-              )}
-            </p>
-            <button className={styles.btnContinue} onClick={handleContinueClick}>
-              Continue <ArrowRight size={14} />
+            <div className={styles.recapInfoGroup}>
+              <div className={styles.recapItem}>
+                <div className={styles.recapIconWrap}>
+                  <Calendar size={16} />
+                </div>
+                <div className={styles.recapMeta}>
+                  <span className={styles.recapSmallLabel}>Arrival & Departure</span>
+                  <span className={styles.recapMainVal}>
+                    {rangeStart && rangeEnd ? (
+                      <>
+                        {monthNames[currentMonth]} {rangeStart} – {monthNames[currentMonth]}{' '}
+                        {rangeEnd}
+                      </>
+                    ) : (
+                      'Select date range'
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              <div className={styles.recapDivider} />
+
+              <div className={styles.recapItem}>
+                <div className={styles.recapIconWrap}>
+                  <Clock size={16} />
+                </div>
+                <div className={styles.recapMeta}>
+                  <span className={styles.recapSmallLabel}>Times</span>
+                  <span className={styles.recapMainVal}>
+                    {startTime} – {endTime}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" className={styles.btnContinue} onClick={handleContinueClick}>
+              Continue <ArrowRight size={16} />
             </button>
           </div>
         </div>
@@ -1042,6 +1123,8 @@ export default function BookingSchedule({
               <div className={styles.calendarFrame}>
                 <div className={styles.calHeader}>
                   <button
+                    type="button"
+                    aria-label="Previous Month"
                     className={styles.btnCalArrow}
                     onClick={() => {
                       if (currentMonth === 0) {
@@ -1052,12 +1135,15 @@ export default function BookingSchedule({
                       }
                     }}
                   >
-                    <ChevronLeft size={16} />
+                    <ChevronLeft size={18} />
                   </button>
-                  <span className={styles.calMonth}>
-                    {monthNames[currentMonth]} {currentYear}
-                  </span>
+                  <div className={styles.calMonthDisplay}>
+                    <span className={styles.calMonth}>{monthNames[currentMonth]}</span>
+                    <span className={styles.calYear}>{currentYear}</span>
+                  </div>
                   <button
+                    type="button"
+                    aria-label="Next Month"
                     className={styles.btnCalArrow}
                     onClick={() => {
                       if (currentMonth === 11) {
@@ -1068,7 +1154,7 @@ export default function BookingSchedule({
                       }
                     }}
                   >
-                    <ChevronRight size={16} />
+                    <ChevronRight size={18} />
                   </button>
                 </div>
 
@@ -1081,7 +1167,7 @@ export default function BookingSchedule({
 
                   {daysArray.map((day, idx) => {
                     if (day === null) {
-                      return <div key={`empty-${idx}`} />;
+                      return <div key={`empty-${idx}`} className={styles.calEmptyCell} />;
                     }
 
                     const isSelected = selectedDay === day;
@@ -1101,6 +1187,31 @@ export default function BookingSchedule({
                   })}
                 </div>
               </div>
+
+              {/* Informative Date Card to balance vertical space */}
+              <div className={styles.selectedDateCard}>
+                <div className={styles.selectedDateHeader}>
+                  <div className={styles.selectedDateIconWrap}>
+                    <Calendar size={16} />
+                  </div>
+                  <div className={styles.selectedDateMeta}>
+                    <span className={styles.selectedDateLabel}>Selected Date</span>
+                    <span className={styles.selectedDateText}>
+                      {monthNames[currentMonth]} {selectedDay}, {currentYear}
+                    </span>
+                  </div>
+                </div>
+                <div className={styles.selectedDateBadges}>
+                  <span className={styles.visitDurationBadge}>
+                    <Clock size={12} />
+                    {serviceDurationText}
+                  </span>
+                  <span className={styles.serviceAreaBadge}>
+                    <MapPin size={12} />
+                    Columbia, MO
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Column 2: Start Time slots */}
@@ -1110,65 +1221,71 @@ export default function BookingSchedule({
                   <Clock size={18} />
                   Select Start Time
                 </h3>
-                <button className={styles.btnClear} onClick={() => handleClearTime('start')}>
-                  Clear
-                </button>
+                {startTime && (
+                  <button className={styles.btnClear} onClick={() => handleClearTime('start')}>
+                    Clear
+                  </button>
+                )}
               </div>
-              <p className={styles.timeInfo}>
-                {loadingAvailability
-                  ? 'Checking availability...'
-                  : 'Unavailable times marked in warm amber. Click to join waitlist.'}
-              </p>
 
-              <div className={styles.slotsGrid}>
-                {timeSlotsList.map((slot) => {
-                  const isUnavailable = Boolean(unavailableSlots[slot]);
-                  const isSelected = startTime === slot;
+              <div className={styles.availabilityNotice}>
+                {loadingAvailability ? (
+                  <span className={styles.loadingAvailability}>
+                    <span className={styles.spinnerDot} /> Checking availability...
+                  </span>
+                ) : (
+                  <span className={styles.readyAvailability}>
+                    Central Time (CT) • Booked slots available on waitlist
+                  </span>
+                )}
+              </div>
+
+              {/* Time Period Filter Tabs */}
+              <div className={styles.timeFilterBar}>
+                {(
+                  [
+                    'all',
+                    ...(enabledSections.includes('morning') ? ['morning'] : []),
+                    ...(enabledSections.includes('afternoon') ? ['afternoon'] : []),
+                    ...(enabledSections.includes('evening') ? ['evening'] : []),
+                  ] as ('all' | 'morning' | 'afternoon' | 'evening')[]
+                ).map((period) => {
+                  const count =
+                    period === 'all' ? timeSlotsList.length : getFilteredSlots(period).length;
+                  const label =
+                    period === 'all'
+                      ? 'All'
+                      : period === 'morning'
+                        ? 'Morning'
+                        : period === 'afternoon'
+                          ? 'Afternoon'
+                          : 'Evening';
 
                   return (
                     <button
-                      key={`start-${slot}`}
+                      key={period}
                       type="button"
-                      title={
-                        isUnavailable
-                          ? `${unavailableSlots[slot]} - Click to join waitlist`
-                          : 'Available for booking'
-                      }
-                      className={`${styles.slotButton} ${
-                        isSelected ? styles.slotButtonActive : ''
-                      } ${isUnavailable ? styles.slotButtonUnavailable : ''}`}
-                      onClick={() => handleSlotClick(slot, isUnavailable, 'start')}
+                      className={`${styles.filterTab} ${
+                        timePeriodFilter === period ? styles.filterTabActive : ''
+                      }`}
+                      onClick={() => setTimePeriodFilter(period)}
                     >
-                      <span>{slot}</span>
-                      {isUnavailable && <span className={styles.bookedTag}>Booked</span>}
+                      {label} <span className={styles.filterCount}>({count})</span>
                     </button>
                   );
                 })}
               </div>
-            </div>
 
-            {/* Column 3: End Time slots */}
-            {!isFixedDuration && (
-              <div className={styles.columnBlock}>
-                <div className={styles.colHeaderRow}>
-                  <h3 className={styles.colTitle}>
-                    <Clock size={18} />
-                    Select End Time
-                  </h3>
-                  <button className={styles.btnClear} onClick={() => handleClearTime('end')}>
-                    Clear
-                  </button>
-                </div>
-                <p className={styles.timeInfo}>All times shown are in Central Time (CT)</p>
-
+              {/* Responsive 3-column slots grid */}
+              <div className={styles.slotsScrollContainer}>
                 <div className={styles.slotsGrid}>
-                  {timeSlotsList.map((slot) => {
+                  {getFilteredSlots(timePeriodFilter).map((slot) => {
                     const isUnavailable = Boolean(unavailableSlots[slot]);
-                    const isSelected = endTime === slot;
+                    const isSelected = startTime === slot;
 
                     return (
                       <button
-                        key={`end-${slot}`}
+                        key={`start-${slot}`}
                         type="button"
                         title={
                           isUnavailable
@@ -1178,13 +1295,98 @@ export default function BookingSchedule({
                         className={`${styles.slotButton} ${
                           isSelected ? styles.slotButtonActive : ''
                         } ${isUnavailable ? styles.slotButtonUnavailable : ''}`}
-                        onClick={() => handleSlotClick(slot, isUnavailable, 'end')}
+                        onClick={() => handleSlotClick(slot, isUnavailable, 'start')}
                       >
-                        <span>{slot}</span>
+                        <span className={styles.slotTimeText}>{slot}</span>
                         {isUnavailable && <span className={styles.bookedTag}>Booked</span>}
                       </button>
                     );
                   })}
+                </div>
+              </div>
+            </div>
+
+            {/* Column 3: End Time slots (for non-fixed duration services) */}
+            {!isFixedDuration && (
+              <div className={styles.columnBlock}>
+                <div className={styles.colHeaderRow}>
+                  <h3 className={styles.colTitle}>
+                    <Clock size={18} />
+                    Select End Time
+                  </h3>
+                  {endTime && (
+                    <button className={styles.btnClear} onClick={() => handleClearTime('end')}>
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className={styles.availabilityNotice}>
+                  <span className={styles.readyAvailability}>Central Time (CT)</span>
+                </div>
+
+                <div className={styles.timeFilterBar}>
+                  {(
+                    [
+                      'all',
+                      ...(enabledSections.includes('morning') ? ['morning'] : []),
+                      ...(enabledSections.includes('afternoon') ? ['afternoon'] : []),
+                      ...(enabledSections.includes('evening') ? ['evening'] : []),
+                    ] as ('all' | 'morning' | 'afternoon' | 'evening')[]
+                  ).map((period) => {
+                    const count =
+                      period === 'all' ? timeSlotsList.length : getFilteredSlots(period).length;
+                    const label =
+                      period === 'all'
+                        ? 'All'
+                        : period === 'morning'
+                          ? 'Morning'
+                          : period === 'afternoon'
+                            ? 'Afternoon'
+                            : 'Evening';
+
+                    return (
+                      <button
+                        key={`end-filter-${period}`}
+                        type="button"
+                        className={`${styles.filterTab} ${
+                          endTimePeriodFilter === period ? styles.filterTabActive : ''
+                        }`}
+                        onClick={() => setEndTimePeriodFilter(period)}
+                      >
+                        {label} <span className={styles.filterCount}>({count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+
+                <div className={styles.slotsScrollContainer}>
+                  <div className={styles.slotsGrid}>
+                    {getFilteredSlots(endTimePeriodFilter).map((slot) => {
+                      const isUnavailable = Boolean(unavailableSlots[slot]);
+                      const isSelected = endTime === slot;
+
+                      return (
+                        <button
+                          key={`end-${slot}`}
+                          type="button"
+                          title={
+                            isUnavailable
+                              ? `${unavailableSlots[slot]} - Click to join waitlist`
+                              : 'Available for booking'
+                          }
+                          className={`${styles.slotButton} ${
+                            isSelected ? styles.slotButtonActive : ''
+                          } ${isUnavailable ? styles.slotButtonUnavailable : ''}`}
+                          onClick={() => handleSlotClick(slot, isUnavailable, 'end')}
+                        >
+                          <span className={styles.slotTimeText}>{slot}</span>
+                          {isUnavailable && <span className={styles.bookedTag}>Booked</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
@@ -1192,28 +1394,53 @@ export default function BookingSchedule({
 
           {/* Bottom summary recap row */}
           <div className={styles.recapBar}>
-            <p className={styles.recapText}>
-              {selectedDay ? (
+            <div className={styles.recapInfoGroup}>
+              <div className={styles.recapItem}>
+                <div className={styles.recapIconWrap}>
+                  <Calendar size={16} />
+                </div>
+                <div className={styles.recapMeta}>
+                  <span className={styles.recapSmallLabel}>Date</span>
+                  <span className={styles.recapMainVal}>
+                    {selectedDay
+                      ? `${monthNames[currentMonth]} ${selectedDay}, ${currentYear}`
+                      : 'Select a date'}
+                  </span>
+                </div>
+              </div>
+
+              <div className={styles.recapDivider} />
+
+              <div className={styles.recapItem}>
+                <div className={styles.recapIconWrap}>
+                  <Clock size={16} />
+                </div>
+                <div className={styles.recapMeta}>
+                  <span className={styles.recapSmallLabel}>Start Time</span>
+                  <span className={styles.recapMainVal}>
+                    {startTime || <span className={styles.recapPlaceholder}>Select time</span>}
+                  </span>
+                </div>
+              </div>
+
+              {!isFixedDuration && endTime && (
                 <>
-                  <span className={styles.recapHighlight}>
-                    {monthNames[currentMonth]} {selectedDay}, {currentYear}
-                  </span>{' '}
-                  • Selected Start Time:{' '}
-                  <span className={styles.recapHighlight}>{startTime || 'None'}</span>
-                  {!isFixedDuration && (
-                    <>
-                      {' '}
-                      • Selected End Time:{' '}
-                      <span className={styles.recapHighlight}>{endTime || 'None'}</span>
-                    </>
-                  )}
+                  <div className={styles.recapDivider} />
+                  <div className={styles.recapItem}>
+                    <div className={styles.recapIconWrap}>
+                      <Clock size={16} />
+                    </div>
+                    <div className={styles.recapMeta}>
+                      <span className={styles.recapSmallLabel}>End Time</span>
+                      <span className={styles.recapMainVal}>{endTime}</span>
+                    </div>
+                  </div>
                 </>
-              ) : (
-                'Select date and times above'
               )}
-            </p>
-            <button className={styles.btnContinue} onClick={handleContinueClick}>
-              Continue <ArrowRight size={14} />
+            </div>
+
+            <button type="button" className={styles.btnContinue} onClick={handleContinueClick}>
+              Continue <ArrowRight size={16} />
             </button>
           </div>
         </div>

@@ -5,13 +5,16 @@ import styles from './ReviewBooking.module.css';
 
 // --- TYPES ---
 export interface ReviewBookingData {
+  serviceId?: string;
   serviceName: string;
+  planId?: string;
   planTitle: string;
   bookingDate: string;
   bookingEndDate?: string;
   startTime?: string;
   endTime?: string;
   numberOfDays: number;
+  durationLabel?: string;
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -22,11 +25,23 @@ export interface ReviewBookingData {
   petAge: string;
   additionalPets: number;
   puppiesCount: number;
+  specialNotes?: string;
 }
 
 interface ReviewBookingProps {
   data: ReviewBookingData;
-  basePrice: number;
+  basePrice?: number;
+  pricingBreakdown?: {
+    numberOfDays: number;
+    durationLabel: string;
+    basePrice: number;
+    additionalPetFee: number;
+    additionalPetFeePerPet: number;
+    puppySurcharge: number;
+    holidaySurcharge: number;
+    holidayName?: string;
+    totalPrice: number;
+  };
   onContinueToPayment: () => void;
   onEditService: () => void;
   onEditDates: () => void;
@@ -186,21 +201,39 @@ const EditIcon = () => (
 // --- COMPONENT ---
 export default function ReviewBooking({
   data,
-  basePrice,
+  basePrice = 34,
+  pricingBreakdown,
   onContinueToPayment,
   onEditService,
   onEditDates,
   onEditDetails,
 }: ReviewBookingProps) {
-  // Pricing calculations
-  const additionalPetFee = data.additionalPets * 30;
-  const puppySurcharge = data.puppiesCount * 15;
-  const holidaySurcharge = 20;
-  const totalPrice = basePrice + additionalPetFee + puppySurcharge + holidaySurcharge;
+  // Pricing values from centralized breakdown or fallback calculation
+  const computedBase = pricingBreakdown?.basePrice ?? basePrice;
+  const additionalPetFee =
+    pricingBreakdown?.additionalPetFee ?? (data.additionalPets > 0 ? data.additionalPets * 10 : 0);
+  const puppySurcharge =
+    pricingBreakdown?.puppySurcharge ?? (data.puppiesCount > 0 ? data.puppiesCount * 15 : 0);
+  const holidaySurcharge = pricingBreakdown?.holidaySurcharge ?? 0;
+  const holidayName = pricingBreakdown?.holidayName;
+  const totalPrice =
+    pricingBreakdown?.totalPrice ??
+    computedBase + additionalPetFee + puppySurcharge + holidaySurcharge;
+
+  const durationLabel =
+    pricingBreakdown?.durationLabel ||
+    data.durationLabel ||
+    (data.numberOfDays === 1 ? '1 Day' : `${data.numberOfDays} Days`);
 
   const dateDisplay = data.bookingEndDate
     ? `${data.bookingDate} - ${data.bookingEndDate}`
     : data.bookingDate || 'Not selected';
+
+  const timeDisplay = data.startTime
+    ? data.endTime
+      ? ` • ${data.startTime} - ${data.endTime}`
+      : ` • ${data.startTime}`
+    : '';
 
   return (
     <div className={styles.container}>
@@ -245,21 +278,24 @@ export default function ReviewBooking({
               </div>
               <div className={styles.rowBody}>
                 <div className={styles.rowTitle}>Date and Time</div>
-                <div className={styles.rowValue}>{dateDisplay}</div>
+                <div className={styles.rowValue}>
+                  {dateDisplay}
+                  {timeDisplay}
+                </div>
               </div>
               <button className={styles.editBtn} onClick={onEditDates}>
                 <EditIcon /> Edit Dates
               </button>
             </div>
 
-            {/* Number of Days */}
+            {/* Duration / Units */}
             <div className={styles.summaryRow}>
               <div className={styles.rowIcon}>
                 <HashIcon />
               </div>
               <div className={styles.rowBody}>
-                <div className={styles.rowTitle}>Number of Days</div>
-                <div className={styles.rowValue}>{data.numberOfDays} Days</div>
+                <div className={styles.rowTitle}>Duration / Scope</div>
+                <div className={styles.rowValue}>{durationLabel}</div>
               </div>
             </div>
 
@@ -271,9 +307,15 @@ export default function ReviewBooking({
               <div className={styles.rowBody}>
                 <div className={styles.rowTitle}>Customer Information</div>
                 <div className={styles.rowValue}>
-                  {data.customerName} | {data.customerEmail} | {data.customerPhone}
-                  <br />
-                  {data.customerAddress}
+                  {data.customerName || 'Customer'}
+                  {data.customerEmail ? ` • ${data.customerEmail}` : ''}
+                  {data.customerPhone ? ` • ${data.customerPhone}` : ''}
+                  {data.customerAddress && (
+                    <>
+                      <br />
+                      {data.customerAddress}
+                    </>
+                  )}
                 </div>
               </div>
               <button className={styles.editBtn} onClick={onEditDetails}>
@@ -289,12 +331,22 @@ export default function ReviewBooking({
               <div className={styles.rowBody}>
                 <div className={styles.rowTitle}>Pet Information</div>
                 <div className={styles.rowValue}>
-                  {data.petName} | {data.petType} | {data.petBreed} | {data.petAge}
+                  {data.petName || 'Pet'}
+                  {data.petType ? ` • ${data.petType}` : ''}
+                  {data.petBreed ? ` • ${data.petBreed}` : ''}
+                  {data.petAge ? ` • ${data.petAge}` : ''}
                   {data.additionalPets > 0 && (
                     <>
                       <br />
                       Plus {data.additionalPets} additional{' '}
                       {data.additionalPets === 1 ? 'pet' : 'pets'}
+                    </>
+                  )}
+                  {data.puppiesCount > 0 && (
+                    <>
+                      <br />
+                      Includes {data.puppiesCount}{' '}
+                      {data.puppiesCount === 1 ? 'puppy (<1 year)' : 'puppies (<1 year)'}
                     </>
                   )}
                 </div>
@@ -316,37 +368,52 @@ export default function ReviewBooking({
           </div>
 
           <div className={styles.pricingList}>
+            {/* Base Price */}
             <div className={styles.pricingRow}>
               <div className={styles.pricingLabel}>
                 <span className={styles.pricingLabelMain}>Base Price</span>
-                <span className={styles.pricingLabelSub}>{data.numberOfDays} Days</span>
+                <span className={styles.pricingLabelSub}>{durationLabel}</span>
               </div>
-              <span className={styles.pricingAmount}>${basePrice.toFixed(2)}</span>
+              <span className={styles.pricingAmount}>${computedBase.toFixed(2)}</span>
             </div>
 
+            {/* Additional Pet Fees */}
             <div className={styles.pricingRow}>
               <div className={styles.pricingLabel}>
                 <span className={styles.pricingLabelMain}>Additional-Pet Fees</span>
                 <span className={styles.pricingLabelSub}>
                   {data.additionalPets > 0
-                    ? `${data.additionalPets} Additional ${data.additionalPets === 1 ? 'Pet' : 'Pets'}`
-                    : 'No additional pets'}
+                    ? `${data.additionalPets} Additional ${
+                        data.additionalPets === 1 ? 'Pet' : 'Pets'
+                      }`
+                    : 'First pet included'}
                 </span>
               </div>
               <span className={styles.pricingAmount}>${additionalPetFee.toFixed(2)}</span>
             </div>
 
+            {/* Puppy Surcharge */}
             <div className={styles.pricingRow}>
               <div className={styles.pricingLabel}>
                 <span className={styles.pricingLabelMain}>Puppy Surcharge</span>
+                <span className={styles.pricingLabelSub}>
+                  {data.puppiesCount > 0
+                    ? `${data.puppiesCount} ${data.puppiesCount === 1 ? 'Puppy' : 'Puppies'} (<1 yr)`
+                    : 'None'}
+                </span>
               </div>
               <span className={styles.pricingAmount}>${puppySurcharge.toFixed(2)}</span>
             </div>
 
+            {/* Holiday Surcharge */}
             <div className={styles.pricingRow}>
               <div className={styles.pricingLabel}>
                 <span className={styles.pricingLabelMain}>Holiday Surcharge</span>
-                <span className={styles.pricingLabelSub}>Memorial Day Holiday</span>
+                <span className={styles.pricingLabelSub}>
+                  {holidaySurcharge > 0
+                    ? holidayName || 'Official US Holiday'
+                    : 'Standard date (no surcharge)'}
+                </span>
               </div>
               <span className={styles.pricingAmount}>${holidaySurcharge.toFixed(2)}</span>
             </div>

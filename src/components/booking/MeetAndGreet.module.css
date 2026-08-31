@@ -45,10 +45,10 @@
 /* Scheduler Card Grid */
 .scheduleCard {
   background-color: #ffffff;
-  border: 1px solid #efe7d8;
+  border: 1px solid #e8e0cf;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(28, 37, 36, 0.02);
+  box-shadow: 0 8px 30px rgba(18, 63, 60, 0.05);
 }
 
 .schedulerGrid {
@@ -63,6 +63,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  background-color: #ffffff;
 }
 
 .columnBlock:last-child {
@@ -73,12 +74,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 30px;
 }
 
 .colTitle {
-  font-size: 15px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--foreground, #1c2524);
+  color: var(--primary, #123f3c);
   margin: 0;
   display: flex;
   align-items: center;
@@ -86,142 +89,363 @@
 }
 
 .btnClear {
-  background: none;
-  border: none;
+  background: #f7f4ed;
+  border: 1px solid #e2dbce;
   font-size: 12px;
   font-weight: 700;
-  color: var(--text-muted, rgba(28, 37, 36, 0.5));
-  text-decoration: underline;
+  color: #736b5c;
+  border-radius: 12px;
+  padding: 3px 10px;
   cursor: pointer;
-  padding: 2px 4px;
+  transition: all 0.2s ease;
 }
 
 .btnClear:hover {
-  color: var(--error, #ef4444);
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
 }
 
 .timeInfo {
   font-size: 12px;
   color: var(--antique-gold, #b18a45);
   margin: 0;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* Calendar styling */
 .calendarFrame {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .calHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 8px;
+  padding: 2px 4px;
+}
+
+.calMonthDisplay {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .calMonth {
-  font-size: 13px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
   font-weight: 700;
   color: var(--primary, #123f3c);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: -0.01em;
+}
+
+.calYear {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--antique-gold, #b18a45);
 }
 
 .btnCalArrow {
-  background: none;
-  border: none;
+  background: #fbf9f4;
+  border: 1px solid #efe7d8;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 4px;
   color: var(--primary, #123f3c);
-  border-radius: 4px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .btnCalArrow:hover {
-  background-color: var(--warm-ivory, #f7f4ed);
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  border-color: var(--primary, #123f3c);
 }
 
 .calGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 6px;
 }
 
 .calDayLabel {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
-  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  color: #8e887d;
   text-align: center;
   padding: 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.calEmptyCell {
+  aspect-ratio: 1;
 }
 
 .calDayBtn {
   aspect-ratio: 1;
   background: none;
-  border: none;
-  font-size: 13px;
+  border: 1px solid transparent;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--foreground, #1c2524);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+  border-radius: 12px;
+  transition: all 0.18s ease;
+  position: relative;
 }
 
 .calDayBtn:hover {
-  background-color: var(--warm-ivory, #f7f4ed);
-}
-
-.calDaySelected {
-  background-color: var(--primary, #123f3c) !important;
-  color: #ffffff !important;
+  background-color: #f7f4ed;
+  color: var(--primary, #123f3c);
+  border-color: #e5ded2;
+  transform: scale(1.05);
 }
 
 .calDayDisabled {
-  color: rgba(28, 37, 36, 0.2) !important;
+  color: rgba(28, 37, 36, 0.25) !important;
   cursor: not-allowed !important;
   background-color: transparent !important;
 }
 
 .calDayDisabled:hover {
   background-color: transparent !important;
+  transform: none;
+}
+
+.calDaySelected {
+  background-color: var(--primary, #123f3c) !important;
+  color: #ffffff !important;
+  border-color: var(--primary, #123f3c) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(18, 63, 60, 0.25);
+  transform: scale(1.05);
+}
+
+/* Selected Date Info Card (under calendar) */
+.selectedDateCard {
+  background-color: #fcfbf8;
+  border: 1px solid #ebdcc5;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.selectedDateHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.selectedDateIconWrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: rgba(18, 63, 60, 0.08);
+  color: var(--primary, #123f3c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.selectedDateMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.selectedDateLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8e887d;
+}
+
+.selectedDateText {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--primary, #123f3c);
+}
+
+.selectedDateBadges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.visitDurationBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary, #123f3c);
+  background-color: #ffffff;
+  border: 1px solid #e0d5c0;
+  border-radius: 20px;
+  padding: 4px 10px;
+}
+
+.serviceAreaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #736b5c;
+  background-color: #ffffff;
+  border: 1px solid #e0d5c0;
+  border-radius: 20px;
+  padding: 4px 10px;
+}
+
+/* Availability notice */
+.availabilityNotice {
+  font-size: 12px;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.readyAvailability {
+  color: #736b5c;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* Time period filter tabs */
+.timeFilterBar {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background-color: #f7f4ed;
+  border-radius: 12px;
+  border: 1px solid #efe7d8;
+}
+
+.filterTab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #736b5c;
+  padding: 6px 2px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.filterTab:hover {
+  color: var(--primary, #123f3c);
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.filterTabActive {
+  background-color: #ffffff !important;
+  color: var(--primary, #123f3c) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(18, 63, 60, 0.08);
+}
+
+.filterCount {
+  font-size: 10.5px;
+  opacity: 0.7;
+  font-weight: 500;
 }
 
 /* Time Slots list grid */
+.slotsScrollContainer {
+  max-height: 310px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.slotsScrollContainer::-webkit-scrollbar {
+  width: 5px;
+}
+
+.slotsScrollContainer::-webkit-scrollbar-track {
+  background: #faf8f3;
+  border-radius: 4px;
+}
+
+.slotsScrollContainer::-webkit-scrollbar-thumb {
+  background: #dfd7c7;
+  border-radius: 4px;
+}
+
+.slotsScrollContainer::-webkit-scrollbar-thumb:hover {
+  background: #b18a45;
+}
+
 .slotsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
 .slotButton {
   background-color: #ffffff;
-  border: 1px solid #efe7d8;
-  border-radius: 8px;
-  padding: 12px 6px;
+  border: 1px solid #e2dbce;
+  border-radius: 10px;
+  padding: 10px 4px;
+  min-height: 42px;
   font-size: 13px;
   font-weight: 600;
   color: var(--foreground, #1c2524);
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
   text-align: center;
+  font-family: inherit;
+}
+
+.slotTimeText {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--foreground, #1c2524);
+  line-height: 1.2;
 }
 
 .slotButton:hover {
   border-color: var(--primary, #123f3c);
-  background-color: var(--warm-ivory, #f7f4ed);
+  background-color: #f7f4ed;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(18, 63, 60, 0.07);
 }
 
 .slotButtonActive {
   background-color: var(--primary, #123f3c) !important;
-  color: #ffffff !important;
   border-color: var(--primary, #123f3c) !important;
-  box-shadow: 0 2px 6px rgba(18, 63, 60, 0.15);
+  box-shadow: 0 4px 12px rgba(18, 63, 60, 0.22) !important;
+}
+
+.slotButtonActive .slotTimeText {
+  color: #ffffff !important;
+  font-weight: 700 !important;
 }
 
 .slotButtonDisabled {
@@ -230,27 +454,27 @@
   background-color: #f7f5f0 !important;
   cursor: not-allowed !important;
   opacity: 0.7;
+}
+
+.slotButtonDisabled .slotTimeText {
   text-decoration: line-through;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 2px !important;
+  color: #a8a29e !important;
 }
 
 .slotButtonDisabled:hover {
   border-color: #efe7d8 !important;
   background-color: #f7f5f0 !important;
+  transform: none;
+  box-shadow: none;
 }
 
 .bookedTag {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 700;
   color: #c53030;
-  text-decoration: none !important;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  display: block;
+  line-height: 1;
 }
 
 /* Appointment Summary Sidebar Card */

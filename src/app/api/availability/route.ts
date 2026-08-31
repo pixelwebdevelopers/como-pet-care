@@ -1,38 +1,41 @@
 import { NextResponse } from 'next/server';
-import { calculateSlotsAvailability } from '@/lib/availability';
+import prisma from '@/lib/prisma';
+import {
+  calculateSlotsAvailability,
+  parseTimeToMinutes,
+  formatMinutesToTime,
+} from '@/lib/availability';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
-const DEFAULT_SLOTS = [
-  '7:00 AM',
-  '7:30 AM',
-  '8:00 AM',
-  '8:30 AM',
-  '9:00 AM',
-  '9:30 AM',
-  '10:00 AM',
-  '10:30 AM',
-  '11:00 AM',
-  '11:30 AM',
-  '12:00 PM',
-  '12:30 PM',
-  '1:00 PM',
-  '1:30 PM',
-  '2:00 PM',
-  '2:30 PM',
-  '3:00 PM',
-  '3:30 PM',
-  '4:00 PM',
-  '4:30 PM',
-  '5:00 PM',
-  '5:30 PM',
-  '6:00 PM',
-  '6:30 PM',
-  '7:00 PM',
-  '10:00 PM',
-  '11:00 PM',
-];
+function generateSlotsBetween(start: string, end: string, interval: number): string[] {
+  const startM = parseTimeToMinutes(start);
+  const endM = parseTimeToMinutes(end);
+  if (endM <= startM) return [start];
+
+  const slots: string[] = [];
+  for (let m = startM; m <= endM; m += interval) {
+    slots.push(formatMinutesToTime(m));
+  }
+  return slots;
+}
+
+function matchesEnabledSections(slot: string, enabledSections: string[]): boolean {
+  if (!enabledSections || enabledSections.length === 0) return true;
+
+  const isMorning = slot.includes('AM');
+  const isAfternoon =
+    slot.includes('PM') &&
+    (slot.startsWith('12:') || ['1:', '2:', '3:', '4:'].some((h) => slot.startsWith(h)));
+  const isEvening = slot.includes('PM') && !isAfternoon;
+
+  if (isMorning && enabledSections.includes('morning')) return true;
+  if (isAfternoon && enabledSections.includes('afternoon')) return true;
+  if (isEvening && enabledSections.includes('evening')) return true;
+
+  return false;
+}
 
 export async function GET(req: Request) {
   try {
@@ -42,22 +45,73 @@ export async function GET(req: Request) {
     const planId = searchParams.get('planId') || 'drop_in_30';
     const slotsParam = searchParams.get('slots');
 
-    if (!date) {
-      return NextResponse.json(
-        { success: false, message: 'Date parameter is required.' },
-        { status: 400 },
-      );
+    // 1. Fetch active business settings
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let settings: any = null;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      settings = await (prisma as any).businessSetting.findUnique({
+        where: { id: 'default' },
+      });
+    } catch {
+      // safe fallback
     }
 
-    const candidateSlots = slotsParam
-      ? slotsParam.split(',').map((s) => s.trim())
-      : DEFAULT_SLOTS;
+    const openingTime = settings?.openingTime || '7:00 AM';
+    const closingTime = settings?.closingTime || '7:00 PM';
+    const slotInterval = settings?.slotInterval || 30;
+    const enabledSections = settings?.enabledSections
+      ? settings.enabledSections.split(',').map((s: string) => s.trim().toLowerCase())
+      : ['morning', 'afternoon', 'evening'];
+    const enabledDays = settings?.enabledDays
+      ? settings.enabledDays.split(',').map((d: string) => d.trim())
+      : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-    const result = await calculateSlotsAvailability(date, serviceId, planId, candidateSlots);
+    let candidateSlots: string[] = [];
+
+    if (slotsParam) {
+      candidateSlots = slotsParam.split(',').map((s) => s.trim());
+    } else if (settings?.customSlots) {
+      try {
+        const parsed = JSON.parse(settings.customSlots);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          candidateSlots = parsed;
+        }
+      } catch {
+        candidateSlots = generateSlotsBetween(openingTime, closingTime, slotInterval);
+      }
+    } else {
+      candidateSlots = generateSlotsBetween(openingTime, closingTime, slotInterval);
+    }
+
+    // Filter candidate slots by admin-enabled sections
+    const filteredSlots = candidateSlots.filter((slot) =>
+      matchesEnabledSections(slot, enabledSections),
+    );
+
+    // If date is not provided, return settings & slots configuration
+    if (!date) {
+      return NextResponse.json({
+        success: true,
+        candidateSlots: filteredSlots,
+        enabledSections,
+        enabledDays,
+        openingTime,
+        closingTime,
+        minAdvanceHours: settings?.minAdvanceHours ?? 2,
+      });
+    }
+
+    const result = await calculateSlotsAvailability(date, serviceId, planId, filteredSlots);
 
     return NextResponse.json({
       success: true,
       ...result,
+      enabledSections,
+      enabledDays,
+      openingTime,
+      closingTime,
+      minAdvanceHours: settings?.minAdvanceHours ?? 2,
     });
   } catch (error: unknown) {
     logger.error('Failed to compute slot availability', error);

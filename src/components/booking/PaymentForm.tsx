@@ -457,6 +457,20 @@ export default function PaymentForm({
           </div>
 
           <div className={styles.orderSummaryList}>
+            {bookingDetails?.planTitle && (
+              <div
+                className={styles.orderRow}
+                style={{ borderBottom: '1px dashed #efe7d8', paddingBottom: '10px' }}
+              >
+                <span className={styles.orderLabel}>Service Plan</span>
+                <span
+                  className={styles.orderValue}
+                  style={{ color: 'var(--primary)', fontWeight: 700 }}
+                >
+                  {bookingDetails.planTitle}
+                </span>
+              </div>
+            )}
             <div className={styles.orderRow}>
               <span className={styles.orderLabel}>Base Price</span>
               <span className={styles.orderValue}>${basePrice.toFixed(2)}</span>
@@ -465,14 +479,18 @@ export default function PaymentForm({
               <span className={styles.orderLabel}>Additional-Pet Fees</span>
               <span className={styles.orderValue}>${additionalPetFee.toFixed(2)}</span>
             </div>
-            <div className={styles.orderRow}>
-              <span className={styles.orderLabel}>Puppy Surcharge</span>
-              <span className={styles.orderValue}>${puppySurcharge.toFixed(2)}</span>
-            </div>
-            <div className={styles.orderRow}>
-              <span className={styles.orderLabel}>Holiday Surcharge</span>
-              <span className={styles.orderValue}>${holidaySurcharge.toFixed(2)}</span>
-            </div>
+            {puppySurcharge > 0 && (
+              <div className={styles.orderRow}>
+                <span className={styles.orderLabel}>Puppy Surcharge</span>
+                <span className={styles.orderValue}>${puppySurcharge.toFixed(2)}</span>
+              </div>
+            )}
+            {holidaySurcharge > 0 && (
+              <div className={styles.orderRow}>
+                <span className={styles.orderLabel}>Holiday Surcharge</span>
+                <span className={styles.orderValue}>${holidaySurcharge.toFixed(2)}</span>
+              </div>
+            )}
           </div>
 
           <div className={styles.totalRow}>

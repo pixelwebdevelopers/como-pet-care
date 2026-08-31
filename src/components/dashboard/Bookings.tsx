@@ -7,7 +7,6 @@ import {
   Filter,
   ArrowUpDown,
   ChevronLeft,
-  Calendar,
   DollarSign,
   CheckCircle2,
   Clock,
@@ -15,13 +14,16 @@ import {
   PawPrint,
   X,
   RefreshCw,
-  CreditCard,
-  Tag,
-  AlertCircle,
   FileText,
   Phone,
   Mail,
-  MapPin,
+  Key,
+  ShieldAlert,
+  HeartPulse,
+  Printer,
+  Copy,
+  CalendarClock,
+  RotateCcw,
 } from 'lucide-react';
 
 // --- TSX TYPES & INTERFACES ---
@@ -34,6 +36,71 @@ export type BookingStatus =
   | 'in_progress';
 
 export type PaymentStatus = 'paid' | 'unpaid';
+
+export interface FullIntakeProfile {
+  id: number;
+  takesMedication?: string;
+  medicationName?: string;
+  dosageInstructions?: string;
+  knownAllergies?: string;
+  medicalConditions?: string;
+  veterinarianName?: string;
+  veterinaryClinic?: string;
+  veterinaryPhone?: string;
+  additionalHealthNotes?: string;
+  primaryEntryMethod?: string;
+  secondaryEntryMethod?: string;
+  entryInstructions?: string;
+  doorCode?: string;
+  garageCode?: string;
+  alarmCode?: string;
+  keyLockboxLocation?: string;
+  parkingInstructions?: string;
+  additionalHomeNotes?: string;
+  primaryName?: string;
+  primaryRelationship?: string;
+  primaryPhone?: string;
+  primaryEmail?: string;
+  secondaryName?: string;
+  secondaryRelationship?: string;
+  secondaryPhone?: string;
+  vetAuthorization?: string;
+  altKeyHolder?: string;
+  emergencyNotes?: string;
+  status?: string;
+}
+
+export interface MeetAndGreetInfo {
+  date: string;
+  time: string;
+  address: string;
+  status: string;
+  notes?: string;
+}
+
+export interface TransactionInfo {
+  id: number;
+  paymentIntentId: string;
+  paymentMethod: string;
+  amount: number;
+  status: string;
+  refundedAmount?: number;
+  refundReason?: string;
+  createdAt: string;
+}
+
+export interface PetDetail {
+  id: number;
+  name: string;
+  type: string;
+  breed?: string;
+  age?: string;
+  isPuppy: boolean;
+  careInstructions?: string;
+  feedingRoutine?: string;
+  exerciseRoutine?: string;
+  temperamentNotes?: string;
+}
 
 export interface Booking {
   id: string;
@@ -57,6 +124,17 @@ export interface Booking {
   customerEmail?: string;
   customerPhone?: string;
   customerAddress?: string;
+  isNewCustomer?: boolean;
+  isColumbiaResident?: boolean;
+  basePrice?: string;
+  additionalPetFee?: string;
+  puppySurcharge?: string;
+  holidaySurcharge?: string;
+  totalPrice?: string;
+  intakeProfile?: FullIntakeProfile | null;
+  meetAndGreet?: MeetAndGreetInfo | null;
+  transactions?: TransactionInfo[];
+  allPets?: PetDetail[];
 }
 
 export default function Bookings() {
@@ -73,6 +151,14 @@ export default function Bookings() {
   const [sortBy, setSortBy] = useState<string>('reference-desc');
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [copiedToast, setCopiedToast] = useState<boolean>(false);
+
+  // Reschedule Modal State
+  const [rescheduleModalOpen, setRescheduleModalOpen] = useState<boolean>(false);
+  const [rescheduleDate, setRescheduleDate] = useState<string>('');
+  const [rescheduleTime, setRescheduleTime] = useState<string>('');
+  const [rescheduling, setRescheduling] = useState<boolean>(false);
+  const [sendingReminder, setSendingReminder] = useState<string | null>(null);
 
   // Fetch live bookings from database
   const loadBookings = async () => {
@@ -81,42 +167,58 @@ export default function Bookings() {
       const res = await fetch('/api/bookings');
       const data = await res.json();
       if (data.success && Array.isArray(data.bookings)) {
-        setBookings(
-          data.bookings.map((b: any) => {
-            const pet = b.customer?.pets?.[0];
-            let mappedStatus: BookingStatus = 'confirmed';
-            const s = (b.status || '').toLowerCase();
-            if (s.includes('pending')) mappedStatus = 'pending';
-            else if (s.includes('cancel')) mappedStatus = 'cancelled';
-            else if (s.includes('complete')) mappedStatus = 'completed';
-            else if (s.includes('progress')) mappedStatus = 'in_progress';
-            else if (s.includes('upcoming')) mappedStatus = 'upcoming';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mappedList = data.bookings.map((b: any) => {
+          const primaryPet = b.customer?.pets?.[0];
+          let mappedStatus: BookingStatus = 'confirmed';
+          const s = (b.status || '').toLowerCase();
+          if (s.includes('pending')) mappedStatus = 'pending';
+          else if (s.includes('cancel')) mappedStatus = 'cancelled';
+          else if (s.includes('complete')) mappedStatus = 'completed';
+          else if (s.includes('progress')) mappedStatus = 'in_progress';
+          else if (s.includes('upcoming')) mappedStatus = 'upcoming';
 
-            return {
-              id: String(b.id),
-              reference: b.reference,
-              clientName: `${b.customer.firstName} ${b.customer.lastName}`,
-              petName: pet?.name || 'Pet',
-              service: b.serviceName,
-              duration: b.serviceId === '2' || b.planTitle?.includes('60') ? '60 min' : '30 min',
-              date: b.bookingDate,
-              time: `${b.startTime || '9:00 AM'}${b.endTime ? `–${b.endTime}` : ''}`,
-              status: mappedStatus,
-              payment: b.paymentStatus === 'PAID' ? 'paid' : 'unpaid',
-              preferredDays: b.preferredWeekdays || 'N/A',
-              subscriptionPlan: b.planTitle || 'Standard Booking',
-              intakeStatus: b.intakeProfiles?.length > 0 ? 'completed' : 'pending',
-              meetStatus: b.meetAndGreet ? 'completed' : 'pending',
-              petType: pet?.type || 'Dog',
-              breed: pet?.breed || 'Mixed',
-              age: pet?.age || 'Adult',
-              notes: b.specialNotes || 'No special instructions',
-              customerEmail: b.customer.email,
-              customerPhone: b.customer.phone || 'N/A',
-              customerAddress: `${b.customer.address || ''}${b.customer.city ? `, ${b.customer.city}` : ''}`,
-            };
-          }),
-        );
+          const intake = b.intakeProfiles?.[0] || null;
+
+          return {
+            id: String(b.id),
+            reference: b.reference,
+            clientName: `${b.customer?.firstName || ''} ${b.customer?.lastName || ''}`.trim(),
+            petName: primaryPet?.name || 'Pet',
+            service: b.serviceName,
+            duration: b.serviceId === '2' || b.planTitle?.includes('60') ? '60 min' : '30 min',
+            date: b.bookingDate,
+            time: `${b.startTime || '9:00 AM'}${b.endTime ? `–${b.endTime}` : ''}`,
+            status: mappedStatus,
+            payment: b.paymentStatus === 'PAID' ? 'paid' : 'unpaid',
+            preferredDays: b.preferredWeekdays || 'N/A',
+            subscriptionPlan: b.planTitle || 'Standard Booking',
+            intakeStatus: b.intakeProfiles?.length > 0 ? 'completed' : 'pending',
+            meetStatus: b.meetAndGreet ? 'completed' : 'pending',
+            petType: primaryPet?.type || 'Dog',
+            breed: primaryPet?.breed || 'Mixed',
+            age: primaryPet?.age || 'Adult',
+            notes: b.specialNotes || 'No special instructions',
+            customerEmail: b.customer?.email,
+            customerPhone: b.customer?.phone || 'N/A',
+            customerAddress: `${b.customer?.address || ''}${b.customer?.city ? `, ${b.customer.city}` : ''}${b.customer?.state ? `, ${b.customer.state}` : ''}`,
+            isNewCustomer: b.isNewCustomer,
+            isColumbiaResident: b.customer?.isColumbiaResident,
+            basePrice: b.basePrice ? `$${Number(b.basePrice).toFixed(2)}` : '$0.00',
+            additionalPetFee: b.additionalPetFee ? `$${Number(b.additionalPetFee).toFixed(2)}` : '$0.00',
+            puppySurcharge: b.puppySurcharge ? `$${Number(b.puppySurcharge).toFixed(2)}` : '$0.00',
+            holidaySurcharge: b.holidaySurcharge ? `$${Number(b.holidaySurcharge).toFixed(2)}` : '$0.00',
+            totalPrice: b.totalPrice ? `$${Number(b.totalPrice).toFixed(2)}` : '$0.00',
+            intakeProfile: intake,
+            meetAndGreet: b.meetAndGreet || null,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            transactions: b.transactions || [],
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            allPets: b.customer?.pets || [],
+          };
+        });
+
+        setBookings(mappedList);
       }
     } catch {
       console.error('Failed to fetch bookings');
@@ -155,6 +257,172 @@ export default function Bookings() {
     } catch {
       alert('Network error updating booking status');
     }
+  };
+
+  // Update Payment Status
+  const handleUpdatePaymentStatus = async (id: string, newPaymentStatus: 'PAID' | 'UNPAID') => {
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, paymentStatus: newPaymentStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const mapped = newPaymentStatus === 'PAID' ? 'paid' : 'unpaid';
+        setBookings((prev) =>
+          prev.map((b) => (b.id === id ? { ...b, payment: mapped } : b)),
+        );
+        if (selectedBooking && selectedBooking.id === id) {
+          setSelectedBooking((prev) =>
+            prev ? { ...prev, payment: mapped } : null,
+          );
+        }
+      } else {
+        alert(data.message || 'Failed to update payment status');
+      }
+    } catch {
+      alert('Network error updating payment status');
+    }
+  };
+
+  // Handle Refund
+  const handleIssueRefund = async (booking: Booking) => {
+    const tx = booking.transactions?.[0];
+    if (!tx || !tx.paymentIntentId) {
+      alert('No electronic transaction record found on this booking.');
+      return;
+    }
+
+    const reason = prompt(
+      `Issue refund for ${booking.clientName} (${booking.reference})?\nEnter refund reason:`,
+      'Customer requested cancellation',
+    );
+    if (!reason) return;
+
+    try {
+      const res = await fetch('/api/payments/refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentIntentId: tx.paymentIntentId,
+          reason,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Refund processed successfully!');
+        handleUpdatePaymentStatus(booking.id, 'UNPAID');
+        handleUpdateBookingStatus(booking.id, 'CANCELLED');
+        loadBookings();
+      } else {
+        alert(data.message || 'Refund failed');
+      }
+    } catch {
+      alert('Network error processing refund');
+    }
+  };
+
+  // Handle Reschedule
+  const handleRescheduleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBooking) return;
+    setRescheduling(true);
+
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedBooking.id,
+          bookingDate: rescheduleDate || selectedBooking.date,
+          startTime: rescheduleTime || selectedBooking.time.split('–')[0],
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('Booking rescheduled successfully!');
+        setRescheduleModalOpen(false);
+        loadBookings();
+        if (selectedBooking) {
+          setSelectedBooking((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  date: rescheduleDate || prev.date,
+                  time: rescheduleTime || prev.time,
+                }
+              : null,
+          );
+        }
+      } else {
+        alert(data.message || 'Reschedule failed');
+      }
+    } catch {
+      alert('Network error rescheduling appointment');
+    } finally {
+      setRescheduling(false);
+    }
+  };
+
+  // Dispatch Customer Reminders (Intake Form or Meet & Greet)
+  const handleSendReminder = async (type: 'INTAKE_REMINDER' | 'MEET_GREET_RESCHEDULE', b: Booking) => {
+    setSendingReminder(b.id);
+    try {
+      const res = await fetch('/api/admin/reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type,
+          bookingId: b.id,
+          bookingRef: b.reference,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message || 'Notification sent successfully!');
+      } else {
+        alert(data.message || 'Failed to send notification.');
+      }
+    } catch {
+      alert('Network error sending notification.');
+    } finally {
+      setSendingReminder(null);
+    }
+  };
+
+  // Copy Full Customer Info to Clipboard
+  const handleCopyCustomerSummary = (b: Booking) => {
+    const intake = b.intakeProfile;
+    const summary = `
+COMO PET CARE — BOOKING SUMMARY
+Reference: ${b.reference}
+Client: ${b.clientName}
+Phone: ${b.customerPhone}
+Email: ${b.customerEmail}
+Address: ${b.customerAddress}
+Service: ${b.service} (${b.duration})
+Date: ${b.date} at ${b.time}
+Pet(s): ${b.allPets?.map((p) => `${p.name} (${p.breed || p.type})`).join(', ') || b.petName}
+Care Notes: ${b.notes}
+
+ACCESS & SECURITY CODES:
+Primary Entry: ${intake?.primaryEntryMethod || 'N/A'}
+Door Code: ${intake?.doorCode || 'None'}
+Garage Code: ${intake?.garageCode || 'None'}
+Alarm Code: ${intake?.alarmCode || 'None'}
+Lockbox Location: ${intake?.keyLockboxLocation || 'None'}
+Entry Notes: ${intake?.entryInstructions || 'None'}
+
+EMERGENCY & VET:
+Vet Clinic: ${intake?.veterinaryClinic || 'N/A'} (${intake?.veterinaryPhone || 'N/A'})
+Emergency Contact: ${intake?.primaryName || 'N/A'} (${intake?.primaryPhone || 'N/A'})
+    `.trim();
+
+    navigator.clipboard.writeText(summary);
+    setCopiedToast(true);
+    setTimeout(() => setCopiedToast(false), 3000);
   };
 
   // Row selection
@@ -214,6 +482,9 @@ export default function Bookings() {
 
   // --- DETAILS VIEW RENDERING ---
   if (viewMode === 'details' && selectedBooking) {
+    const intake = selectedBooking.intakeProfile;
+    const mg = selectedBooking.meetAndGreet;
+
     return (
       <div className={styles.bookingsContainer}>
         {/* Back navigation and breadcrumb */}
@@ -221,17 +492,248 @@ export default function Bookings() {
           <button
             className={styles.backTitleButton}
             onClick={() => setViewMode('list')}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              fontWeight: 700,
+              fontSize: '18px',
+              color: 'var(--primary)',
+            }}
           >
-            <ChevronLeft size={18} />
-            <span>Booking Details</span>
+            <ChevronLeft size={20} />
+            <span>Booking #{selectedBooking.reference}</span>
           </button>
-          <span className="dashboard-breadcrumb">Home &gt; Bookings &gt; Booking Details</span>
+          <span className="dashboard-breadcrumb">Dashboard &gt; Bookings &gt; Details</span>
         </div>
+
+        {/* Action Toolbar for Operations */}
+        <div className={styles.customerActionBar}>
+          <div className={styles.actionBarGroup}>
+            {/* Status Change Buttons */}
+            {selectedBooking.status !== 'confirmed' && (
+              <button
+                type="button"
+                className={styles.btnActionPrimary}
+                onClick={() => handleUpdateBookingStatus(selectedBooking.id, 'CONFIRMED')}
+              >
+                <CheckCircle2 size={14} />
+                <span>Confirm Booking</span>
+              </button>
+            )}
+
+            {selectedBooking.status !== 'in_progress' && (
+              <button
+                type="button"
+                className={styles.btnActionSecondary}
+                onClick={() => handleUpdateBookingStatus(selectedBooking.id, 'IN_PROGRESS')}
+              >
+                <Clock size={14} />
+                <span>In Progress</span>
+              </button>
+            )}
+
+            {selectedBooking.status !== 'completed' && (
+              <button
+                type="button"
+                className={styles.btnActionSecondary}
+                onClick={() => handleUpdateBookingStatus(selectedBooking.id, 'COMPLETED')}
+              >
+                <CheckCircle2 size={14} />
+                <span>Mark Completed</span>
+              </button>
+            )}
+
+            {selectedBooking.status !== 'cancelled' && (
+              <button
+                type="button"
+                className={styles.btnActionDanger}
+                onClick={() => {
+                  if (confirm(`Are you sure you want to cancel booking ${selectedBooking.reference}?`)) {
+                    handleUpdateBookingStatus(selectedBooking.id, 'CANCELLED');
+                  }
+                }}
+              >
+                <X size={14} />
+                <span>Cancel</span>
+              </button>
+            )}
+
+            {/* Reschedule Button */}
+            <button
+              type="button"
+              className={styles.btnActionSecondary}
+              onClick={() => {
+                setRescheduleDate(selectedBooking.date);
+                setRescheduleTime(selectedBooking.time.split('–')[0]);
+                setRescheduleModalOpen(true);
+              }}
+            >
+              <CalendarClock size={14} />
+              <span>Reschedule</span>
+            </button>
+
+            {/* Payment Toggle */}
+            {selectedBooking.payment === 'unpaid' ? (
+              <button
+                type="button"
+                className={styles.btnActionPrimary}
+                style={{ backgroundColor: '#059669' }}
+                onClick={() => handleUpdatePaymentStatus(selectedBooking.id, 'PAID')}
+              >
+                <DollarSign size={14} />
+                <span>Mark Paid</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={styles.btnActionSecondary}
+                onClick={() => handleIssueRefund(selectedBooking)}
+              >
+                <RotateCcw size={14} />
+                <span>Issue Refund</span>
+              </button>
+            )}
+
+            {/* Send Intake Form Link Reminder */}
+            {selectedBooking.intakeStatus !== 'completed' && (
+              <button
+                type="button"
+                className={styles.btnActionSecondary}
+                style={{
+                  borderColor: '#b18a45',
+                  color: '#b18a45',
+                  backgroundColor: '#faf6ee',
+                }}
+                onClick={() => handleSendReminder('INTAKE_REMINDER', selectedBooking)}
+                disabled={sendingReminder === selectedBooking.id}
+                title="Send customer an email with their unique Intake Form link"
+              >
+                <FileText size={14} />
+                <span>{sendingReminder === selectedBooking.id ? 'Sending...' : 'Send Intake Link'}</span>
+              </button>
+            )}
+
+            {/* Missed Meet & Greet Notice */}
+            <button
+              type="button"
+              className={styles.btnActionSecondary}
+              style={{
+                borderColor: '#3b82f6',
+                color: '#1d4ed8',
+                backgroundColor: '#eff6ff',
+              }}
+              onClick={() => handleSendReminder('MEET_GREET_RESCHEDULE', selectedBooking)}
+              disabled={sendingReminder === selectedBooking.id}
+              title="Send courteous Missed Meet & Greet email with reschedule link"
+            >
+              <CalendarClock size={14} />
+              <span>{sendingReminder === selectedBooking.id ? 'Sending...' : 'Missed Meet & Greet'}</span>
+            </button>
+
+            {/* Divider between Operations and Contact */}
+            {(selectedBooking.customerPhone || selectedBooking.customerEmail) && (
+              <div className={styles.actionBarDivider} />
+            )}
+
+            {/* Direct Contact actions */}
+            {selectedBooking.customerPhone && (
+              <a
+                href={`tel:${selectedBooking.customerPhone}`}
+                className={styles.btnActionSecondary}
+                title="Call customer"
+              >
+                <Phone size={14} />
+                <span>Call</span>
+              </a>
+            )}
+
+            {selectedBooking.customerEmail && (
+              <a
+                href={`mailto:${selectedBooking.customerEmail}?subject=Regarding Your Como Pet Care Booking (${selectedBooking.reference})`}
+                className={styles.btnActionSecondary}
+                title="Email customer"
+              >
+                <Mail size={14} />
+                <span>Email</span>
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Reschedule Modal */}
+        {rescheduleModalOpen && (
+          <div className={styles.modalOverlay} onClick={() => setRescheduleModalOpen(false)}>
+            <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>Reschedule Booking {selectedBooking.reference}</h3>
+                <button
+                  type="button"
+                  className={styles.modalCloseBtn}
+                  onClick={() => setRescheduleModalOpen(false)}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleRescheduleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+                    New Scheduled Date
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. August 15, 2026 or 2026-08-15"
+                    className={styles.searchInput}
+                    style={{ width: '100%' }}
+                    value={rescheduleDate}
+                    onChange={(e) => setRescheduleDate(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+                    New Appointment Start Time
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 10:00 AM"
+                    className={styles.searchInput}
+                    style={{ width: '100%' }}
+                    value={rescheduleTime}
+                    onChange={(e) => setRescheduleTime(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+                  <button
+                    type="button"
+                    className={styles.btnActionSecondary}
+                    onClick={() => setRescheduleModalOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className={styles.btnActionPrimary}
+                    disabled={rescheduling}
+                  >
+                    {rescheduling ? 'Updating...' : 'Confirm Reschedule'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* 3-Column details layout */}
         <div className={styles.detailsGrid}>
-          {/* COLUMN 1: Booking Summary */}
+          {/* COLUMN 1: Booking & Financial Overview */}
           <div className={styles.detailsCard}>
             <div className={styles.detailsCardHeader}>
               <span className={styles.detailsCardIcon}>
@@ -256,61 +758,85 @@ export default function Bookings() {
                 </span>
               </div>
               <div className={styles.metaRow}>
-                <span className={styles.metaLabel}>Scheduled Date</span>
-                <span className={styles.metaValue}>{selectedBooking.date}</span>
-              </div>
-              <div className={styles.metaRow}>
-                <span className={styles.metaLabel}>Appointment Time</span>
-                <span className={styles.metaValue}>{selectedBooking.time}</span>
-              </div>
-              <div className={styles.metaRow}>
-                <span className={styles.metaLabel}>Payment Status</span>
-                <span
-                  className={`${styles.paymentTag} ${
-                    selectedBooking.payment === 'paid' ? styles.paidTag : styles.unpaidTag
-                  }`}
-                >
-                  {selectedBooking.payment === 'paid' ? 'Paid' : 'Unpaid'}
+                <span className={styles.metaLabel}>Scheduled Date &amp; Time</span>
+                <span className={styles.metaValue}>
+                  {selectedBooking.date} at {selectedBooking.time}
                 </span>
               </div>
               <div className={styles.metaRow}>
                 <span className={styles.metaLabel}>Booking Status</span>
-                <span
-                  className={`${styles.statusTag} ${
-                    selectedBooking.status === 'confirmed'
-                      ? styles.statusConfirmed
-                      : selectedBooking.status === 'pending'
-                        ? styles.statusPending
-                        : selectedBooking.status === 'completed'
-                          ? styles.statusCompleted
-                          : selectedBooking.status === 'cancelled'
-                            ? styles.statusCancelled
-                            : styles.statusInProgress
-                  }`}
-                >
-                  {selectedBooking.status.charAt(0).toUpperCase() + selectedBooking.status.slice(1)}
-                </span>
+                <div>
+                  <span
+                    className={`${styles.statusTag} ${
+                      selectedBooking.status === 'confirmed'
+                        ? styles.statusConfirmed
+                        : selectedBooking.status === 'pending'
+                          ? styles.statusPending
+                          : selectedBooking.status === 'completed'
+                            ? styles.statusCompleted
+                            : selectedBooking.status === 'cancelled'
+                              ? styles.statusCancelled
+                              : styles.statusInProgress
+                    }`}
+                  >
+                    {selectedBooking.status.toUpperCase()}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Actions for this booking */}
-            <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className={styles.btnSecondary}
-                onClick={() => handleUpdateBookingStatus(selectedBooking.id, 'COMPLETED')}
-                style={{ fontSize: '12.5px', padding: '6px 12px' }}
+              {/* Price Breakdown */}
+              <div
+                style={{
+                  marginTop: '8px',
+                  paddingTop: '12px',
+                  borderTop: '1px solid #efe7d8',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                }}
               >
-                Mark Completed
-              </button>
-              <button
-                type="button"
-                className={styles.btnSecondary}
-                onClick={() => handleUpdateBookingStatus(selectedBooking.id, 'CANCELLED')}
-                style={{ fontSize: '12.5px', padding: '6px 12px', color: '#b91c1c' }}
-              >
-                Cancel Booking
-              </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Base Price</span>
+                  <span style={{ fontWeight: 600 }}>{selectedBooking.basePrice}</span>
+                </div>
+                {selectedBooking.additionalPetFee !== '$0.00' && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Additional Pet Fee</span>
+                    <span>{selectedBooking.additionalPetFee}</span>
+                  </div>
+                )}
+                {selectedBooking.puppySurcharge !== '$0.00' && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Puppy Surcharge</span>
+                    <span>{selectedBooking.puppySurcharge}</span>
+                  </div>
+                )}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    color: 'var(--primary)',
+                    paddingTop: '6px',
+                    borderTop: '1px dashed #efe7d8',
+                  }}
+                >
+                  <span>Total Amount</span>
+                  <span>{selectedBooking.totalPrice}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Payment</span>
+                  <span
+                    className={`${styles.paymentTag} ${
+                      selectedBooking.payment === 'paid' ? '' : styles.paymentUnpaid
+                    }`}
+                  >
+                    <span className={styles.dot} />
+                    {selectedBooking.payment.toUpperCase()}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -320,7 +846,7 @@ export default function Bookings() {
               <span className={styles.detailsCardIcon}>
                 <User size={18} style={{ color: 'var(--primary)' }} />
               </span>
-              <h3 className={styles.detailsCardTitle}>Customer Information</h3>
+              <h3 className={styles.detailsCardTitle}>Customer Profile</h3>
             </div>
 
             <div className={styles.detailsMetaList}>
@@ -330,39 +856,68 @@ export default function Bookings() {
               </div>
               <div className={styles.metaRow}>
                 <span className={styles.metaLabel}>Email Address</span>
-                <span className={styles.metaValue}>{selectedBooking.customerEmail || 'N/A'}</span>
+                <span className={styles.metaValue}>
+                  <a href={`mailto:${selectedBooking.customerEmail}`} style={{ color: 'var(--primary)' }}>
+                    {selectedBooking.customerEmail || 'N/A'}
+                  </a>
+                </span>
               </div>
               <div className={styles.metaRow}>
                 <span className={styles.metaLabel}>Phone Number</span>
-                <span className={styles.metaValue}>{selectedBooking.customerPhone || 'N/A'}</span>
+                <span className={styles.metaValue}>
+                  <a href={`tel:${selectedBooking.customerPhone}`} style={{ color: 'var(--primary)' }}>
+                    {selectedBooking.customerPhone || 'N/A'}
+                  </a>
+                </span>
               </div>
               <div className={styles.metaRow}>
                 <span className={styles.metaLabel}>Service Address</span>
-                <span className={styles.metaValue}>{selectedBooking.customerAddress || 'N/A'}</span>
+                <span className={styles.metaValue}>{selectedBooking.customerAddress || 'Columbia, MO'}</span>
               </div>
               <div className={styles.metaRow}>
-                <span className={styles.metaLabel}>Intake Form</span>
-                <span
-                  className={`${styles.statusTag} ${
-                    selectedBooking.intakeStatus === 'completed'
-                      ? styles.statusCompleted
-                      : styles.statusPending
-                  }`}
-                >
-                  {selectedBooking.intakeStatus === 'completed' ? 'Submitted' : 'Pending'}
+                <span className={styles.metaLabel}>Client Classification</span>
+                <span className={styles.metaValue}>
+                  {selectedBooking.isNewCustomer ? 'New Client (First Booking)' : 'Returning Client'} •{' '}
+                  {selectedBooking.isColumbiaResident ? 'Columbia Resident ✓' : 'Out of Area'}
                 </span>
               </div>
               <div className={styles.metaRow}>
-                <span className={styles.metaLabel}>Meet &amp; Greet</span>
-                <span
-                  className={`${styles.statusTag} ${
-                    selectedBooking.meetStatus === 'completed'
-                      ? styles.statusCompleted
-                      : styles.statusPending
-                  }`}
-                >
-                  {selectedBooking.meetStatus === 'completed' ? 'Completed' : 'Pending'}
-                </span>
+                <span className={styles.metaLabel}>Intake Form Status</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span
+                    className={`${styles.statusTag} ${
+                      selectedBooking.intakeStatus === 'completed'
+                        ? styles.statusConfirmed
+                        : styles.statusPending
+                    }`}
+                  >
+                    {selectedBooking.intakeStatus === 'completed' ? 'Completed ✓' : 'Pending Client Submission'}
+                  </span>
+                  {selectedBooking.intakeStatus !== 'completed' && (
+                    <button
+                      type="button"
+                      onClick={() => handleSendReminder('INTAKE_REMINDER', selectedBooking)}
+                      disabled={sendingReminder === selectedBooking.id}
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        borderRadius: '6px',
+                        border: '1px solid #b18a45',
+                        backgroundColor: '#faf6ee',
+                        color: '#b18a45',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                      title="Send customer an email with their unique Intake Form link"
+                    >
+                      <FileText size={12} />
+                      <span>{sendingReminder === selectedBooking.id ? 'Sending...' : 'Email Intake Link'}</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -377,24 +932,224 @@ export default function Bookings() {
             </div>
 
             <div className={styles.detailsMetaList}>
+              {selectedBooking.allPets && selectedBooking.allPets.length > 0 ? (
+                selectedBooking.allPets.map((p, idx) => (
+                  <div
+                    key={p.id || idx}
+                    style={{
+                      padding: '10px',
+                      backgroundColor: 'var(--warm-ivory, #fbf9f4)',
+                      borderRadius: '8px',
+                      border: '1px solid #efe7d8',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '15px' }}>
+                        🐾 {p.name}
+                      </span>
+                      <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                        {p.type} {p.isPuppy ? '• Puppy 🐶' : ''}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '12.5px', marginTop: '4px', color: 'var(--foreground)' }}>
+                      <strong>Breed:</strong> {p.breed || 'Mixed'} | <strong>Age:</strong> {p.age || 'Adult'}
+                    </div>
+                    {p.feedingRoutine && (
+                      <div style={{ fontSize: '12px', marginTop: '4px', color: 'var(--text-muted)' }}>
+                        <strong>Feeding:</strong> {p.feedingRoutine}
+                      </div>
+                    )}
+                    {p.careInstructions && (
+                      <div style={{ fontSize: '12px', marginTop: '2px', color: 'var(--text-muted)' }}>
+                        <strong>Care:</strong> {p.careInstructions}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className={styles.metaRow}>
+                    <span className={styles.metaLabel}>Pet Name</span>
+                    <span className={styles.metaValue}>{selectedBooking.petName}</span>
+                  </div>
+                  <div className={styles.metaRow}>
+                    <span className={styles.metaLabel}>Species &amp; Breed</span>
+                    <span className={styles.metaValue}>
+                      {selectedBooking.petType || 'Dog'} • {selectedBooking.breed || 'Mixed'}
+                    </span>
+                  </div>
+                </>
+              )}
+
               <div className={styles.metaRow}>
-                <span className={styles.metaLabel}>Pet Name</span>
-                <span className={styles.metaValue}>{selectedBooking.petName}</span>
-              </div>
-              <div className={styles.metaRow}>
-                <span className={styles.metaLabel}>Pet Species / Breed</span>
-                <span className={styles.metaValue}>
-                  {selectedBooking.petType || 'Dog'} • {selectedBooking.breed || 'Mixed'}
+                <span className={styles.metaLabel}>Special Booking Notes</span>
+                <span className={styles.metaValue} style={{ fontSize: '13px', lineHeight: 1.4 }}>
+                  {selectedBooking.notes}
                 </span>
               </div>
+            </div>
+          </div>
+
+          {/* COLUMN 4: Home Access & Entry Codes (Collected from Customer) */}
+          <div className={styles.detailsCard}>
+            <div className={styles.detailsCardHeader}>
+              <span className={styles.detailsCardIcon}>
+                <Key size={18} style={{ color: '#b45309' }} />
+              </span>
+              <h3 className={styles.detailsCardTitle}>Home Access &amp; Entry Security</h3>
+            </div>
+
+            <div className={styles.detailsMetaList}>
               <div className={styles.metaRow}>
-                <span className={styles.metaLabel}>Age</span>
-                <span className={styles.metaValue}>{selectedBooking.age || 'Adult'}</span>
+                <span className={styles.metaLabel}>Primary Entry Method</span>
+                <span className={styles.metaValue}>
+                  {intake?.primaryEntryMethod || 'Front Door Key / Lockbox'}
+                </span>
               </div>
+
+              {intake?.doorCode && (
+                <div className={styles.metaRow}>
+                  <span className={styles.metaLabel}>Door Access Code</span>
+                  <span className={styles.codeChip}>{intake.doorCode}</span>
+                </div>
+              )}
+
+              {intake?.garageCode && (
+                <div className={styles.metaRow}>
+                  <span className={styles.metaLabel}>Garage Keypad Code</span>
+                  <span className={styles.codeChip}>{intake.garageCode}</span>
+                </div>
+              )}
+
+              {intake?.alarmCode && (
+                <div className={styles.metaRow}>
+                  <span className={styles.metaLabel}>Security Alarm Code / Disarm Instructions</span>
+                  <span className={styles.codeChip}>{intake.alarmCode}</span>
+                </div>
+              )}
+
+              {intake?.keyLockboxLocation && (
+                <div className={styles.metaRow}>
+                  <span className={styles.metaLabel}>Key Lockbox Location</span>
+                  <span className={styles.metaValue}>{intake.keyLockboxLocation}</span>
+                </div>
+              )}
+
               <div className={styles.metaRow}>
-                <span className={styles.metaLabel}>Care / Feeding Notes</span>
+                <span className={styles.metaLabel}>Entry &amp; Parking Instructions</span>
                 <span className={styles.metaValue} style={{ fontSize: '12.5px', lineHeight: 1.4 }}>
-                  {selectedBooking.notes}
+                  {intake?.entryInstructions || intake?.parkingInstructions || 'Standard driveway / street parking.'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* COLUMN 5: Medical, Health & Veterinary Profile */}
+          <div className={styles.detailsCard}>
+            <div className={styles.detailsCardHeader}>
+              <span className={styles.detailsCardIcon}>
+                <HeartPulse size={18} style={{ color: '#b91c1c' }} />
+              </span>
+              <h3 className={styles.detailsCardTitle}>Medical &amp; Veterinary Info</h3>
+            </div>
+
+            <div className={styles.detailsMetaList}>
+              <div className={styles.metaRow}>
+                <span className={styles.metaLabel}>Veterinary Clinic</span>
+                <span className={styles.metaValue}>
+                  {intake?.veterinaryClinic || 'Horton Animal Hospital (Columbia, MO)'}
+                </span>
+              </div>
+
+              <div className={styles.metaRow}>
+                <span className={styles.metaLabel}>Vet Doctor &amp; Emergency Phone</span>
+                <span className={styles.metaValue}>
+                  {intake?.veterinarianName || 'Staff Veterinarian'} •{' '}
+                  {intake?.veterinaryPhone ? (
+                    <a href={`tel:${intake.veterinaryPhone}`} style={{ color: 'var(--primary)' }}>
+                      {intake.veterinaryPhone}
+                    </a>
+                  ) : (
+                    'N/A'
+                  )}
+                </span>
+              </div>
+
+              <div className={styles.metaRow}>
+                <span className={styles.metaLabel}>Takes Medications</span>
+                <span className={styles.metaValue}>
+                  {intake?.takesMedication || 'None declared'}
+                  {intake?.medicationName ? ` (${intake.medicationName}: ${intake.dosageInstructions || ''})` : ''}
+                </span>
+              </div>
+
+              <div className={styles.metaRow}>
+                <span className={styles.metaLabel}>Known Allergies &amp; Health Conditions</span>
+                <span className={styles.metaValue} style={{ fontSize: '12.5px' }}>
+                  {intake?.knownAllergies || intake?.medicalConditions || 'No known allergies or medical issues.'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* COLUMN 6: Emergency Contacts & Authorization */}
+          <div className={styles.detailsCard}>
+            <div className={styles.detailsCardHeader}>
+              <span className={styles.detailsCardIcon}>
+                <ShieldAlert size={18} style={{ color: '#4338ca' }} />
+              </span>
+              <h3 className={styles.detailsCardTitle}>Emergency Contacts &amp; Visits</h3>
+            </div>
+
+            <div className={styles.detailsMetaList}>
+              <div className={styles.metaRow}>
+                <span className={styles.metaLabel}>Primary Emergency Contact</span>
+                <span className={styles.metaValue}>
+                  {intake?.primaryName || selectedBooking.clientName}{' '}
+                  {intake?.primaryRelationship ? `(${intake.primaryRelationship})` : ''} •{' '}
+                  {intake?.primaryPhone || selectedBooking.customerPhone}
+                </span>
+              </div>
+
+              {intake?.secondaryName && (
+                <div className={styles.metaRow}>
+                  <span className={styles.metaLabel}>Secondary Emergency Contact</span>
+                  <span className={styles.metaValue}>
+                    {intake.secondaryName}{' '}
+                    {intake.secondaryRelationship ? `(${intake.secondaryRelationship})` : ''} •{' '}
+                    {intake.secondaryPhone || 'N/A'}
+                  </span>
+                </div>
+              )}
+
+              {/* Meet and Greet */}
+              {mg && (
+                <div
+                  style={{
+                    marginTop: '8px',
+                    padding: '10px',
+                    borderRadius: '8px',
+                    backgroundColor: '#e6edea',
+                    border: '1px solid rgba(18, 63, 60, 0.2)',
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '13.5px' }}>
+                    🤝 Meet &amp; Greet Appointment
+                  </div>
+                  <div style={{ fontSize: '12.5px', marginTop: '3px' }}>
+                    Scheduled for: <strong>{mg.date} at {mg.time}</strong>
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Address: {mg.address} | Status: <strong>{mg.status}</strong>
+                  </div>
+                </div>
+              )}
+
+              <div className={styles.metaRow} style={{ marginTop: '6px' }}>
+                <span className={styles.metaLabel}>Vet Care Medical Authorization</span>
+                <span className={styles.metaValue}>
+                  {intake?.vetAuthorization ? 'Authorized by Owner ✓' : 'Standard Authorization'}
                 </span>
               </div>
             </div>
@@ -416,9 +1171,8 @@ export default function Bookings() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
             type="button"
-            className={styles.btnSecondary}
+            className={styles.btnActionSecondary}
             onClick={loadBookings}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
             <RefreshCw size={14} className={loading ? styles.spinIcon : ''} />
             <span>Refresh</span>
@@ -432,39 +1186,31 @@ export default function Bookings() {
         <div className={styles.tabsContainer}>
           <div className={styles.tabsList}>
             <button
-              className={`${styles.tabButton} ${activeTab === 'all' ? styles.tabButtonActive : ''}`}
+              className={`${styles.tabButton} ${activeTab === 'all' ? styles.activeTabButton : ''}`}
               onClick={() => setActiveTab('all')}
             >
               All Bookings ({bookings.length})
             </button>
             <button
-              className={`${styles.tabButton} ${
-                activeTab === 'confirmed' ? styles.tabButtonActive : ''
-              }`}
+              className={`${styles.tabButton} ${activeTab === 'confirmed' ? styles.activeTabButton : ''}`}
               onClick={() => setActiveTab('confirmed')}
             >
               Confirmed ({bookings.filter((b) => b.status === 'confirmed').length})
             </button>
             <button
-              className={`${styles.tabButton} ${
-                activeTab === 'pending' ? styles.tabButtonActive : ''
-              }`}
+              className={`${styles.tabButton} ${activeTab === 'pending' ? styles.activeTabButton : ''}`}
               onClick={() => setActiveTab('pending')}
             >
               Pending ({bookings.filter((b) => b.status === 'pending').length})
             </button>
             <button
-              className={`${styles.tabButton} ${
-                activeTab === 'completed' ? styles.tabButtonActive : ''
-              }`}
+              className={`${styles.tabButton} ${activeTab === 'completed' ? styles.activeTabButton : ''}`}
               onClick={() => setActiveTab('completed')}
             >
               Completed ({bookings.filter((b) => b.status === 'completed').length})
             </button>
             <button
-              className={`${styles.tabButton} ${
-                activeTab === 'cancelled' ? styles.tabButtonActive : ''
-              }`}
+              className={`${styles.tabButton} ${activeTab === 'cancelled' ? styles.activeTabButton : ''}`}
               onClick={() => setActiveTab('cancelled')}
             >
               Cancelled ({bookings.filter((b) => b.status === 'cancelled').length})
@@ -473,23 +1219,24 @@ export default function Bookings() {
         </div>
 
         {/* Action Controls Bar */}
-        <div className={styles.actionsRow}>
+        <div className={styles.actionBar}>
           <div className={styles.searchContainer}>
             <span className={styles.searchIcon}>
               <Search size={16} />
             </span>
             <input
               type="text"
-              placeholder="Search by reference, client, pet, service..."
-              className={styles.searchBar}
+              placeholder="Search reference, client, pet, service..."
+              className={styles.searchInput}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <div className={styles.filterGroup}>
+          <div className={styles.filterActions}>
+            {/* Payment Filter */}
             <select
-              className={styles.filterSelect}
+              className={styles.btnSecondary}
               value={paymentFilter}
               onChange={(e) => setPaymentFilter(e.target.value)}
             >
@@ -502,9 +1249,7 @@ export default function Bookings() {
               type="button"
               className={styles.btnSecondary}
               onClick={() => {
-                setSortBy((prev) =>
-                  prev === 'reference-desc' ? 'reference-asc' : 'reference-desc',
-                );
+                setSortBy((prev) => (prev === 'reference-asc' ? 'reference-desc' : 'reference-asc'));
               }}
             >
               <ArrowUpDown size={15} />
@@ -516,19 +1261,19 @@ export default function Bookings() {
               className={styles.btnSecondary}
               onClick={() => {
                 setActiveTab('all');
-                setPaymentFilter('all');
                 setSearchQuery('');
+                setPaymentFilter('all');
               }}
             >
               <Filter size={15} />
-              <span>Reset Filters</span>
+              <span>Reset</span>
             </button>
           </div>
         </div>
 
         {/* Data Table */}
-        <div className={styles.tableResponsive}>
-          <table className={styles.dataTable}>
+        <div className={styles.tableWrapper}>
+          <table className={styles.bookingsTable}>
             <thead>
               <tr>
                 <th className={`${styles.th} ${styles.thCheckbox}`}>
@@ -540,38 +1285,33 @@ export default function Bookings() {
                   />
                 </th>
                 <th className={styles.th}>Booking Ref</th>
-                <th className={styles.th}>Client Name</th>
+                <th className={styles.th}>Customer</th>
                 <th className={styles.th}>Pet</th>
-                <th className={styles.th}>Service</th>
-                <th className={styles.th}>Duration</th>
-                <th className={styles.th}>Date &amp; Time</th>
+                <th className={styles.th}>Service &amp; Time</th>
+                <th className={styles.th}>Total</th>
                 <th className={styles.th}>Payment</th>
                 <th className={styles.th}>Status</th>
-                <th className={styles.th}>Action</th>
+                <th className={styles.th}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={10} className={styles.emptyTd}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                      <RefreshCw size={26} className={styles.spinIcon} style={{ color: '#123f3c' }} />
-                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#123f3c' }}>Loading bookings from database...</span>
-                    </div>
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '40px' }}>
+                    <RefreshCw size={24} className={styles.spinIcon} style={{ margin: '0 auto 8px auto' }} />
+                    <p style={{ margin: 0, color: 'var(--text-muted)' }}>Loading live bookings...</p>
                   </td>
                 </tr>
               ) : filteredBookings.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className={styles.emptyTd}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                      <div style={{ width: '52px', height: '52px', borderRadius: '16px', backgroundColor: '#f5eee3', color: '#b18a45', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Calendar size={26} />
-                      </div>
-                      <span style={{ fontSize: '16px', fontWeight: 700, color: '#1c2524' }}>No Bookings Found</span>
-                      <span style={{ fontSize: '13px', color: 'rgba(28, 37, 36, 0.6)', maxWidth: '340px' }}>
-                        No appointments match your active tab or search criteria. Try adjusting your filters.
-                      </span>
-                    </div>
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '48px 16px' }}>
+                    <FileText size={32} style={{ color: 'var(--primary)', opacity: 0.3, marginBottom: '8px' }} />
+                    <p style={{ fontWeight: 600, margin: '0 0 4px 0', color: 'var(--foreground)' }}>
+                      No bookings found
+                    </p>
+                    <p style={{ fontSize: '13px', margin: 0, color: 'var(--text-muted)' }}>
+                      Customer appointments placed online will automatically appear here.
+                    </p>
                   </td>
                 </tr>
               ) : (
@@ -579,10 +1319,7 @@ export default function Bookings() {
                   const isChecked = selectedIds.includes(b.id);
 
                   return (
-                    <tr
-                      key={b.id}
-                      className={`${styles.tr} ${isChecked ? styles.trSelected : ''}`}
-                    >
+                    <tr key={b.id} className={isChecked ? styles.trSelected : ''}>
                       <td className={`${styles.td} ${styles.tdCheckbox}`}>
                         <input
                           type="checkbox"
@@ -593,50 +1330,53 @@ export default function Bookings() {
                       </td>
 
                       <td className={styles.td}>
-                        <span
+                        <button
+                          type="button"
                           className={styles.refLink}
                           onClick={() => {
                             setSelectedBooking(b);
                             setViewMode('details');
                           }}
+                          style={{ border: 'none', background: 'none', padding: 0 }}
                         >
                           {b.reference}
-                        </span>
+                        </button>
                       </td>
 
                       <td className={styles.td}>
-                        <span style={{ fontWeight: 600 }}>{b.clientName}</span>
+                        <span className={styles.boldText}>{b.clientName}</span>
+                        <span className={styles.subtext}>{b.customerPhone}</span>
                       </td>
 
                       <td className={styles.td}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <PawPrint size={14} style={{ color: '#b45309' }} />
-                          <span>{b.petName}</span>
+                          <span style={{ fontWeight: 600 }}>{b.petName}</span>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({b.breed})</span>
                         </div>
                       </td>
 
                       <td className={styles.td}>
                         <span className={styles.boldText}>{b.service}</span>
+                        <span className={styles.subtext}>
+                          {b.date} • {b.time}
+                        </span>
                       </td>
 
-                      <td className={styles.td}>{b.duration}</td>
-
                       <td className={styles.td}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span>{b.date}</span>
-                          <span style={{ fontSize: '11.5px', color: 'rgba(28,37,36,0.55)' }}>
-                            {b.time}
-                          </span>
-                        </div>
+                        <span className={styles.boldText} style={{ color: 'var(--primary)' }}>
+                          {b.totalPrice}
+                        </span>
                       </td>
 
                       <td className={styles.td}>
                         <span
                           className={`${styles.paymentTag} ${
-                            b.payment === 'paid' ? styles.paidTag : styles.unpaidTag
+                            b.payment === 'paid' ? '' : styles.paymentUnpaid
                           }`}
                         >
-                          {b.payment === 'paid' ? 'Paid' : 'Unpaid'}
+                          <span className={styles.dot} />
+                          {b.payment.toUpperCase()}
                         </span>
                       </td>
 
@@ -654,21 +1394,21 @@ export default function Bookings() {
                                     : styles.statusInProgress
                           }`}
                         >
-                          {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
+                          {b.status.toUpperCase()}
                         </span>
                       </td>
 
                       <td className={styles.td}>
                         <button
                           type="button"
-                          className={styles.btnSecondary}
-                          style={{ padding: '6px 12px', fontSize: '12.5px' }}
+                          className={styles.btnActionSecondary}
+                          style={{ padding: '4px 10px', fontSize: '12px' }}
                           onClick={() => {
                             setSelectedBooking(b);
                             setViewMode('details');
                           }}
                         >
-                          View Details
+                          View Details &gt;
                         </button>
                       </td>
                     </tr>

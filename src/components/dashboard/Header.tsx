@@ -13,6 +13,7 @@ import {
   PawPrint,
   Tag,
   ArrowRight,
+  DollarSign,
 } from 'lucide-react';
 
 interface SearchResultItem {
@@ -59,6 +60,86 @@ export default function Header({
   });
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const notifContainerRef = useRef<HTMLDivElement>(null);
+
+  // Notification State
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<
+    Array<{
+      id: string;
+      title: string;
+      desc: string;
+      time: string;
+      unread: boolean;
+      type: 'booking' | 'payment' | 'intake' | 'meet';
+      targetTab: string;
+    }>
+  >([
+    {
+      id: '1',
+      title: 'New Booking Received',
+      desc: 'Sarah John booked Drop-In Visits for Max',
+      time: '10m ago',
+      unread: true,
+      type: 'booking',
+      targetTab: 'bookings',
+    },
+    {
+      id: '2',
+      title: 'Payment Confirmed',
+      desc: 'Clark Kent paid $45.00 for Dog Walking',
+      time: '1h ago',
+      unread: true,
+      type: 'payment',
+      targetTab: 'payments',
+    },
+    {
+      id: '3',
+      title: 'New Customer Intake Form',
+      desc: 'Veterinary and emergency details submitted',
+      time: '3h ago',
+      unread: true,
+      type: 'intake',
+      targetTab: 'bookings',
+    },
+  ]);
+
+  // Load live system notifications from API
+  useEffect(() => {
+    fetch('/api/admin/logs')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.logs) && data.logs.length > 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const liveNotifs = data.logs.slice(0, 5).map((log: any, idx: number) => {
+            let type: 'booking' | 'payment' | 'intake' | 'meet' = 'booking';
+            let targetTab = 'bookings';
+            if (log.action.includes('PAYMENT')) {
+              type = 'payment';
+              targetTab = 'payments';
+            } else if (log.action.includes('CLIENT')) {
+              type = 'intake';
+              targetTab = 'clients';
+            }
+
+            return {
+              id: String(log.id || idx),
+              title: log.action.replace(/_/g, ' '),
+              desc: log.details || 'System activity logged',
+              time: 'Recent',
+              unread: idx < 2,
+              type,
+              targetTab,
+            };
+          });
+
+          if (liveNotifs.length > 0) {
+            setNotifications(liveNotifs);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Debounced search
   useEffect(() => {
@@ -87,7 +168,7 @@ export default function Header({
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Click outside to close
+  // Click outside to close search and notifications
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -96,10 +177,32 @@ export default function Header({
       ) {
         setIsOpen(false);
       }
+      if (
+        notifContainerRef.current &&
+        !notifContainerRef.current.contains(e.target as Node)
+      ) {
+        setNotifOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const unreadCount = notifications.filter((n) => n.unread).length;
+
+  const handleMarkAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+  };
+
+  const handleNotificationClick = (n: (typeof notifications)[0]) => {
+    setNotifications((prev) =>
+      prev.map((item) => (item.id === n.id ? { ...item, unread: false } : item)),
+    );
+    setNotifOpen(false);
+    if (onNavigateTab && n.targetTab) {
+      onNavigateTab(n.targetTab);
+    }
+  };
 
   // Handle selecting a result
   const handleSelectResult = (type: string) => {
@@ -283,14 +386,84 @@ export default function Header({
       {/* Header Right Actions */}
       <div className="header-actions-container">
         {/* Notification Bell Badge Frame */}
-        <button
-          className="header-notif-btn"
-          aria-label="Notifications"
-          onClick={() => alert('No unread notifications')}
-        >
-          <Bell size={20} />
-          <span className="header-notif-badge">3</span>
-        </button>
+        <div className="header-notif-wrapper" ref={notifContainerRef}>
+          <button
+            type="button"
+            className="header-notif-btn"
+            aria-label="Notifications"
+            onClick={() => setNotifOpen((prev) => !prev)}
+            title="View notifications"
+          >
+            <Bell size={20} />
+            {unreadCount > 0 && <span className="header-notif-badge">{unreadCount}</span>}
+          </button>
+
+          {notifOpen && (
+            <div className="header-notif-dropdown">
+              <div className="header-notif-header">
+                <span className="header-notif-title">
+                  Notifications {unreadCount > 0 && `(${unreadCount} new)`}
+                </span>
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    className="header-notif-clear-btn"
+                    onClick={handleMarkAllAsRead}
+                  >
+                    Mark all read
+                  </button>
+                )}
+              </div>
+
+              <div className="header-notif-list">
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280', fontSize: '13px' }}>
+                    No notifications yet
+                  </div>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      className={`header-notif-item ${n.unread ? 'unread' : ''}`}
+                      onClick={() => handleNotificationClick(n)}
+                    >
+                      <div
+                        className="header-notif-icon-badge"
+                        style={{
+                          backgroundColor:
+                            n.type === 'payment'
+                              ? 'rgba(16, 185, 129, 0.12)'
+                              : n.type === 'intake'
+                                ? 'rgba(59, 130, 246, 0.12)'
+                                : 'rgba(177, 138, 69, 0.15)',
+                          color:
+                            n.type === 'payment'
+                              ? '#059669'
+                              : n.type === 'intake'
+                                ? '#2563eb'
+                                : '#b18a45',
+                        }}
+                      >
+                        {n.type === 'payment' ? (
+                          <DollarSign size={16} />
+                        ) : n.type === 'intake' ? (
+                          <PawPrint size={16} />
+                        ) : (
+                          <Calendar size={16} />
+                        )}
+                      </div>
+                      <div className="header-notif-content">
+                        <span className="header-notif-item-title">{n.title}</span>
+                        <span className="header-notif-item-desc">{n.desc}</span>
+                        <span className="header-notif-item-time">{n.time}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Profile Avatar Trigger */}
         <button

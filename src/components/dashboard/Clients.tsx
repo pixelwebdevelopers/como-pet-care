@@ -15,6 +15,9 @@ import {
   RefreshCw,
   MoreVertical,
   Calendar,
+  CheckCircle2,
+  FileText,
+  CalendarClock,
 } from 'lucide-react';
 
 // --- TSX TYPES & INTERFACES ---
@@ -33,7 +36,11 @@ interface Client {
   totalSpent: string;
   bookingsCount: number;
   upcomingBooking: string;
+  latestBookingRef?: string | null;
   status: ClientStatus;
+  hasCompletedIntake?: boolean;
+  intakeStatus?: 'completed' | 'pending';
+  meetAndGreetStatus?: string;
 }
 
 export default function Clients() {
@@ -44,6 +51,33 @@ export default function Clients() {
   const [sortBy, setSortBy] = useState<string>('name-asc');
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
+
+  // Dispatch Customer Reminder Emails (Intake Form or Meet & Greet)
+  const handleSendClientReminder = async (type: 'INTAKE_REMINDER' | 'MEET_GREET_RESCHEDULE', c: Client) => {
+    setSendingReminderId(c.id);
+    try {
+      const res = await fetch('/api/admin/reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type,
+          customerId: c.id,
+          bookingRef: c.latestBookingRef,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message || 'Notification sent successfully!');
+      } else {
+        alert(data.message || 'Failed to send notification.');
+      }
+    } catch {
+      alert('Network error sending reminder email.');
+    } finally {
+      setSendingReminderId(null);
+    }
+  };
 
   // Fetch live clients from API
   const loadClients = async () => {
@@ -212,12 +246,13 @@ export default function Clients() {
                 <th className={styles.th}>Total Spent</th>
                 <th className={styles.th}>Latest Visit</th>
                 <th className={styles.th}>Status</th>
+                <th className={styles.th}>Intake &amp; Meet &amp; Greet</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className={styles.emptyTd}>
+                  <td colSpan={9} className={styles.emptyTd}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
                       <RefreshCw size={26} className={styles.spinIcon} style={{ color: '#123f3c' }} />
                       <span style={{ fontSize: '14px', fontWeight: 600, color: '#123f3c' }}>Loading client records from database...</span>
@@ -226,7 +261,7 @@ export default function Clients() {
                 </tr>
               ) : filteredClients.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className={styles.emptyTd}>
+                  <td colSpan={9} className={styles.emptyTd}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
                       <div style={{ width: '52px', height: '52px', borderRadius: '16px', backgroundColor: '#f5eee3', color: '#b18a45', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Users size={26} />
@@ -331,6 +366,81 @@ export default function Clients() {
                         >
                           {c.status.toUpperCase()}
                         </span>
+                      </td>
+
+                      <td className={styles.td}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+                          {c.intakeStatus === 'completed' ? (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                color: '#059669',
+                                fontWeight: 600,
+                                fontSize: '11.5px',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                              }}
+                            >
+                              <CheckCircle2 size={12} /> Complete
+                            </span>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                              <span style={{ fontSize: '11px', color: '#b45309', fontWeight: 600 }}>
+                                Intake Pending
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleSendClientReminder('INTAKE_REMINDER', c)}
+                                disabled={sendingReminderId === c.id}
+                                style={{
+                                  padding: '3px 8px',
+                                  fontSize: '11.5px',
+                                  fontWeight: 600,
+                                  borderRadius: '6px',
+                                  border: '1px solid #b18a45',
+                                  backgroundColor: '#faf6ee',
+                                  color: '#b18a45',
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                                title="Send client an email with direct Intake Form link"
+                              >
+                                <FileText size={11} />
+                                <span>{sendingReminderId === c.id ? 'Sending...' : 'Send Intake Link'}</span>
+                              </button>
+                            </div>
+                          )}
+
+                          {c.status === 'new' && (
+                            <button
+                              type="button"
+                              onClick={() => handleSendClientReminder('MEET_GREET_RESCHEDULE', c)}
+                              disabled={sendingReminderId === c.id}
+                              style={{
+                                padding: '3px 8px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                borderRadius: '6px',
+                                border: '1px solid #3b82f6',
+                                backgroundColor: '#eff6ff',
+                                color: '#1d4ed8',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                              }}
+                              title="Send client a Meet & Greet notice and reschedule link"
+                            >
+                              <CalendarClock size={11} />
+                              <span>{sendingReminderId === c.id ? 'Sending...' : 'M&G Follow-Up'}</span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

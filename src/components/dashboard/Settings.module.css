@@ -206,6 +206,205 @@
   box-shadow: 0 2px 4px rgba(18, 63, 60, 0.15);
 }
 
+.formHelper {
+  font-size: 12px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  margin-top: 2px;
+}
+
+/* Slots Selection & Chip Matrix */
+.slotsGridContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+  gap: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 12px;
+  background-color: var(--warm-ivory, #fbf9f4);
+  border: 1px solid var(--card-border, #efe7d8);
+  border-radius: var(--radius-md, 10px);
+}
+
+.slotChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--card-border, #efe7d8);
+  background-color: #ffffff;
+  color: var(--foreground, #1c2524);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.slotChipActive {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  border-color: var(--primary, #123f3c);
+  box-shadow: 0 2px 4px rgba(18, 63, 60, 0.15);
+}
+
+.slotChip:hover:not(.slotChipActive) {
+  border-color: var(--primary, #123f3c);
+  background-color: #f7f4ed;
+}
+
+/* Section Toggle Cards */
+.sectionsContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  width: 100%;
+}
+
+.sectionCard {
+  border: 1px solid var(--card-border, #efe7d8);
+  border-radius: 12px;
+  padding: 16px;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sectionCardActive {
+  border-color: var(--primary, #123f3c);
+  background-color: #f6f8f7;
+  box-shadow: 0 2px 8px rgba(18, 63, 60, 0.08);
+}
+
+.sectionCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitleBadge {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+}
+
+.sectionCardDesc {
+  font-size: 12px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Days Pill Group */
+.daysContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.dayPill {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid var(--card-border, #efe7d8);
+  background-color: #ffffff;
+  color: var(--foreground, #1c2524);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dayPillActive {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  border-color: var(--primary, #123f3c);
+}
+
+/* Toggle Switch Row */
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background-color: var(--warm-ivory, #fbf9f4);
+  border: 1px solid var(--card-border, #efe7d8);
+  border-radius: 10px;
+}
+
+.toggleLabelGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.toggleTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+}
+
+.toggleSubtitle {
+  font-size: 12px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+}
+
+.toggleSwitch {
+  width: 44px;
+  height: 24px;
+  background-color: #d1d5db;
+  border-radius: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.toggleSwitchOn {
+  background-color: var(--primary, #123f3c);
+}
+
+.toggleKnob {
+  width: 18px;
+  height: 18px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggleSwitchOn .toggleKnob {
+  transform: translateX(20px);
+}
+
+.alertBanner {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.alertBannerSuccess {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.alertBannerError {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
 /* ==========================================================================
    LAPTOP RESPONSIVENESS (1024px to 1400px)
    ========================================================================== */
@@ -250,6 +449,10 @@
   .formGrid {
     gap: 16px;
   }
+
+  .sectionsContainer {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ==========================================================================
@@ -276,4 +479,9 @@
     width: 100%;
     text-align: center;
   }
+
+  .sectionsContainer {
+    grid-template-columns: 1fr;
+  }
 }
+

@@ -169,7 +169,7 @@ export default function BookingConfirmation({
 }: BookingConfirmationProps) {
   const router = useRouter();
   const dateDisplay = bookingEndDate
-    ? `${bookingDate} - ${bookingEndDate} (${numberOfDays} Day)`
+    ? `${bookingDate} - ${bookingEndDate} (${numberOfDays} ${numberOfDays === 1 ? 'Night' : 'Nights'})`
     : bookingDate;
 
   const handleGoToIntake = () => {
@@ -249,6 +249,16 @@ export default function BookingConfirmation({
             <span className={styles.confirmRowValue}>{serviceName}</span>
           </div>
 
+          {petName && (
+            <div className={styles.confirmRow}>
+              <span className={styles.confirmRowIcon}>
+                <CheckCircleIcon />
+              </span>
+              <span className={styles.confirmRowLabel}>Pet</span>
+              <span className={styles.confirmRowValue}>{petName}</span>
+            </div>
+          )}
+
           <div className={styles.confirmRow}>
             <span className={styles.confirmRowIcon}>
               <CalendarIcon />
@@ -308,10 +318,7 @@ export default function BookingConfirmation({
               Return to Homepage
             </button>
           )}
-          <button
-            className={styles.btnViewDetails}
-            onClick={() => router.push('/')}
-          >
+          <button className={styles.btnViewDetails} onClick={() => router.push('/')}>
             Finished
           </button>
         </div>

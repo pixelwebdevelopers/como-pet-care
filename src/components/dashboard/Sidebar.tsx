@@ -67,8 +67,8 @@ export default function Sidebar({
           <Image
             src="/assets/como-logo.png"
             alt="CoMo Pet Care Brand Logo"
-            width={124}
-            height={36}
+            width={160}
+            height={46}
             className="sidebar-brand-img"
             priority
           />

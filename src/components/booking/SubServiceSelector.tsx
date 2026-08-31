@@ -66,6 +66,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       description:
         "A personalized 30-minute visit designed to keep your pet comfortable and cared for while you're away.",
       priceText: '$34',
+      basePrice: 34,
     },
     {
       id: 'drop_in_60',
@@ -73,6 +74,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       description:
         "A personalized 60-minute visit designed to keep your pet comfortable and cared for while you're away.",
       priceText: '$44',
+      basePrice: 44,
     },
   ];
 
@@ -83,12 +85,14 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       title: 'Half-Day Companion Visit',
       description: 'Up to 4 hours of personalized in-home care for your pet',
       priceText: '$69',
+      basePrice: 69,
     },
     {
       id: 'sitting_full_day',
       title: 'Full-Day Companion Visit',
       description: 'Up to 8 hours of personalized in-home care for your pet',
       priceText: '$99',
+      basePrice: 99,
     },
     {
       id: 'sitting_overnight',
@@ -96,6 +100,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       description: 'Full-day and overnight care for your pet',
       priceText: '$119/day',
       badge: 'Most popular',
+      basePrice: 119,
     },
   ];
 
@@ -106,6 +111,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       title: 'One-Time Walk',
       description: 'Flexible single booking',
       priceText: '$34 / walk',
+      basePrice: 34,
     },
     {
       id: 'walk_30_weekly',
@@ -113,6 +119,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       description: 'Choose 1–5 walks each week with weekly billing',
       priceText: 'From $29 / week',
       savingText: '(Save up to $51/Week)',
+      basePrice: 29,
     },
     {
       id: 'walk_30_monthly',
@@ -121,6 +128,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       priceText: 'From $104 / month',
       savingText: '(Save up to $251/Month)',
       badge: 'Most popular',
+      basePrice: 104,
     },
     {
       id: 'walk_30_annual',
@@ -128,6 +136,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       description: 'Choose 1–5 walks each week with annual billing',
       priceText: 'From $1,149 / year',
       savingText: '(Save up to $3,211/Year)',
+      basePrice: 1149,
     },
   ];
 
@@ -137,6 +146,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       title: 'One-Time Walk',
       description: 'Flexible single booking',
       priceText: '$44 / walk',
+      basePrice: 44,
     },
     {
       id: 'walk_60_weekly',
@@ -144,6 +154,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       description: 'Choose 1–5 walks each week with weekly billing',
       priceText: 'From $39 / week',
       savingText: '(Save up to $51/Week)',
+      basePrice: 39,
     },
     {
       id: 'walk_60_monthly',
@@ -152,6 +163,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       priceText: 'From $144 / month',
       savingText: '(Save up to $251/Month)',
       badge: 'Most popular',
+      basePrice: 144,
     },
     {
       id: 'walk_60_annual',
@@ -159,6 +171,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       description: 'Choose 1–5 walks each week with annual billing',
       priceText: 'From $1,549 / year',
       savingText: '(Save up to $3,211/Year)',
+      basePrice: 1549,
     },
   ];
 
@@ -169,6 +182,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       title: 'One-Time Cleanup',
       description: 'Perfect for spring cleanups, special events, or move-outs.',
       priceText: '$65 One-Time',
+      basePrice: 65,
     },
     {
       id: 'scoop_weekly',
@@ -176,6 +190,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       description: 'Enjoy a consistently clean yard with scheduled once-weekly cleanups.',
       priceText: 'From $29/Week',
       savingText: '(Save $20/Week)',
+      basePrice: 29,
     },
     {
       id: 'scoop_monthly',
@@ -185,6 +200,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
       priceText: 'From $104/Month',
       savingText: '(Save up to $92/Month)',
       badge: 'Most popular',
+      basePrice: 104,
     },
     {
       id: 'scoop_annual',
@@ -193,6 +209,7 @@ export default function SubServiceSelector({ serviceId, onSelectPlan }: SubServi
         'Year-round, once-weekly cleanups for a consistently clean yard without the hassle.',
       priceText: 'From $1,054/year',
       savingText: '(Save up to $1,494/Year)',
+      basePrice: 1054,
     },
   ];
 

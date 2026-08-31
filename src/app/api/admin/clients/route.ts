@@ -32,6 +32,11 @@ export async function GET(req: Request) {
         transactions: {
           where: { status: 'SUCCEEDED' },
         },
+        intakeProfiles: true,
+        meetAndGreets: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -41,6 +46,8 @@ export async function GET(req: Request) {
     const clients = customers.map((c) => {
       const totalSpent = c.transactions.reduce((acc, t) => acc + Number(t.amount), 0);
       const latestBooking = c.bookings[0];
+      const hasCompletedIntake = c.intakeProfiles.length > 0;
+      const latestMeetAndGreet = c.meetAndGreets[0];
 
       return {
         id: String(c.id),
@@ -55,7 +62,11 @@ export async function GET(req: Request) {
         totalSpent: `$${totalSpent.toFixed(2)}`,
         bookingsCount: c.bookings.length,
         upcomingBooking: latestBooking ? `${latestBooking.serviceName} (${latestBooking.bookingDate})` : 'No bookings yet',
+        latestBookingRef: latestBooking?.reference || null,
         status: c.isNewCustomer ? 'new' : 'active',
+        hasCompletedIntake,
+        intakeStatus: hasCompletedIntake ? 'completed' : 'pending',
+        meetAndGreetStatus: latestMeetAndGreet?.status || (c.isNewCustomer ? 'pending' : 'none'),
         createdAt: c.createdAt.toISOString(),
       };
     });

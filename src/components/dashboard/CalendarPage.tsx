@@ -68,10 +68,14 @@ export default function CalendarPage() {
           else if (s.includes('progress')) mappedStatus = 'in_progress';
           else if (s.includes('upcoming')) mappedStatus = 'upcoming';
 
+          const custName = b.customer
+            ? `${b.customer.firstName || ''} ${b.customer.lastName || ''}`.trim()
+            : 'Customer';
+
           return {
             id: String(b.id),
             reference: b.reference,
-            clientName: `${b.customer.firstName} ${b.customer.lastName}`,
+            clientName: custName || 'Client',
             petName: pet?.name || 'Pet',
             service: b.serviceName,
             duration: b.serviceId === '2' || b.planTitle?.includes('60') ? '60 min' : '30 min',

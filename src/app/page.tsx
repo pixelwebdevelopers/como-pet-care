@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Eye, EyeOff, ArrowLeft, X, Mail, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, X, Mail, ShieldCheck, RefreshCw } from 'lucide-react';
 
 
 // Dashboard Modular Components
@@ -14,7 +14,7 @@ import UpcomingBookings from '@/components/dashboard/UpcomingBookings';
 import CalendarOverview from '@/components/dashboard/CalendarOverview';
 import RecentActivity from '@/components/dashboard/RecentActivity';
 import Waitlist from '@/components/dashboard/Waitlist';
-import QuickActions from '@/components/dashboard/QuickActions';
+import RecentPayments from '@/components/dashboard/RecentPayments';
 import Bookings from '@/components/dashboard/Bookings';
 import CalendarPage from '@/components/dashboard/CalendarPage';
 import Clients from '@/components/dashboard/Clients';
@@ -421,8 +421,32 @@ export default function AuthControllerPage() {
               <>
                 {/* Dashboard Sub-Header */}
                 <div className="dashboard-title-bar">
-                  <h1 className="dashboard-overview-title">Dashboard Overview</h1>
-                  <span className="dashboard-breadcrumb">Home &gt; Dashboard</span>
+                  <div className="dashboard-title-group">
+                    <h1 className="dashboard-overview-title">Dashboard Overview</h1>
+                    <span className="dashboard-breadcrumb">Home &gt; Dashboard</span>
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={loadAdminDashboardData}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 16px',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #efe7d8',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: 'var(--foreground)',
+                      }}
+                    >
+                      <RefreshCw size={14} />
+                      <span>Refresh</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Metrics cards grid */}
@@ -452,12 +476,8 @@ export default function AuthControllerPage() {
                     items={dashboardData?.waitlist}
                     onViewAll={() => setActiveTab('waitlist')}
                   />
-                  <QuickActions
-                    onNewBooking={() => (window.location.href = '/booking')}
-                    onNewClient={() => setActiveTab('clients')}
-                    onNewPet={() => setActiveTab('pets')}
-                    onRecordPayment={() => setActiveTab('payments')}
-                    onBlockAvailability={() => setActiveTab('calendar')}
+                  <RecentPayments
+                    onViewAll={() => setActiveTab('payments')}
                   />
                 </div>
               </>

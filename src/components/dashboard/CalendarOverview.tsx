@@ -1,9 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarDays } from 'lucide-react';
+import { parseDateString, normalizeDateKey } from '@/lib/availability';
 
-export default function CalendarOverview() {
+interface CalendarEvent {
+  id: string;
+  reference: string;
+  clientName: string;
+  petName: string;
+  service: string;
+  dateNormalized: string;
+  time: string;
+  dayIndex: number; // 0-6
+  hourBracket: number; // 0: 8 AM, 1: 10 AM, 2: 12 PM, 3: 2 PM, 4: 4 PM, 5: 6 PM
+  themeClass: string;
+}
+
+export default function CalendarOverview({ onSelectBooking }: { onSelectBooking?: (id: string) => void }) {
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+
   const today = new Date();
   const currentDayOfWeek = today.getDay(); // 0 is Sunday
   const startOfWeek = new Date(today);
@@ -16,11 +32,80 @@ export default function CalendarOverview() {
     return {
       name: dayNames[i],
       num: String(d.getDate()),
+      dateStr: normalizeDateKey(d),
       active: d.toDateString() === today.toDateString(),
+      dayIndex: i,
     };
   });
 
-  const hours = ['8 AM', '10 AM', '12 PM', '2 PM', '4 PM', '6 PM'];
+  const hours = [
+    { label: '8 AM', minHour: 7, maxHour: 9 },
+    { label: '10 AM', minHour: 9, maxHour: 11 },
+    { label: '12 PM', minHour: 11, maxHour: 13 },
+    { label: '2 PM', minHour: 13, maxHour: 15 },
+    { label: '4 PM', minHour: 15, maxHour: 17 },
+    { label: '6 PM', minHour: 17, maxHour: 20 },
+  ];
+
+  useEffect(() => {
+    fetch('/api/bookings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.bookings)) {
+          const parsedEvents: CalendarEvent[] = [];
+
+          for (const b of data.bookings) {
+            if (b.status === 'CANCELLED') continue;
+
+            const bDate = parseDateString(b.bookingDate);
+            if (!bDate) continue;
+            const bNorm = normalizeDateKey(bDate);
+
+            // Find matching day in current week
+            const dayMatch = days.find((d) => d.dateStr === bNorm);
+            if (!dayMatch) continue;
+
+            // Determine hour bracket
+            let bracket = 0;
+            const timeUpper = (b.startTime || '9:00 AM').toUpperCase();
+            let hr = parseInt(timeUpper.split(':')[0], 10);
+            if (timeUpper.includes('PM') && hr < 12) hr += 12;
+            if (timeUpper.includes('AM') && hr === 12) hr = 0;
+
+            if (hr < 9) bracket = 0;
+            else if (hr < 11) bracket = 1;
+            else if (hr < 13) bracket = 2;
+            else if (hr < 15) bracket = 3;
+            else if (hr < 17) bracket = 4;
+            else bracket = 5;
+
+            // Theme class based on service
+            let themeClass = 'event-dogwalking';
+            const sName = (b.serviceName || '').toLowerCase();
+            if (sName.includes('sitting')) themeClass = 'event-petsitting';
+            else if (sName.includes('drop')) themeClass = 'event-dropin';
+
+            const pet = b.customer?.pets?.[0];
+
+            parsedEvents.push({
+              id: String(b.id),
+              reference: b.reference,
+              clientName: `${b.customer?.firstName || ''} ${b.customer?.lastName || ''}`.trim(),
+              petName: pet?.name || 'Pet',
+              service: b.serviceName,
+              dateNormalized: bNorm,
+              time: b.startTime || '9:00 AM',
+              dayIndex: dayMatch.dayIndex,
+              hourBracket: bracket,
+              themeClass,
+            });
+          }
+
+          setEvents(parsedEvents);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="dashboard-card calendar-overview-card">
@@ -48,114 +133,38 @@ export default function CalendarOverview() {
 
       {/* Hour Grid Slots */}
       <div className="calendar-grid-container">
-        {hours.map((hour, idx) => (
-          <div key={idx} className="calendar-grid-row">
-            <span className="calendar-row-time-lbl">{hour}</span>
-            <div className="calendar-row-slots">
-              {/* Event Block 1 (Dog Walking - Green) */}
-              {idx === 0 && (
-                <div
-                  className="calendar-event-block event-dogwalking"
-                  style={{ left: '15.5%', width: '12%', top: '20%' }}
-                  title="Dog Walking (Active Booking)"
-                />
-              )}
-              {/* Event Block 2 (Pet Sitting - Cream) */}
-              {idx === 0 && (
-                <div
-                  className="calendar-event-block event-petsitting"
-                  style={{ left: '72.5%', width: '12%', top: '20%' }}
-                  title="Pet Sitting"
-                />
-              )}
+        {hours.map((hourObj, bracketIdx) => {
+          const bracketEvents = events.filter((e) => e.hourBracket === bracketIdx);
 
-              {/* Event Block 3 (Drop-in - Gold/Beige) */}
-              {idx === 1 && (
-                <div
-                  className="calendar-event-block event-dropin"
-                  style={{ left: '15.5%', width: '12%', top: '20%' }}
-                  title="Drop-In Visit"
-                />
-              )}
-              {/* Event Block 4 (Pet Sitting - Cream) */}
-              {idx === 1 && (
-                <div
-                  className="calendar-event-block event-petsitting"
-                  style={{ left: '58.5%', width: '12%', top: '20%' }}
-                  title="Pet Sitting"
-                />
-              )}
-              {/* Event Block 5 (Pet Sitting - Cream) */}
-              {idx === 1 && (
-                <div
-                  className="calendar-event-block event-petsitting"
-                  style={{ left: '86.5%', width: '10%', top: '20%' }}
-                  title="Pet Sitting"
-                />
-              )}
+          return (
+            <div key={bracketIdx} className="calendar-grid-row">
+              <span className="calendar-row-time-lbl">{hourObj.label}</span>
+              <div className="calendar-row-slots" style={{ position: 'relative' }}>
+                {bracketEvents.map((evt) => {
+                  // Position across 7 columns (each column is ~14.28%)
+                  const leftPercent = `${evt.dayIndex * 14.28 + 1}%`;
+                  const widthPercent = '12.5%';
 
-              {/* Event Block 6 (Pet Sitting - Cream) */}
-              {idx === 2 && (
-                <div
-                  className="calendar-event-block event-petsitting"
-                  style={{ left: '1.5%', width: '12%', top: '20%' }}
-                  title="Pet Sitting"
-                />
-              )}
-              {/* Event Block 7 (Drop-In - Gold/Beige) */}
-              {idx === 2 && (
-                <div
-                  className="calendar-event-block event-dropin"
-                  style={{ left: '29.5%', width: '12%', top: '20%' }}
-                  title="Drop-In Visit"
-                />
-              )}
-
-              {/* Event Block 8 (Pet Sitting - Cream) */}
-              {idx === 3 && (
-                <div
-                  className="calendar-event-block event-petsitting"
-                  style={{ left: '44%', width: '12%', top: '20%' }}
-                  title="Pet Sitting"
-                />
-              )}
-              {/* Event Block 9 (Drop-In - Gold/Beige) */}
-              {idx === 3 && (
-                <div
-                  className="calendar-event-block event-dropin"
-                  style={{ left: '72.5%', width: '12%', top: '20%' }}
-                  title="Drop-In Visit"
-                />
-              )}
-
-              {/* Event Block 10 (Dog Walking - Green) */}
-              {idx === 4 && (
-                <div
-                  className="calendar-event-block event-dogwalking"
-                  style={{ left: '29.5%', width: '12%', top: '20%' }}
-                  title="Dog Walking"
-                />
-              )}
-              {/* Event Block 11 (Pet Sitting - Cream) */}
-              {idx === 4 && (
-                <div
-                  className="calendar-event-block event-petsitting"
-                  style={{ left: '86.5%', width: '10%', top: '20%' }}
-                  title="Pet Sitting"
-                />
-              )}
-
-              {/* Event Block 12 (Drop-In - Gold/Beige) */}
-              {idx === 5 && (
-                <div
-                  className="calendar-event-block event-dropin"
-                  style={{ left: '44%', width: '12%', top: '20%' }}
-                  title="Drop-In Visit"
-                />
-              )}
+                  return (
+                    <div
+                      key={evt.id}
+                      className={`calendar-event-block ${evt.themeClass}`}
+                      style={{
+                        left: leftPercent,
+                        width: widthPercent,
+                        top: '15%',
+                        cursor: 'pointer',
+                        zIndex: 2,
+                      }}
+                      title={`${evt.service} (${evt.time}) - ${evt.clientName} [${evt.petName}] (${evt.reference})`}
+                      onClick={() => onSelectBooking?.(evt.id)}
+                    />
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

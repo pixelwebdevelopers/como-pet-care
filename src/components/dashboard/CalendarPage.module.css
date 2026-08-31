@@ -12,10 +12,16 @@
 /* 2-Column Responsive Grid Layout */
 .calendarLayout {
   display: grid;
-  grid-template-columns: minmax(0, 2.4fr) minmax(300px, 1fr);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
   align-items: start;
   width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .calendarLayout {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Main Calendar Schedule Card */

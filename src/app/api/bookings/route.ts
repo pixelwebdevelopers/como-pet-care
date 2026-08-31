@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { sendEmail, emailTemplates } from '@/lib/mail';
 import {
   getBookedIntervalsForDate,
   parseTimeToMinutes,
@@ -258,6 +259,71 @@ export async function POST(req: Request) {
       `Successfully created booking ${result.booking.reference} for ${result.customer.email}`,
     );
 
+    // Dispatch Emails based on Business Settings
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const settings: any = await (prisma as any).businessSetting.findUnique({
+        where: { id: 'default' },
+      });
+
+      const sendCustomer = settings?.sendCustomerConfirmation ?? true;
+      const sendAdmin = settings?.sendAdminNotification ?? true;
+      const adminEmail = settings?.adminNotificationEmail || 'admin@comopetcare.com';
+
+      // 1. Customer Confirmation Email
+      if (sendCustomer && result.customer.email) {
+        const custHtml = emailTemplates.customerBookingConfirmation({
+          clientName: `${result.customer.firstName} ${result.customer.lastName}`.trim(),
+          reference: result.booking.reference,
+          serviceName: result.booking.serviceName,
+          planTitle: result.booking.planTitle || undefined,
+          bookingDate: result.booking.bookingDate,
+          startTime: result.booking.startTime || '9:00 AM',
+          endTime: result.booking.endTime || undefined,
+          petNames: result.pet?.name || 'Your Pet',
+          address: `${result.customer.address || ''}${result.customer.city ? `, ${result.customer.city}` : ''}`,
+          totalPrice: `$${Number(result.booking.totalPrice).toFixed(2)}`,
+          paymentStatus: result.booking.paymentStatus,
+          notes: result.booking.specialNotes || undefined,
+        });
+
+        await sendEmail({
+          to: result.customer.email,
+          subject: `Booking Confirmed #${result.booking.reference} — CoMo Pet Care`,
+          html: custHtml,
+        });
+      }
+
+      // 2. Admin Alert Email
+      if (sendAdmin && adminEmail) {
+        const adminHtml = emailTemplates.adminBookingAlert({
+          clientName: `${result.customer.firstName} ${result.customer.lastName}`.trim(),
+          clientEmail: result.customer.email,
+          clientPhone: result.customer.phone || 'N/A',
+          reference: result.booking.reference,
+          serviceName: result.booking.serviceName,
+          planTitle: result.booking.planTitle || undefined,
+          bookingDate: result.booking.bookingDate,
+          startTime: result.booking.startTime || '9:00 AM',
+          endTime: result.booking.endTime || undefined,
+          petNames: result.pet?.name || 'Pet',
+          address: `${result.customer.address || ''}${result.customer.city ? `, ${result.customer.city}` : ''}`,
+          totalPrice: `$${Number(result.booking.totalPrice).toFixed(2)}`,
+          paymentStatus: result.booking.paymentStatus,
+          isColumbiaResident: result.customer.isColumbiaResident,
+          notes: result.booking.specialNotes || undefined,
+        });
+
+        await sendEmail({
+          to: adminEmail,
+          subject: `[NEW BOOKING] #${result.booking.reference} - ${result.customer.firstName} ${result.customer.lastName}`,
+          html: adminHtml,
+        });
+      }
+    } catch (emailErr) {
+      logger.error('Failed to send booking notification emails', emailErr);
+    }
+
     return NextResponse.json({
       success: true,
       bookingReference: result.booking.reference,
@@ -332,7 +398,7 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { id, status, paymentStatus } = body;
+    const { id, status, paymentStatus, bookingDate, startTime, endTime, specialNotes } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -341,14 +407,26 @@ export async function PATCH(req: Request) {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
     if (status) updateData.status = status.toUpperCase();
     if (paymentStatus) updateData.paymentStatus = paymentStatus.toUpperCase();
+    if (bookingDate) updateData.bookingDate = bookingDate.trim();
+    if (startTime) updateData.startTime = startTime.trim();
+    if (endTime) updateData.endTime = endTime.trim();
+    if (specialNotes !== undefined) updateData.specialNotes = specialNotes ? specialNotes.trim() : null;
 
     const booking = await prisma.booking.update({
       where: { id: parseInt(String(id), 10) },
       data: updateData,
-      include: { customer: true },
+      include: {
+        customer: {
+          include: { pets: true },
+        },
+        meetAndGreet: true,
+        intakeProfiles: true,
+        transactions: true,
+      },
     });
 
     // Record system log
@@ -356,7 +434,7 @@ export async function PATCH(req: Request) {
       await prisma.systemLog.create({
         data: {
           action: 'BOOKING_UPDATED',
-          details: `Booking ${booking.reference} status updated to ${booking.status} by admin.`,
+          details: `Booking ${booking.reference} updated: status=${booking.status}, date=${booking.bookingDate}, time=${booking.startTime} by admin.`,
         },
       });
     } catch {

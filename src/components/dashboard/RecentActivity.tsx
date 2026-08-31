@@ -17,31 +17,7 @@ interface RecentActivityProps {
 }
 
 export default function RecentActivity({ activities: initialActivities, onViewAll }: RecentActivityProps) {
-  const defaultActivities: ActivityItem[] = [
-    {
-      id: '1',
-      action: 'New Booking Created',
-      details: 'Max - Dog Walking (30 min)',
-      time: 'Just now',
-      themeClass: 'activity-booking',
-    },
-    {
-      id: '2',
-      action: 'Intake Form Completed',
-      details: 'Luna - Medical & Emergency contacts saved',
-      time: '2 hr ago',
-      themeClass: 'activity-intake',
-    },
-    {
-      id: '3',
-      action: 'Payment Received',
-      details: 'Bella - Pet Sitting $280.00',
-      time: 'Yesterday',
-      themeClass: 'activity-payment',
-    },
-  ];
-
-  const activities = initialActivities && initialActivities.length > 0 ? initialActivities : defaultActivities;
+  const activities = initialActivities || [];
 
   const getActivityIcon = (themeClass?: string) => {
     if (themeClass === 'activity-intake') return <CheckCircle2 size={16} />;
@@ -58,7 +34,7 @@ export default function RecentActivity({ activities: initialActivities, onViewAl
         </div>
         <button
           className="card-header-link"
-          onClick={() => onViewAll?.() || alert('Showing all system audit logs')}
+          onClick={() => onViewAll?.()}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
         >
           View all <ArrowRight size={14} />
@@ -66,20 +42,41 @@ export default function RecentActivity({ activities: initialActivities, onViewAl
       </div>
 
       <div className="activity-timeline-container">
-        {activities.map((item) => (
-          <div key={item.id} className="activity-row">
-            <div className={`activity-icon-badge ${item.themeClass || 'activity-booking'}`}>
-              {getActivityIcon(item.themeClass)}
-            </div>
-            <div className="activity-content-box">
-              <div className="activity-details-text">
-                <span className="activity-action-title">{item.action}</span>
-                <span className="activity-details-desc">{item.details}</span>
-              </div>
-              <span className="activity-time-stamp">{item.time}</span>
-            </div>
+        {activities.length === 0 ? (
+          <div
+            style={{
+              padding: '32px 16px',
+              textAlign: 'center',
+              backgroundColor: 'var(--warm-ivory, #fbf9f4)',
+              borderRadius: '12px',
+              border: '1px dashed var(--card-border, #efe7d8)',
+              margin: '8px 0',
+            }}
+          >
+            <Activity size={28} style={{ color: 'var(--primary)', opacity: 0.4, marginBottom: '8px' }} />
+            <p style={{ margin: 0, fontWeight: 600, fontSize: '13.5px', color: 'var(--foreground)' }}>
+              No recent audit activity
+            </p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>
+              Actions like new bookings and payments will be logged here.
+            </p>
           </div>
-        ))}
+        ) : (
+          activities.map((item) => (
+            <div key={item.id} className="activity-row">
+              <div className={`activity-icon-badge ${item.themeClass || 'activity-booking'}`}>
+                {getActivityIcon(item.themeClass)}
+              </div>
+              <div className="activity-content-box">
+                <div className="activity-details-text">
+                  <span className="activity-action-title">{item.action}</span>
+                  <span className="activity-details-desc">{item.details}</span>
+                </div>
+                <span className="activity-time-stamp">{item.time}</span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

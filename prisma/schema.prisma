@@ -246,3 +246,34 @@ model ServiceConfiguration {
 
   @@map("service_configurations")
 }
+
+model BusinessSetting {
+  id                     String   @id @default("default")
+  businessName           String   @default("CoMo Pet Care")
+  businessEmail          String   @default("info@comopetcare.com")
+  businessPhone          String   @default("(555) 256-2648")
+  businessAddress        String   @default("123 Main St, Columbia, MO 65201")
+  businessHours          String   @default("7:00 AM - 7:00 PM")
+  websiteUrl             String   @default("https://comopetcare.com")
+  serviceArea            String   @default("Columbia metro area and surrounding county areas.")
+  // Operating time settings
+  openingTime            String   @default("7:00 AM")
+  closingTime            String   @default("7:00 PM")
+  slotInterval           Int      @default(30) // in minutes
+  enabledDays            String   @default("Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday")
+  customSlots            String?  @db.Text    // JSON array of active slots
+  enabledSections        String   @default("morning,afternoon,evening")
+  // Notification settings
+  adminNotificationEmail String   @default("info@comopetcare.com")
+  sendCustomerConfirmation Boolean @default(true)
+  sendAdminNotification  Boolean  @default(true)
+  // Booking policies
+  minAdvanceHours        Int      @default(2)
+  requireMeetAndGreet    Boolean  @default(true)
+  cancellationPolicy     String?  @db.Text
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@map("business_settings")
+}
+

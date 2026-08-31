@@ -172,6 +172,7 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
 
   const [selectedDay, setSelectedDay] = useState<number>(defaultDay);
   const [startTime, setStartTime] = useState<string>('9:00 AM');
+  const [timeFilter, setTimeFilter] = useState<'all' | 'morning' | 'afternoon' | 'evening'>('all');
 
   // Real-time slot availability
   const [unavailableSlots, setUnavailableSlots] = useState<Record<string, string>>({});
@@ -224,6 +225,25 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
   ];
 
   const uniqueTimeSlots = Array.from(new Set(timeSlotsList));
+
+  // Time period filter helpers
+  const isMorningSlot = (s: string) => s.includes('AM');
+  const isAfternoonSlot = (s: string) => {
+    if (!s.includes('PM')) return false;
+    const hour = parseInt(s.split(':')[0], 10);
+    return hour === 12 || (hour >= 1 && hour <= 4);
+  };
+  const isEveningSlot = (s: string) => {
+    if (!s.includes('PM')) return false;
+    return !isAfternoonSlot(s);
+  };
+
+  const getFilteredSlots = (filter: 'all' | 'morning' | 'afternoon' | 'evening') => {
+    if (filter === 'morning') return uniqueTimeSlots.filter(isMorningSlot);
+    if (filter === 'afternoon') return uniqueTimeSlots.filter(isAfternoonSlot);
+    if (filter === 'evening') return uniqueTimeSlots.filter(isEveningSlot);
+    return uniqueTimeSlots;
+  };
 
   // Query slot collisions for the selected date
   useEffect(() => {
@@ -310,6 +330,7 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
               <div className={styles.calHeader}>
                 <button
                   type="button"
+                  aria-label="Previous Month"
                   className={styles.btnCalArrow}
                   onClick={() => {
                     if (currentMonth === 0) {
@@ -322,11 +343,13 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
                 >
                   <ArrowLeftChevron />
                 </button>
-                <span className={styles.calMonth}>
-                  {monthNames[currentMonth]} {currentYear}
-                </span>
+                <div className={styles.calMonthDisplay}>
+                  <span className={styles.calMonth}>{monthNames[currentMonth]}</span>
+                  <span className={styles.calYear}>{currentYear}</span>
+                </div>
                 <button
                   type="button"
+                  aria-label="Next Month"
                   className={styles.btnCalArrow}
                   onClick={() => {
                     if (currentMonth === 11) {
@@ -350,7 +373,7 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
 
                 {daysArray.map((day, idx) => {
                   if (day === null) {
-                    return <div key={`empty-${idx}`} />;
+                    return <div key={`empty-${idx}`} className={styles.calEmptyCell} />;
                   }
 
                   let isDisabled = false;
@@ -385,6 +408,29 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
                 })}
               </div>
             </div>
+
+            {/* Informative Date Card */}
+            <div className={styles.selectedDateCard}>
+              <div className={styles.selectedDateHeader}>
+                <div className={styles.selectedDateIconWrap}>
+                  <CalendarIcon />
+                </div>
+                <div className={styles.selectedDateMeta}>
+                  <span className={styles.selectedDateLabel}>Selected Date</span>
+                  <span className={styles.selectedDateText}>
+                    {selectedDay
+                      ? `${monthNames[currentMonth]} ${selectedDay}, ${currentYear}`
+                      : 'Choose a date'}
+                  </span>
+                </div>
+              </div>
+              <div className={styles.selectedDateBadges}>
+                <span className={styles.visitDurationBadge}>
+                  <ClockIcon /> 30 Minutes
+                </span>
+                <span className={styles.serviceAreaBadge}>Free Consultation</span>
+              </div>
+            </div>
           </div>
 
           {/* Column 2: Start Time slots */}
@@ -394,48 +440,85 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
                 <ClockIcon />
                 Select Time
               </h3>
-              <button type="button" className={styles.btnClear} onClick={() => setStartTime('')}>
-                Clear
-              </button>
+              {startTime && (
+                <button type="button" className={styles.btnClear} onClick={() => setStartTime('')}>
+                  Clear
+                </button>
+              )}
             </div>
-            <p className={styles.timeInfo}>All times shown are in Central Time (CT)</p>
 
-            <div className={styles.slotsGrid}>
-              {uniqueTimeSlots.map((slot, idx) => {
-                let isLimitDisabled = false;
-                if (
-                  selectedDay &&
-                  parsedLimit &&
-                  selectedDay === parsedLimit.day &&
-                  currentMonth === parsedLimit.month &&
-                  currentYear === parsedLimit.year
-                ) {
-                  const slotMin = parseTimeToMinutes(slot);
-                  const limitMin = parseTimeToMinutes(serviceSchedule?.startTime);
-                  if (slotMin >= limitMin) {
-                    isLimitDisabled = true;
-                  }
-                }
+            <div className={styles.availabilityNotice}>
+              <span className={styles.readyAvailability}>Central Time (CT) • 30 min duration</span>
+            </div>
 
-                const isBooked = Boolean(unavailableSlots[slot]);
-                const isSlotDisabled = isLimitDisabled || isBooked;
+            {/* Time Period Filter Tabs */}
+            <div className={styles.timeFilterBar}>
+              {(['all', 'morning', 'afternoon', 'evening'] as const).map((period) => {
+                const count =
+                  period === 'all' ? uniqueTimeSlots.length : getFilteredSlots(period).length;
+                const label =
+                  period === 'all'
+                    ? 'All'
+                    : period === 'morning'
+                      ? 'Morning'
+                      : period === 'afternoon'
+                        ? 'Afternoon'
+                        : 'Evening';
 
                 return (
                   <button
-                    key={`meet-${slot}-${idx}`}
+                    key={period}
                     type="button"
-                    disabled={isSlotDisabled}
-                    title={isBooked ? unavailableSlots[slot] : ''}
-                    className={`${styles.slotButton} ${
-                      startTime === slot ? styles.slotButtonActive : ''
-                    } ${isSlotDisabled ? styles.slotButtonDisabled : ''}`}
-                    onClick={() => !isSlotDisabled && setStartTime(slot)}
+                    className={`${styles.filterTab} ${
+                      timeFilter === period ? styles.filterTabActive : ''
+                    }`}
+                    onClick={() => setTimeFilter(period)}
                   >
-                    <span>{slot}</span>
-                    {isBooked && <span className={styles.bookedTag}>Booked</span>}
+                    {label} <span className={styles.filterCount}>({count})</span>
                   </button>
                 );
               })}
+            </div>
+
+            {/* Scrollable slots grid */}
+            <div className={styles.slotsScrollContainer}>
+              <div className={styles.slotsGrid}>
+                {getFilteredSlots(timeFilter).map((slot, idx) => {
+                  let isLimitDisabled = false;
+                  if (
+                    selectedDay &&
+                    parsedLimit &&
+                    selectedDay === parsedLimit.day &&
+                    currentMonth === parsedLimit.month &&
+                    currentYear === parsedLimit.year
+                  ) {
+                    const slotMin = parseTimeToMinutes(slot);
+                    const limitMin = parseTimeToMinutes(serviceSchedule?.startTime);
+                    if (slotMin >= limitMin) {
+                      isLimitDisabled = true;
+                    }
+                  }
+
+                  const isBooked = Boolean(unavailableSlots[slot]);
+                  const isSlotDisabled = isLimitDisabled || isBooked;
+
+                  return (
+                    <button
+                      key={`meet-${slot}-${idx}`}
+                      type="button"
+                      disabled={isSlotDisabled}
+                      title={isBooked ? unavailableSlots[slot] : ''}
+                      className={`${styles.slotButton} ${
+                        startTime === slot ? styles.slotButtonActive : ''
+                      } ${isSlotDisabled ? styles.slotButtonDisabled : ''}`}
+                      onClick={() => !isSlotDisabled && setStartTime(slot)}
+                    >
+                      <span className={styles.slotTimeText}>{slot}</span>
+                      {isBooked && <span className={styles.bookedTag}>Booked</span>}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -501,9 +584,9 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
         <div className={styles.goldContent}>
           <h4 className={styles.goldTitle}>Meet &amp; Greet is Required for New Clients</h4>
           <p className={styles.goldDesc}>
-            To ensure the highest standard of personalized, stress-free care, an in-person Meet &amp;
-            Greet is mandatory before we begin your pet&apos;s first service. It must be scheduled on
-            or prior to your requested start date.
+            To ensure the highest standard of personalized, stress-free care, an in-person Meet
+            &amp; Greet is mandatory before we begin your pet&apos;s first service. It must be
+            scheduled on or prior to your requested start date.
           </p>
         </div>
       </div>

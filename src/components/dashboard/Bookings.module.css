@@ -95,14 +95,16 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  width: 100%;
   flex-wrap: wrap;
 }
 
+.searchContainer,
 .searchWrapper {
   position: relative;
   flex: 1;
-  min-width: 280px;
-  max-width: 450px;
+  min-width: 260px;
+  max-width: 440px;
 }
 
 .searchIcon {
@@ -135,10 +137,19 @@
   box-shadow: 0 0 0 3px var(--primary-light, rgba(18, 63, 60, 0.08));
 }
 
+.filterActions,
 .actionButtonsGroup {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.filterActions select,
+.filterActions button {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btnSecondary {
@@ -1359,5 +1370,160 @@
   font-weight: 700;
   color: #123f3c;
 }
+
+/* Security code chip */
+.codeChip {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background-color: #f7f4ed;
+  border: 1px dashed rgba(177, 138, 69, 0.4);
+  color: #8c6827;
+  display: inline-block;
+  letter-spacing: 0.05em;
+  margin-top: 3px;
+}
+
+/* Quick Action Toolbar */
+/* Quick Action Toolbar */
+.customerActionBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 12px 18px;
+  background-color: var(--warm-ivory, #fbf9f4);
+  border: 1px solid var(--card-border, #efe7d8);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  white-space: nowrap;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(18, 63, 60, 0.2) transparent;
+}
+
+.customerActionBar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.customerActionBar::-webkit-scrollbar-thumb {
+  background-color: rgba(18, 63, 60, 0.2);
+  border-radius: 4px;
+}
+
+.actionBarGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+.actionBarDivider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--card-border, #efe7d8);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.btnActionPrimary {
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 34px;
+  box-sizing: border-box;
+}
+
+.btnActionPrimary:hover {
+  background-color: #0c2b29;
+}
+
+.btnActionSecondary {
+  background-color: #ffffff;
+  color: var(--foreground, #1c2524);
+  border: 1px solid var(--card-border, #efe7d8);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 34px;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.btnActionSecondary:hover {
+  background-color: #f7f4ed;
+  border-color: var(--primary, #123f3c);
+}
+
+.btnActionDanger {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 34px;
+  box-sizing: border-box;
+}
+
+.btnActionDanger:hover {
+  background-color: #fee2e2;
+}
+
+/* Print Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .bookingsContainer,
+  .bookingsContainer * {
+    visibility: visible;
+  }
+  .bookingsContainer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .customerActionBar,
+  .backTitleButton {
+    display: none !important;
+  }
+}
+
 
 

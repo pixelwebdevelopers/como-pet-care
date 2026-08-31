@@ -21,30 +21,7 @@ interface UpcomingBookingsProps {
 }
 
 export default function UpcomingBookings({ bookings: initialBookings, onViewAll }: UpcomingBookingsProps) {
-  const defaultBookings: UpcomingItem[] = [
-    {
-      id: '1',
-      clientName: 'Sarah John',
-      petName: 'Bella',
-      date: 'Aug 10, 2026',
-      time: '9:00 AM',
-      service: 'Drop-In Visits',
-      duration: '30 min',
-      status: 'CONFIRMED',
-    },
-    {
-      id: '2',
-      clientName: 'Clark Kent',
-      petName: 'Krypto',
-      date: 'Aug 12, 2026',
-      time: '11:00 AM',
-      service: 'Dog Walking',
-      duration: '30 min',
-      status: 'CONFIRMED',
-    },
-  ];
-
-  const bookings = initialBookings && initialBookings.length > 0 ? initialBookings : defaultBookings;
+  const bookings = initialBookings || [];
 
   return (
     <div className="dashboard-card upcoming-bookings-card">
@@ -55,7 +32,7 @@ export default function UpcomingBookings({ bookings: initialBookings, onViewAll 
         </div>
         <button
           className="card-header-link"
-          onClick={() => onViewAll?.() || alert('Showing all bookings')}
+          onClick={() => onViewAll?.()}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
         >
           View all <ArrowRight size={14} />
@@ -63,50 +40,71 @@ export default function UpcomingBookings({ bookings: initialBookings, onViewAll 
       </div>
 
       <div className="upcoming-bookings-list">
-        {bookings.map((booking) => (
+        {bookings.length === 0 ? (
           <div
-            key={booking.id}
-            className="upcoming-booking-item"
-            onClick={() => alert(`Booking ${booking.reference || booking.id}: ${booking.clientName} - ${booking.service}`)}
+            style={{
+              padding: '32px 16px',
+              textAlign: 'center',
+              backgroundColor: 'var(--warm-ivory, #fbf9f4)',
+              borderRadius: '12px',
+              border: '1px dashed var(--card-border, #efe7d8)',
+              margin: '8px 0',
+            }}
           >
-            {/* Pet Avatar Icon Frame */}
-            <div
-              className="booking-pet-avatar-frame"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#f5eee3',
-                color: '#b18a45',
-                borderRadius: '50%',
-                width: '36px',
-                height: '36px',
-                flexShrink: 0,
-              }}
-            >
-              <PawPrint size={18} />
-            </div>
-
-            <div className="booking-info-cell client-info">
-              <span className="booking-client-name">{booking.clientName}</span>
-              <span className="booking-pet-name">🐾 {booking.petName}</span>
-            </div>
-
-            <div className="booking-info-cell date-info">
-              <span className="booking-date">{booking.date}</span>
-              <span className="booking-time">{booking.time}</span>
-            </div>
-
-            <div className="booking-info-cell service-info">
-              <span className="booking-service">{booking.service}</span>
-              <span className="booking-duration">{booking.duration}</span>
-            </div>
-
-            <div className="booking-action-cell">
-              <ChevronRight size={16} style={{ color: 'rgba(28, 37, 36, 0.4)' }} />
-            </div>
+            <CalendarCheck size={28} style={{ color: 'var(--primary)', opacity: 0.4, marginBottom: '8px' }} />
+            <p style={{ margin: 0, fontWeight: 600, fontSize: '13.5px', color: 'var(--foreground)' }}>
+              No upcoming bookings found
+            </p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>
+              Future appointments booked by customers will show up here.
+            </p>
           </div>
-        ))}
+        ) : (
+          bookings.map((booking) => (
+            <div
+              key={booking.id}
+              className="upcoming-booking-item"
+              onClick={() => onViewAll?.()}
+            >
+              {/* Pet Avatar Icon Frame */}
+              <div
+                className="booking-pet-avatar-frame"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#f5eee3',
+                  color: '#b18a45',
+                  borderRadius: '50%',
+                  width: '36px',
+                  height: '36px',
+                  flexShrink: 0,
+                }}
+              >
+                <PawPrint size={18} />
+              </div>
+
+              <div className="booking-info-cell client-info">
+                <span className="booking-client-name">{booking.clientName}</span>
+                <span className="booking-pet-name">🐾 {booking.petName}</span>
+              </div>
+
+              <div className="booking-info-cell date-info">
+                <span className="booking-date">{booking.date}</span>
+                <span className="booking-time">{booking.time}</span>
+              </div>
+
+              <div className="booking-info-cell service-info">
+                <span className="booking-service">{booking.service}</span>
+                <span className="booking-duration">{booking.duration}</span>
+              </div>
+
+              <div className="booking-action-cell">
+                <ChevronRight size={16} style={{ color: 'rgba(28, 37, 36, 0.4)' }} />
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
