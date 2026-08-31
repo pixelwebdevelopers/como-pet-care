@@ -1,7 +1,8 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // Use standalone output only for Docker / self-hosted environments; disable on Vercel
+  output: process.env.VERCEL ? undefined : 'standalone',
   async headers() {
     return [
       {
