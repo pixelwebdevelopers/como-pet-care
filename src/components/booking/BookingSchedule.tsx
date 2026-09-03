@@ -18,6 +18,7 @@ import {
   CalendarDays,
   MapPin,
 } from 'lucide-react';
+import { resolveServiceDuration, parseTimeToMinutes, formatMinutesToTime } from '@/lib/availability';
 
 // --- TSX TYPES & INTERFACES ---
 interface BookingScheduleProps {
@@ -360,13 +361,24 @@ export default function BookingSchedule({
       }
       const freqMatch = walkFrequency.match(/(\d+)/);
       const walksCount = freqMatch ? parseInt(freqMatch[1], 10) : 1;
-      onContinue({ walkFrequency, preferredWeekdays, numberOfDays: walksCount });
+      const weekdaysStr = preferredWeekdays.join(', ');
+      onContinue({
+        bookingDate: `${walkFrequency} (${weekdaysStr})`,
+        walkFrequency,
+        preferredWeekdays,
+        numberOfDays: walksCount,
+      });
     } else if (isRecurringScoop) {
       if (preferredWeekdays.length === 0) {
         alert('Please select your preferred cleanup weekday.');
         return;
       }
-      onContinue({ preferredWeekdays, numberOfDays: 1 });
+      const weekdaysStr = preferredWeekdays.join(', ');
+      onContinue({
+        bookingDate: `Weekly on ${weekdaysStr}`,
+        preferredWeekdays,
+        numberOfDays: 1,
+      });
     } else if (isOvernight) {
       if (!rangeStart || !rangeEnd) {
         alert('Please select your arrival and departure dates.');
@@ -376,8 +388,8 @@ export default function BookingSchedule({
       onContinue({
         bookingDate: `${monthNames[currentMonth]} ${rangeStart}, ${currentYear}`,
         bookingEndDate: `${monthNames[currentMonth]} ${rangeEnd}, ${currentYear}`,
-        startTime,
-        endTime,
+        startTime: startTime || undefined,
+        endTime: endTime || undefined,
         numberOfDays: calculatedDays,
       });
     } else {
@@ -394,10 +406,19 @@ export default function BookingSchedule({
         setUnavailableModalOpen(true);
         return;
       }
+
+      // Automatically compute endTime for fixed duration visits if not set
+      let resolvedEndTime = endTime;
+      if (!resolvedEndTime && startTime) {
+        const duration = resolveServiceDuration(serviceId, selectedPlanTitle, startTime, endTime);
+        const startMinutes = parseTimeToMinutes(startTime);
+        resolvedEndTime = formatMinutesToTime(startMinutes + duration);
+      }
+
       onContinue({
         bookingDate: `${monthNames[currentMonth]} ${selectedDay}, ${currentYear}`,
         startTime,
-        endTime,
+        endTime: resolvedEndTime,
         numberOfDays: 1,
       });
     }

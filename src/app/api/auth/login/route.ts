@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
         email: user.email,
         name: user.name,
         role: user.role,
+        image: (user as unknown as { image?: string | null }).image || null,
       },
     });
 

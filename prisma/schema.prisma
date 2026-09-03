@@ -12,6 +12,7 @@ model User {
   name      String?
   role      String   @default("USER") // e.g. USER, ADMIN
   password  String   // Hashed password
+  image     String?  @db.LongText
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -271,6 +272,7 @@ model BusinessSetting {
   minAdvanceHours        Int      @default(2)
   requireMeetAndGreet    Boolean  @default(true)
   cancellationPolicy     String?  @db.Text
+  adminAvatar            String?  @db.LongText
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

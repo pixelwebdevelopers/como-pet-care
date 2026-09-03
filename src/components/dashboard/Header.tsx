@@ -35,6 +35,7 @@ interface HeaderProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   adminName?: string;
+  adminAvatar?: string | null;
   onLogoutClick?: () => void;
   onNavigateTab?: (tab: string) => void;
 }
@@ -45,8 +46,46 @@ export default function Header({
   onLogoutClick,
   onNavigateTab,
   adminName = 'Como Admin',
+  adminAvatar = null,
 }: HeaderProps) {
   const [imageError, setImageError] = useState(false);
+  const [currentAvatar, setCurrentAvatar] = useState<string | null>(adminAvatar);
+
+  // Sync avatar when prop changes or when event is broadcast
+  useEffect(() => {
+    if (adminAvatar !== undefined) {
+      setCurrentAvatar(adminAvatar);
+    }
+  }, [adminAvatar]);
+
+  useEffect(() => {
+    const handleProfileUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<{ image?: string | null; name?: string }>;
+      if (customEvent.detail) {
+        if (customEvent.detail.image !== undefined) {
+          setCurrentAvatar(customEvent.detail.image);
+        }
+      }
+    };
+
+    window.addEventListener('admin-profile-updated', handleProfileUpdate);
+
+    // Also fetch current profile if not passed
+    if (!adminAvatar) {
+      fetch('/api/admin/profile')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.user?.image) {
+            setCurrentAvatar(data.user.image);
+          }
+        })
+        .catch(() => {});
+    }
+
+    return () => {
+      window.removeEventListener('admin-profile-updated', handleProfileUpdate);
+    };
+  }, [adminAvatar]);
 
   // Search State
   const [query, setQuery] = useState('');
@@ -484,9 +523,19 @@ export default function Header({
               justifyContent: 'center',
               backgroundColor: '#123f3c',
               color: '#ffffff',
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
-            {!imageError ? (
+            {currentAvatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={currentAvatar}
+                alt={`${adminName}'s Profile Avatar`}
+                className="header-avatar-img"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : !imageError ? (
               <Image
                 src="/assets/admin-avatar.jpg"
                 alt="Administrator Profile Avatar"

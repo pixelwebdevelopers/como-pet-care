@@ -73,6 +73,7 @@ export default function AuthControllerPage() {
     name: string;
     email: string;
     role: string;
+    image?: string | null;
   } | null>(null);
 
   // Admin Data Dashboard
@@ -105,6 +106,9 @@ export default function AuthControllerPage() {
         const data = await logsRes.json();
         if (data.success) {
           setStats(data.stats);
+          if (data.user) {
+            setUserProfile(data.user);
+          }
         }
       }
       if (dashRes.ok) {
@@ -126,11 +130,14 @@ export default function AuthControllerPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
-            setUserProfile({
-              name: 'Como Admin',
-              email: 'admin@comopetcare.com',
-              role: 'ADMIN',
-            });
+            setUserProfile(
+              data.user || {
+                name: 'Como Admin',
+                email: 'admin@comopetcare.com',
+                role: 'ADMIN',
+                image: null,
+              },
+            );
             setStats(data.stats);
             await loadAdminDashboardData();
             setView('ADMIN_PORTAL');
@@ -412,6 +419,7 @@ export default function AuthControllerPage() {
             setSidebarOpen={setSidebarOpen}
             onLogoutClick={handleLogout}
             adminName={userProfile?.name || 'Como Admin'}
+            adminAvatar={userProfile?.image}
             onNavigateTab={setActiveTab}
           />
 

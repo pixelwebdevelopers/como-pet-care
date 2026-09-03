@@ -55,6 +55,7 @@
   display: grid;
   grid-template-columns: 1.15fr 1fr 1fr;
   width: 100%;
+  align-items: stretch;
 }
 
 .columnBlock {
@@ -64,6 +65,7 @@
   flex-direction: column;
   gap: 20px;
   background-color: #ffffff;
+  height: 100%;
 }
 
 .columnBlock:last-child {

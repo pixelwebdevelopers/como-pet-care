@@ -31,6 +31,81 @@ export interface ServiceItem {
   status: 'active' | 'inactive';
 }
 
+// --- SERVICE ICONS HELPER ---
+const getServiceCategoryIcon = (serviceName: string, serviceId?: string) => {
+  const nameLower = (serviceName || '').toLowerCase();
+  const idStr = String(serviceId || '');
+
+  if (nameLower.includes('meet') || idStr === '1') {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ width: '16px', height: '16px', color: 'var(--primary, #123f3c)', flexShrink: 0 }}
+      >
+        <path d="M18.5 4.5a3 3 0 0 1 0 4.2" />
+        <path d="M21 2a6 6 0 0 1 0 8.5" />
+        <path d="M14 10.5V5.5a1.5 1.5 0 0 0-3 0V11" />
+        <path d="M11 7.5a1.5 1.5 0 0 0-3 0v4.5" />
+        <path d="M8 9.5a1.5 1.5 0 0 0-3 0v4.2c0 4.3 3.5 7.8 7.8 7.8h.4c4.1 0 7.3-3.2 7.8-7.2l.6-4.8a1.5 1.5 0 0 0-2.8-.7L17 11.5" />
+      </svg>
+    );
+  }
+
+  if (nameLower.includes('dog') || nameLower.includes('walking') || idStr === '4') {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ width: '16px', height: '16px', color: 'var(--primary, #123f3c)', flexShrink: 0 }}
+      >
+        <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5" />
+        <path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.45-2.239-2.5" />
+        <path d="M8 14v.5" />
+        <path d="M16 14v.5" />
+        <path d="M11.25 16.25h1.5" />
+        <path d="M4.42 11.247A13.152 13.152 0 0 0 4 14.5c0 4.418 3.582 8 8 8s8-3.582 8-8c0-1.129-.234-2.203-.655-3.178" />
+      </svg>
+    );
+  }
+
+  if (nameLower.includes('poop') || nameLower.includes('scoop') || idStr === '5') {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ width: '16px', height: '16px', color: 'var(--primary, #123f3c)', flexShrink: 0 }}
+      >
+        <path d="M12 2.5c.8 1.2 1.8 1.8 1.8 2.8 0 1-.8 1.7-1.8 1.7-1.5 0-2.5-1.2-1.2-2.8.5-.7 1-1.3 1.2-1.7Z" />
+        <path d="M8.5 9c0-1.4 1.6-2 3.5-2s3.5.6 3.5 2c0 1-1.2 1.8-3.5 1.8-2.3 0-3.5-.8-3.5-1.8Z" />
+        <path d="M6 14c0-1.8 2.7-2.8 6-2.8s6 1 6 2.8c0 1.2-1.8 2.2-6 2.2s-6-1-6-2.2Z" />
+        <path d="M3.5 19c0-2.2 3.8-3.5 8.5-3.5s8.5 1.3 8.5 3.5c0 1.7-3.8 2.5-8.5 2.5s-8.5-.8-8.5-2.5Z" />
+      </svg>
+    );
+  }
+
+  if (nameLower.includes('drop') || idStr === '2') {
+    return <Clock size={16} style={{ color: 'var(--primary, #123f3c)', flexShrink: 0 }} />;
+  }
+
+  return <Tag size={15} style={{ color: 'var(--primary, #123f3c)', flexShrink: 0 }} />;
+};
+
 export default function Services() {
   // --- STATE ---
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'inactive'>('all');
@@ -286,7 +361,7 @@ export default function Services() {
                   <tr key={s.id} className={styles.tr}>
                     <td className={styles.td} data-label="Category">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Tag size={15} style={{ color: 'var(--primary)' }} />
+                        {getServiceCategoryIcon(s.serviceName, s.serviceId)}
                         <span className={styles.boldText}>{s.serviceName}</span>
                       </div>
                     </td>

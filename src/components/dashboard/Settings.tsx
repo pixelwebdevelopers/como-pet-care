@@ -12,11 +12,16 @@ import {
   Sun,
   Sunset,
   Moon,
+  User,
+  Upload,
+  Trash2,
+  Camera,
+  Sparkles,
 } from 'lucide-react';
 import { parseTimeToMinutes, formatMinutesToTime } from '@/lib/availability';
 
 // --- TYPES ---
-type SettingsTab = 'business' | 'schedule' | 'notification' | 'policies';
+type SettingsTab = 'profile' | 'business' | 'schedule' | 'notification' | 'policies';
 
 const TIME_OPTIONS = [
   '6:00 AM',
@@ -59,12 +64,22 @@ const TIME_OPTIONS = [
 const ALL_WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('business');
+  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
+  const [savingProfile, setSavingProfile] = useState<boolean>(false);
+  const [compressing, setCompressing] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
     null,
   );
+
+  // Admin Profile Fields
+  const [adminName, setAdminName] = useState<string>('Como Admin');
+  const [adminEmail, setAdminEmail] = useState<string>('admin@comopetcare.com');
+  const [adminRole, setAdminRole] = useState<string>('ADMIN');
+  const [adminAvatar, setAdminAvatar] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   // Business Information Fields
   const [businessName, setBusinessName] = useState<string>('CoMo Pet Care');
@@ -96,52 +111,162 @@ export default function Settings() {
     'Cancellations made within 24 hours of appointment may incur a 50% cancellation fee.'
   );
 
-  // Load Settings from API
+  // Client-side HTML5 Canvas Image Compression (resizes to max 400x400 @ 0.82 JPEG)
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.createElement('img');
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 400;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(e.target?.result as string);
+            return;
+          }
+
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Return compressed JPEG data URL
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = () => reject(new Error('Failed to load image into canvas for compression'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Handle Photo File Selection with 2MB Restriction & Canvas Compression
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadError(null);
+
+    // 1. Strict 2MB size restriction check
+    const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSizeBytes) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      setUploadError(`Selected file is too large (${sizeMB} MB). Upload limit is 2.0 MB maximum.`);
+      e.target.value = '';
+      return;
+    }
+
+    // 2. MIME type check
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Invalid file format. Please upload a valid image file (JPG, PNG, WEBP, GIF).');
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      setCompressing(true);
+      const compressedBase64 = await compressImage(file);
+      setAvatarPreview(compressedBase64);
+      setAdminAvatar(compressedBase64);
+    } catch (err) {
+      setUploadError('Failed to process image. Please try a different photo.');
+    } finally {
+      setCompressing(false);
+      e.target.value = '';
+    }
+  };
+
+  // Handle Remove Photo
+  const handleRemovePhoto = () => {
+    setAvatarPreview(null);
+    setAdminAvatar('');
+    setUploadError(null);
+  };
+
+  // Load Settings & Admin Profile from API
   const loadSettings = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/settings');
-      const data = await res.json();
-      if (data.success && data.settings) {
-        const s = data.settings;
-        setBusinessName(s.businessName || 'CoMo Pet Care');
-        setBusinessEmail(s.businessEmail || 'info@comopetcare.com');
-        setBusinessPhone(s.businessPhone || '(555) 256-2648');
-        setBusinessAddress(s.businessAddress || '123 Main St, Columbia, MO 65201');
-        setWebsiteUrl(s.websiteUrl || 'https://comopetcare.com');
-        setServiceArea(s.serviceArea || '');
+      const [settingsRes, profileRes] = await Promise.all([
+        fetch('/api/admin/settings'),
+        fetch('/api/admin/profile'),
+      ]);
 
-        setOpeningTime(s.openingTime || '7:00 AM');
-        setClosingTime(s.closingTime || '7:00 PM');
-        setSlotInterval(s.slotInterval || 30);
-
-        if (s.enabledDays) {
-          setEnabledDays(s.enabledDays.split(',').map((d: string) => d.trim()));
-        }
-
-        if (s.customSlots) {
-          try {
-            const parsed = JSON.parse(s.customSlots);
-            if (Array.isArray(parsed)) setCustomSlots(parsed);
-          } catch {
-            // fallback
+      if (profileRes.ok) {
+        const profileData = await profileRes.json();
+        if (profileData.success && profileData.user) {
+          setAdminName(profileData.user.name || 'Como Admin');
+          setAdminEmail(profileData.user.email || 'admin@comopetcare.com');
+          setAdminRole(profileData.user.role || 'ADMIN');
+          if (profileData.user.image) {
+            setAdminAvatar(profileData.user.image);
+            setAvatarPreview(profileData.user.image);
           }
         }
+      }
 
-        if (s.enabledSections) {
-          setEnabledSections(s.enabledSections.split(',').map((sec: string) => sec.trim()));
+      if (settingsRes.ok) {
+        const data = await settingsRes.json();
+        if (data.success && data.settings) {
+          const s = data.settings;
+          setBusinessName(s.businessName || 'CoMo Pet Care');
+          setBusinessEmail(s.businessEmail || 'info@comopetcare.com');
+          setBusinessPhone(s.businessPhone || '(555) 256-2648');
+          setBusinessAddress(s.businessAddress || '123 Main St, Columbia, MO 65201');
+          setWebsiteUrl(s.websiteUrl || 'https://comopetcare.com');
+          setServiceArea(s.serviceArea || '');
+
+          setOpeningTime(s.openingTime || '7:00 AM');
+          setClosingTime(s.closingTime || '7:00 PM');
+          setSlotInterval(s.slotInterval || 30);
+
+          if (s.enabledDays) {
+            setEnabledDays(s.enabledDays.split(',').map((d: string) => d.trim()));
+          }
+
+          if (s.customSlots) {
+            try {
+              const parsed = JSON.parse(s.customSlots);
+              if (Array.isArray(parsed)) setCustomSlots(parsed);
+            } catch {
+              // fallback
+            }
+          }
+
+          if (s.enabledSections) {
+            setEnabledSections(s.enabledSections.split(',').map((sec: string) => sec.trim()));
+          }
+
+          setAdminNotificationEmail(s.adminNotificationEmail || 'info@comopetcare.com');
+          setSendCustomerConfirmation(s.sendCustomerConfirmation ?? true);
+          setSendAdminNotification(s.sendAdminNotification ?? true);
+
+          setMinAdvanceHours(s.minAdvanceHours ?? 2);
+          setRequireMeetAndGreet(s.requireMeetAndGreet ?? true);
+          setCancellationPolicy(s.cancellationPolicy || '');
         }
-
-        setAdminNotificationEmail(s.adminNotificationEmail || 'info@comopetcare.com');
-        setSendCustomerConfirmation(s.sendCustomerConfirmation ?? true);
-        setSendAdminNotification(s.sendAdminNotification ?? true);
-
-        setMinAdvanceHours(s.minAdvanceHours ?? 2);
-        setRequireMeetAndGreet(s.requireMeetAndGreet ?? true);
-        setCancellationPolicy(s.cancellationPolicy || '');
       }
     } catch {
-      setFeedback({ type: 'error', message: 'Failed to load business settings from server.' });
+      setFeedback({ type: 'error', message: 'Failed to load settings from server.' });
     } finally {
       setLoading(false);
     }
@@ -246,6 +371,49 @@ export default function Settings() {
     }
   };
 
+  // Save Admin Profile
+  const handleSaveProfile = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setSavingProfile(true);
+    setFeedback(null);
+    try {
+      const res = await fetch('/api/admin/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: adminName,
+          email: adminEmail,
+          image: adminAvatar === '' ? null : adminAvatar,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setFeedback({
+          type: 'success',
+          message: 'Admin profile & avatar photo saved successfully!',
+        });
+        // Dispatch custom event for immediate header sync
+        window.dispatchEvent(
+          new CustomEvent('admin-profile-updated', {
+            detail: {
+              name: adminName,
+              email: adminEmail,
+              image: adminAvatar || null,
+            },
+          }),
+        );
+        setTimeout(() => setFeedback(null), 5000);
+      } else {
+        setFeedback({ type: 'error', message: data.message || 'Failed to save profile.' });
+      }
+    } catch {
+      setFeedback({ type: 'error', message: 'Network error occurred while saving profile.' });
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   return (
     <div className={styles.settingsContainer}>
       {/* Subheader Title */}
@@ -263,7 +431,7 @@ export default function Settings() {
           <p className={styles.cardSubtitle}>
             {loading
               ? 'Loading active business settings...'
-              : 'Configure operational hours, availability slots, automated notifications, and business policies.'}
+              : 'Configure admin profile, operational hours, availability slots, notifications, and business policies.'}
           </p>
         </div>
 
@@ -282,6 +450,13 @@ export default function Settings() {
         {/* Tabs Navigation */}
         <div className={styles.tabsContainer}>
           <div className={styles.tabsList}>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'profile' ? styles.tabButtonActive : ''}`}
+              onClick={() => setActiveTab('profile')}
+            >
+              <User size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+              Admin Profile
+            </button>
             <button
               className={`${styles.tabButton} ${activeTab === 'business' ? styles.tabButtonActive : ''}`}
               onClick={() => setActiveTab('business')}
@@ -312,6 +487,126 @@ export default function Settings() {
             </button>
           </div>
         </div>
+
+        {/* TAB 0: ADMIN PROFILE */}
+        {activeTab === 'profile' && (
+          <form onSubmit={handleSaveProfile} className={styles.formSection}>
+            <h3 className={styles.sectionTitle}>Administrator Profile &amp; Avatar</h3>
+
+            {/* Profile Picture Upload Card */}
+            <div className={styles.profileCard}>
+              <div className={styles.profileCardHeader}>
+                <h4 className={styles.profileCardTitle}>Profile Picture</h4>
+                <p className={styles.profileCardDesc}>
+                  Upload a custom avatar for the administrator dashboard. Photos are automatically compressed client-side.
+                </p>
+              </div>
+
+              {uploadError && (
+                <div className={styles.uploadErrorBanner}>
+                  <AlertCircle size={16} />
+                  <span>{uploadError}</span>
+                </div>
+              )}
+
+              <div className={styles.profileAvatarSection}>
+                <div className={styles.profileAvatarWrapper}>
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Administrator Avatar Preview"
+                      className={styles.profileAvatarImg}
+                    />
+                  ) : (
+                    <User size={40} />
+                  )}
+                </div>
+
+                <div className={styles.profileAvatarActions}>
+                  <div className={styles.profileButtonRow}>
+                    <label className={styles.btnUploadPhoto}>
+                      <Camera size={15} />
+                      <span>{compressing ? 'Compressing...' : 'Upload New Photo'}</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        style={{ display: 'none' }}
+                        onChange={handlePhotoUpload}
+                        disabled={compressing}
+                      />
+                    </label>
+
+                    {avatarPreview && (
+                      <button
+                        type="button"
+                        className={styles.btnRemovePhoto}
+                        onClick={handleRemovePhoto}
+                      >
+                        <Trash2 size={14} />
+                        <span>Remove</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <p className={styles.profileHelpText}>
+                    Allowed formats: JPG, PNG, WEBP, or GIF. Max upload size is <strong>2.0 MB</strong>.
+                  </p>
+
+                  <div className={styles.badgeCompressed}>
+                    <Sparkles size={12} />
+                    <span>Auto-compressed for instant loading &amp; small database size</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Admin Profile Details */}
+            <div className={styles.formGrid}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Admin Display Name</label>
+                <input
+                  type="text"
+                  required
+                  className={styles.formInput}
+                  value={adminName}
+                  onChange={(e) => setAdminName(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Email Address</label>
+                <input
+                  type="email"
+                  required
+                  className={styles.formInput}
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>User Role</label>
+                <input
+                  type="text"
+                  disabled
+                  className={styles.formInput}
+                  value={adminRole}
+                  style={{ backgroundColor: 'var(--soft-cream)', opacity: 0.8 }}
+                />
+                <span className={styles.formHelper}>Standard administrator system role.</span>
+              </div>
+            </div>
+
+            <div className={styles.formActions}>
+              <button type="button" className={styles.btnCancel} onClick={loadSettings}>
+                Reset
+              </button>
+              <button type="submit" className={styles.btnSave} disabled={savingProfile || compressing}>
+                {savingProfile ? 'Saving...' : 'Save Profile Changes'}
+              </button>
+            </div>
+          </form>
+        )}
 
         {/* TAB 1: BUSINESS INFORMATION */}
         {activeTab === 'business' && (

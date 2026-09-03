@@ -13,6 +13,8 @@ export interface ReviewBookingData {
   bookingEndDate?: string;
   startTime?: string;
   endTime?: string;
+  walkFrequency?: string;
+  preferredWeekdays?: string[];
   numberOfDays: number;
   durationLabel?: string;
   customerName: string;
@@ -225,12 +227,22 @@ export default function ReviewBooking({
     data.durationLabel ||
     (data.numberOfDays === 1 ? '1 Day' : `${data.numberOfDays} Days`);
 
-  const dateDisplay = data.bookingEndDate
-    ? `${data.bookingDate} - ${data.bookingEndDate}`
-    : data.bookingDate || 'Not selected';
+  let dateDisplay = 'Not selected';
+  if (data.bookingEndDate && data.bookingDate) {
+    dateDisplay = `${data.bookingDate} - ${data.bookingEndDate}`;
+  } else if (data.bookingDate && data.bookingDate.trim().length > 0 && data.bookingDate !== 'Not selected') {
+    dateDisplay = data.bookingDate;
+  } else if (data.preferredWeekdays && data.preferredWeekdays.length > 0) {
+    const daysStr = data.preferredWeekdays.join(', ');
+    dateDisplay = data.walkFrequency
+      ? `${data.walkFrequency} (${daysStr})`
+      : `Weekly • ${daysStr}`;
+  } else if (data.walkFrequency) {
+    dateDisplay = data.walkFrequency;
+  }
 
   const timeDisplay = data.startTime
-    ? data.endTime
+    ? data.endTime && data.endTime !== data.startTime
       ? ` • ${data.startTime} - ${data.endTime}`
       : ` • ${data.startTime}`
     : '';

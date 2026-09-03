@@ -28,17 +28,21 @@ interface SelectedService {
 const WaveIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    fill="none"
     viewBox="0 0 24 24"
-    strokeWidth={1.5}
+    fill="none"
     stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
     style={{ width: '22px', height: '22px' }}
   >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M10.05 2.25a2.25 2.25 0 0 1 3.9 0l1.43 2.485a2.25 2.25 0 0 0 1.625 1.055l2.842.416a2.25 2.25 0 0 1 1.25 3.84l-2.057 2.005a2.25 2.25 0 0 0-.646 1.99l.486 2.83a2.25 2.25 0 0 1-3.265 2.37l-2.543-1.336a2.25 2.25 0 0 0-2.1 0l-2.543 1.336a2.25 2.25 0 0 1-3.265-2.37l.486-2.83a2.25 2.25 0 0 0-.646-1.99L2.08 10.046a2.25 2.25 0 0 1 1.25-3.84l2.842-.416a2.25 2.25 0 0 0 1.625-1.055L10.05 2.25Z"
-    />
+    {/* Waving motion arcs */}
+    <path d="M18.5 4.5a3 3 0 0 1 0 4.2" />
+    <path d="M21 2a6 6 0 0 1 0 8.5" />
+    {/* Hand palm and fingers */}
+    <path d="M14 10.5V5.5a1.5 1.5 0 0 0-3 0V11" />
+    <path d="M11 7.5a1.5 1.5 0 0 0-3 0v4.5" />
+    <path d="M8 9.5a1.5 1.5 0 0 0-3 0v4.2c0 4.3 3.5 7.8 7.8 7.8h.4c4.1 0 7.3-3.2 7.8-7.2l.6-4.8a1.5 1.5 0 0 0-2.8-.7L17 11.5" />
   </svg>
 );
 
@@ -79,34 +83,42 @@ const HouseIcon = () => (
 const DogIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    fill="none"
     viewBox="0 0 24 24"
-    strokeWidth={1.5}
+    fill="none"
     stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
     style={{ width: '22px', height: '22px' }}
   >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z"
-    />
+    <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5" />
+    <path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.45-2.239-2.5" />
+    <path d="M8 14v.5" />
+    <path d="M16 14v.5" />
+    <path d="M11.25 16.25h1.5" />
+    <path d="M4.42 11.247A13.152 13.152 0 0 0 4 14.5c0 4.418 3.582 8 8 8s8-3.582 8-8c0-1.129-.234-2.203-.655-3.178" />
   </svg>
 );
 
 const ScoopIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    fill="none"
     viewBox="0 0 24 24"
-    strokeWidth={1.5}
+    fill="none"
     stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
     style={{ width: '22px', height: '22px' }}
   >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 9.75v6.75m0 0-3-3m3 3 3-3m-8.25 6h10.5a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"
-    />
+    {/* Swirl top tip */}
+    <path d="M12 2.5c.8 1.2 1.8 1.8 1.8 2.8 0 1-.8 1.7-1.8 1.7-1.5 0-2.5-1.2-1.2-2.8.5-.7 1-1.3 1.2-1.7Z" />
+    {/* Top tier */}
+    <path d="M8.5 9c0-1.4 1.6-2 3.5-2s3.5.6 3.5 2c0 1-1.2 1.8-3.5 1.8-2.3 0-3.5-.8-3.5-1.8Z" />
+    {/* Middle tier */}
+    <path d="M6 14c0-1.8 2.7-2.8 6-2.8s6 1 6 2.8c0 1.2-1.8 2.2-6 2.2s-6-1-6-2.2Z" />
+    {/* Base bottom tier */}
+    <path d="M3.5 19c0-2.2 3.8-3.5 8.5-3.5s8.5 1.3 8.5 3.5c0 1.7-3.8 2.5-8.5 2.5s-8.5-.8-8.5-2.5Z" />
   </svg>
 );
 
@@ -594,6 +606,8 @@ export default function BookingFlow() {
                 bookingEndDate: scheduleData.bookingEndDate,
                 startTime: scheduleData.startTime,
                 endTime: scheduleData.endTime,
+                walkFrequency: scheduleData.walkFrequency,
+                preferredWeekdays: scheduleData.preferredWeekdays,
                 numberOfDays: currentBill.numberOfDays,
                 durationLabel: currentBill.durationLabel,
                 customerName: `${customerDetails.firstName} ${customerDetails.lastName}`.trim(),

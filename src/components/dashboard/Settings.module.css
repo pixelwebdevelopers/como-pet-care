@@ -485,3 +485,156 @@
   }
 }
 
+/* ==========================================================================
+   ADMIN PROFILE TAB STYLES
+   ========================================================================== */
+
+.profileCard {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--card-border, #efe7d8);
+  border-radius: var(--radius-md, 12px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profileCardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid var(--card-border, #efe7d8);
+  padding-bottom: 16px;
+}
+
+.profileCardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+  margin: 0;
+}
+
+.profileCardDesc {
+  font-size: 13px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  margin: 0;
+}
+
+.profileAvatarSection {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.profileAvatarWrapper {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--primary-light, #f5eee3);
+  box-shadow: 0 4px 12px rgba(18, 63, 60, 0.15);
+  flex-shrink: 0;
+}
+
+.profileAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profileAvatarActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.profileButtonRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btnUploadPhoto {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--primary, #123f3c);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnUploadPhoto:hover {
+  background-color: var(--primary-dark, #0b2826);
+  transform: translateY(-1px);
+}
+
+.btnRemovePhoto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: transparent;
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnRemovePhoto:hover {
+  background-color: #fee2e2;
+  border-color: #dc2626;
+}
+
+.profileHelpText {
+  font-size: 12px;
+  color: var(--text-muted, rgba(28, 37, 36, 0.6));
+  line-height: 1.4;
+  margin: 0;
+}
+
+.badgeCompressed {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary, #123f3c);
+  background-color: var(--primary-light, #f5eee3);
+  padding: 2px 8px;
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.uploadErrorBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
