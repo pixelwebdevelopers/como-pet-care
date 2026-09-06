@@ -164,18 +164,49 @@ const ArrowRightIcon = () => (
 
 export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGreetProps) {
   const parsedLimit = parseBookingDate(serviceSchedule?.bookingDate);
-  const defaultDay = parsedLimit ? (parsedLimit.day > 1 ? parsedLimit.day - 1 : 1) : 9;
 
-  // Calendar states defaulting to August 2026
-  const [currentYear, setCurrentYear] = useState<number>(2026);
-  const [currentMonth, setCurrentMonth] = useState<number>(7); // August
+  // Calendar states defaulting to target service date if available, or current date
+  const [currentYear, setCurrentYear] = useState<number>(() => {
+    if (parsedLimit) return parsedLimit.year;
+    return new Date().getFullYear();
+  });
+  const [currentMonth, setCurrentMonth] = useState<number>(() => {
+    if (parsedLimit) return parsedLimit.month;
+    return new Date().getMonth();
+  });
 
-  const [selectedDay, setSelectedDay] = useState<number>(defaultDay);
+  const [selectedDay, setSelectedDay] = useState<number>(() => {
+    const nowDate = new Date();
+    if (parsedLimit) {
+      const limitDate = new Date(parsedLimit.year, parsedLimit.month, parsedLimit.day);
+      if (limitDate >= nowDate) {
+        const targetDay = parsedLimit.day > 1 ? parsedLimit.day - 1 : parsedLimit.day;
+        const targetDate = new Date(parsedLimit.year, parsedLimit.month, targetDay);
+        return targetDate >= nowDate ? targetDay : nowDate.getDate();
+      }
+    }
+    return nowDate.getDate();
+  });
   const [startTime, setStartTime] = useState<string>('9:00 AM');
   const [timeFilter, setTimeFilter] = useState<'all' | 'morning' | 'afternoon' | 'evening'>('all');
 
   // Real-time slot availability
   const [unavailableSlots, setUnavailableSlots] = useState<Record<string, string>>({});
+
+  const isPastDate = (year: number, month: number, day: number) => {
+    const checkDate = new Date(year, month, day, 0, 0, 0, 0);
+    const nowDate = new Date();
+    nowDate.setHours(0, 0, 0, 0);
+    return checkDate.getTime() < nowDate.getTime();
+  };
+
+  const isPrevMonthDisabled = (year: number, month: number) => {
+    const nowDate = new Date();
+    return (
+      year < nowDate.getFullYear() ||
+      (year === nowDate.getFullYear() && month <= nowDate.getMonth())
+    );
+  };
 
   const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
@@ -183,6 +214,37 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
 
   const getFirstDayOfMonth = (month: number, year: number) => {
     return new Date(year, month, 1).getDay();
+  };
+
+  const handlePrevMonth = () => {
+    if (isPrevMonthDisabled(currentYear, currentMonth)) return;
+    const newMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const newYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+    setCurrentMonth(newMonth);
+    if (currentMonth === 0) {
+      setCurrentYear((y) => y - 1);
+    }
+
+    const total = getDaysInMonth(newMonth, newYear);
+    const nowDate = new Date();
+    const isCur = newYear === nowDate.getFullYear() && newMonth === nowDate.getMonth();
+    const minDay = isCur ? nowDate.getDate() : 1;
+    setSelectedDay((prev) => (prev < minDay || prev > total ? minDay : prev));
+  };
+
+  const handleNextMonth = () => {
+    const newMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+    const newYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+    setCurrentMonth(newMonth);
+    if (currentMonth === 11) {
+      setCurrentYear((y) => y + 1);
+    }
+
+    const total = getDaysInMonth(newMonth, newYear);
+    const nowDate = new Date();
+    const isCur = newYear === nowDate.getFullYear() && newMonth === nowDate.getMonth();
+    const minDay = isCur ? nowDate.getDate() : 1;
+    setSelectedDay((prev) => (prev < minDay || prev > total ? minDay : prev));
   };
 
   const totalDays = getDaysInMonth(currentMonth, currentYear);
@@ -331,15 +393,9 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
                 <button
                   type="button"
                   aria-label="Previous Month"
+                  disabled={isPrevMonthDisabled(currentYear, currentMonth)}
                   className={styles.btnCalArrow}
-                  onClick={() => {
-                    if (currentMonth === 0) {
-                      setCurrentMonth(11);
-                      setCurrentYear((y) => y - 1);
-                    } else {
-                      setCurrentMonth((m) => m - 1);
-                    }
-                  }}
+                  onClick={handlePrevMonth}
                 >
                   <ArrowLeftChevron />
                 </button>
@@ -351,14 +407,7 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
                   type="button"
                   aria-label="Next Month"
                   className={styles.btnCalArrow}
-                  onClick={() => {
-                    if (currentMonth === 11) {
-                      setCurrentMonth(0);
-                      setCurrentYear((y) => y + 1);
-                    } else {
-                      setCurrentMonth((m) => m + 1);
-                    }
-                  }}
+                  onClick={handleNextMonth}
                 >
                   <ArrowRightChevron />
                 </button>
@@ -377,6 +426,9 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
                   }
 
                   let isDisabled = false;
+                  if (isPastDate(currentYear, currentMonth, day)) {
+                    isDisabled = true;
+                  }
                   if (parsedLimit) {
                     if (
                       currentYear > parsedLimit.year ||
@@ -391,8 +443,11 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
 
                   const isSelected = selectedDay === day;
                   let dayClass = styles.calDayBtn;
-                  if (isSelected) dayClass += ` ${styles.calDaySelected}`;
-                  if (isDisabled) dayClass += ` ${styles.calDayDisabled}`;
+                  if (isDisabled) {
+                    dayClass += ` ${styles.calDayDisabled}`;
+                  } else if (isSelected) {
+                    dayClass += ` ${styles.calDaySelected}`;
+                  }
 
                   return (
                     <button

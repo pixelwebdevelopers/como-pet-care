@@ -18,7 +18,11 @@ import {
   CalendarDays,
   MapPin,
 } from 'lucide-react';
-import { resolveServiceDuration, parseTimeToMinutes, formatMinutesToTime } from '@/lib/availability';
+import {
+  resolveServiceDuration,
+  parseTimeToMinutes,
+  formatMinutesToTime,
+} from '@/lib/availability';
 
 // --- TSX TYPES & INTERFACES ---
 interface BookingScheduleProps {
@@ -43,15 +47,19 @@ export default function BookingSchedule({
   onContinue,
 }: BookingScheduleProps) {
   // --- STATE ---
-  const [currentYear, setCurrentYear] = useState<number>(2026);
-  const [currentMonth, setCurrentMonth] = useState<number>(7); // 0-indexed, so 7 is August
+  const [currentYear, setCurrentYear] = useState<number>(() => new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState<number>(() => new Date().getMonth());
 
   // Single Date selector state (Case A / Case D)
-  const [selectedDay, setSelectedDay] = useState<number>(10);
+  const [selectedDay, setSelectedDay] = useState<number>(() => new Date().getDate());
 
   // Date Range selector state (Case B: Overnight Stay)
-  const [rangeStart, setRangeStart] = useState<number>(10);
-  const [rangeEnd, setRangeEnd] = useState<number>(17);
+  const [rangeStart, setRangeStart] = useState<number>(() => new Date().getDate());
+  const [rangeEnd, setRangeEnd] = useState<number>(() => {
+    const d = new Date();
+    const totalDaysInCurMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    return Math.min(d.getDate() + 2, totalDaysInCurMonth);
+  });
 
   // Time Slots selection
   const [startTime, setStartTime] = useState<string>('9:00 AM');
@@ -225,12 +233,62 @@ export default function BookingSchedule({
   }, [selectedDay, currentMonth, currentYear, serviceId, selectedPlanId]);
 
 
+  const isPastDate = (year: number, month: number, day: number) => {
+    const checkDate = new Date(year, month, day, 0, 0, 0, 0);
+    const nowDate = new Date();
+    nowDate.setHours(0, 0, 0, 0);
+    return checkDate.getTime() < nowDate.getTime();
+  };
+
+  const isPrevMonthDisabled = (year: number, month: number) => {
+    const nowDate = new Date();
+    return (
+      year < nowDate.getFullYear() ||
+      (year === nowDate.getFullYear() && month <= nowDate.getMonth())
+    );
+  };
+
   const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
   };
 
   const getFirstDayOfMonth = (month: number, year: number) => {
     return new Date(year, month, 1).getDay();
+  };
+
+  const handlePrevMonth = () => {
+    if (isPrevMonthDisabled(currentYear, currentMonth)) return;
+    const newMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const newYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+    setCurrentMonth(newMonth);
+    if (currentMonth === 0) {
+      setCurrentYear((y) => y - 1);
+    }
+
+    const total = getDaysInMonth(newMonth, newYear);
+    const nowDate = new Date();
+    const isCur = newYear === nowDate.getFullYear() && newMonth === nowDate.getMonth();
+    const minDay = isCur ? nowDate.getDate() : 1;
+    setSelectedDay((prev) => (prev < minDay || prev > total ? minDay : prev));
+    setRangeStart((prev) => (prev < minDay || prev > total ? minDay : prev));
+    setRangeEnd((prev) => Math.min(Math.max(prev, minDay + 2), total));
+  };
+
+  const handleNextMonth = () => {
+    const newMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+    const newYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+    setCurrentMonth(newMonth);
+    if (currentMonth === 11) {
+      setCurrentYear((y) => y + 1);
+    }
+
+    const total = getDaysInMonth(newMonth, newYear);
+    const nowDate = new Date();
+    const isCur = newYear === nowDate.getFullYear() && newMonth === nowDate.getMonth();
+    const minDay = isCur ? nowDate.getDate() : 1;
+    setSelectedDay((prev) => (prev < minDay || prev > total ? minDay : prev));
+    setRangeStart((prev) => (prev < minDay || prev > total ? minDay : prev));
+    setRangeEnd((prev) => Math.min(Math.max(prev, minDay + 2), total));
   };
 
   const totalDays = getDaysInMonth(currentMonth, currentYear);
@@ -246,6 +304,9 @@ export default function BookingSchedule({
 
   // --- HANDLERS ---
   const handleDayClick = (day: number) => {
+    if (isPastDate(currentYear, currentMonth, day)) {
+      return;
+    }
     const isOvernight = serviceId === '3' && selectedPlanId === 'sitting_overnight';
 
     if (isOvernight) {
@@ -936,15 +997,9 @@ export default function BookingSchedule({
                   <button
                     type="button"
                     aria-label="Previous Month"
+                    disabled={isPrevMonthDisabled(currentYear, currentMonth)}
                     className={styles.btnCalArrow}
-                    onClick={() => {
-                      if (currentMonth === 0) {
-                        setCurrentMonth(11);
-                        setCurrentYear((y) => y - 1);
-                      } else {
-                        setCurrentMonth((m) => m - 1);
-                      }
-                    }}
+                    onClick={handlePrevMonth}
                   >
                     <ChevronLeft size={18} />
                   </button>
@@ -956,14 +1011,7 @@ export default function BookingSchedule({
                     type="button"
                     aria-label="Next Month"
                     className={styles.btnCalArrow}
-                    onClick={() => {
-                      if (currentMonth === 11) {
-                        setCurrentMonth(0);
-                        setCurrentYear((y) => y + 1);
-                      } else {
-                        setCurrentMonth((m) => m + 1);
-                      }
-                    }}
+                    onClick={handleNextMonth}
                   >
                     <ChevronRight size={18} />
                   </button>
@@ -981,21 +1029,27 @@ export default function BookingSchedule({
                       return <div key={`empty-${idx}`} className={styles.calEmptyCell} />;
                     }
 
+                    const isPast = isPastDate(currentYear, currentMonth, day);
                     const isStart = rangeStart === day;
                     const isEnd = rangeEnd === day;
                     const isMid = rangeStart && rangeEnd && day > rangeStart && day < rangeEnd;
 
                     let dayClass = styles.calDayBtn;
-                    if (isStart) dayClass += ` ${styles.calRangeStart}`;
-                    else if (isEnd) dayClass += ` ${styles.calRangeEnd}`;
-                    else if (isMid) dayClass += ` ${styles.calRangeMid}`;
+                    if (isPast) {
+                      dayClass += ` ${styles.calDayDisabled}`;
+                    } else {
+                      if (isStart) dayClass += ` ${styles.calRangeStart}`;
+                      else if (isEnd) dayClass += ` ${styles.calRangeEnd}`;
+                      else if (isMid) dayClass += ` ${styles.calRangeMid}`;
+                    }
 
                     return (
                       <button
                         key={day}
                         type="button"
+                        disabled={isPast}
                         className={dayClass}
-                        onClick={() => handleDayClick(day)}
+                        onClick={() => !isPast && handleDayClick(day)}
                       >
                         {day}
                       </button>
@@ -1146,15 +1200,9 @@ export default function BookingSchedule({
                   <button
                     type="button"
                     aria-label="Previous Month"
+                    disabled={isPrevMonthDisabled(currentYear, currentMonth)}
                     className={styles.btnCalArrow}
-                    onClick={() => {
-                      if (currentMonth === 0) {
-                        setCurrentMonth(11);
-                        setCurrentYear((y) => y - 1);
-                      } else {
-                        setCurrentMonth((m) => m - 1);
-                      }
-                    }}
+                    onClick={handlePrevMonth}
                   >
                     <ChevronLeft size={18} />
                   </button>
@@ -1166,14 +1214,7 @@ export default function BookingSchedule({
                     type="button"
                     aria-label="Next Month"
                     className={styles.btnCalArrow}
-                    onClick={() => {
-                      if (currentMonth === 11) {
-                        setCurrentMonth(0);
-                        setCurrentYear((y) => y + 1);
-                      } else {
-                        setCurrentMonth((m) => m + 1);
-                      }
-                    }}
+                    onClick={handleNextMonth}
                   >
                     <ChevronRight size={18} />
                   </button>
@@ -1191,16 +1232,22 @@ export default function BookingSchedule({
                       return <div key={`empty-${idx}`} className={styles.calEmptyCell} />;
                     }
 
+                    const isPast = isPastDate(currentYear, currentMonth, day);
                     const isSelected = selectedDay === day;
                     let dayClass = styles.calDayBtn;
-                    if (isSelected) dayClass += ` ${styles.calDaySelected}`;
+                    if (isPast) {
+                      dayClass += ` ${styles.calDayDisabled}`;
+                    } else if (isSelected) {
+                      dayClass += ` ${styles.calDaySelected}`;
+                    }
 
                     return (
                       <button
                         key={day}
                         type="button"
+                        disabled={isPast}
                         className={dayClass}
-                        onClick={() => handleDayClick(day)}
+                        onClick={() => !isPast && handleDayClick(day)}
                       >
                         {day}
                       </button>

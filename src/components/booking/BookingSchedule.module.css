@@ -193,7 +193,16 @@
   transition: all 0.2s ease;
 }
 
-.btnCalArrow:hover {
+.btnCalArrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: #f7f6f2;
+  border-color: #efe7d8;
+  color: #a0988a;
+}
+
+.btnCalArrow:hover:not(:disabled) {
   background-color: var(--primary, #123f3c);
   color: #ffffff;
   border-color: var(--primary, #123f3c);
@@ -243,8 +252,22 @@
 }
 
 .calDayDisabled {
-  color: rgba(28, 37, 36, 0.25);
-  cursor: not-allowed;
+  color: #bcb8ae !important;
+  cursor: not-allowed !important;
+  background-color: #f6f4ee !important;
+  border-color: transparent !important;
+  opacity: 0.55 !important;
+  pointer-events: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+  text-decoration: line-through;
+}
+
+.calDayDisabled:hover {
+  background-color: #f6f4ee !important;
+  color: #bcb8ae !important;
+  border-color: transparent !important;
+  transform: none !important;
 }
 
 .calDaySelected {
