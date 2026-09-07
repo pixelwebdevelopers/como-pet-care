@@ -1,0 +1,326 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.headerSection {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.headerTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+}
+
+.headerSubtitle {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0;
+  max-width: 680px;
+}
+
+/* Document Cards Grid */
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.5rem;
+}
+
+.docCard {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.docCard:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.docCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.docTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.docIconBadge {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.docTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.2rem 0;
+}
+
+.docSubtitle {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.statusBadgePublished {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.statusBadgeDraft {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: #fef9c3;
+  color: #a16207;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.statusBadgeArchived {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Metadata Rows */
+.metadataList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+}
+
+.metadataRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.84rem;
+}
+
+.metaLabel {
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.metaValue {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.versionTag {
+  background: #e2e8f0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* Actions toolbar inside card */
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btnActionOutline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex: 1;
+  justify-content: center;
+  min-width: 90px;
+}
+
+.btnActionOutline:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.btnActionPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: #059669;
+  color: #ffffff;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex: 1.2;
+  justify-content: center;
+  min-width: 130px;
+}
+
+.btnActionPrimary:hover {
+  background: #047857;
+}
+
+.btnActionSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnActionSecondary:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* History Modal / Drawer */
+.historyTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  text-align: left;
+}
+
+.historyTable th {
+  background: #f8fafc;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #e2e8f0;
+  color: #475569;
+  font-weight: 700;
+}
+
+.historyTable td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.historyTable tr:hover td {
+  background: #fafafa;
+}
+
+/* Editor Modal */
+.editorTextarea {
+  width: 100%;
+  min-height: 380px;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-family: monospace;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #0f172a;
+  background: #f8fafc;
+  resize: vertical;
+  outline: none;
+}
+
+.editorTextarea:focus {
+  border-color: #059669;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+.editorInput {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.88rem;
+  color: #0f172a;
+  margin-top: 0.25rem;
+  outline: none;
+}
+
+.editorInput:focus {
+  border-color: #059669;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .cardsGrid {
+    grid-template-columns: 1fr;
+  }
+  .cardActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

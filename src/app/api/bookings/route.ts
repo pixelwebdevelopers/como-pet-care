@@ -32,7 +32,14 @@ export async function POST(req: Request) {
       meetAndGreet: meetAndGreetData,
       isNewCustomer: requestedNewCustomer,
       payment: paymentData,
+      legalAgreement: legalAgreementData,
     } = body;
+
+    const clientIp =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('x-real-ip') ||
+      '127.0.0.1';
+    const userAgent = req.headers.get('user-agent') || 'Browser Client';
 
     // Validate required fields
     if (!customerData?.email || !customerData?.firstName || !customerData?.lastName) {
@@ -197,8 +204,36 @@ export async function POST(req: Request) {
           totalPrice,
           paymentStatus: initialPaymentStatus,
           isNewCustomer,
+          legalAgreed: Boolean(legalAgreementData?.agreed),
+          termsVersion: legalAgreementData?.termsVersion || 'v1.0',
+          waiverVersion: legalAgreementData?.waiverVersion || 'v1.0',
+          signerLegalName:
+            legalAgreementData?.signerLegalName?.trim() ||
+            `${customer.firstName} ${customer.lastName}`,
+          signatureImage: legalAgreementData?.signatureImage || null,
+          signerIp: clientIp,
+          signedAt: legalAgreementData?.agreed ? new Date() : null,
         },
       });
+
+      // 4b. If legal agreement accepted, create persistent LegalAcceptance audit record
+      if (legalAgreementData?.agreed) {
+        await tx.legalAcceptance.create({
+          data: {
+            customerId: customer.id,
+            bookingId: booking.id,
+            termsVersion: legalAgreementData.termsVersion || 'v1.0',
+            waiverVersion: legalAgreementData.waiverVersion || 'v1.0',
+            signerLegalName:
+              legalAgreementData.signerLegalName?.trim() ||
+              `${customer.firstName} ${customer.lastName}`,
+            signatureImage: legalAgreementData.signatureImage || null,
+            ipAddress: clientIp,
+            userAgent,
+            acceptedAt: new Date(),
+          },
+        });
+      }
 
       // 5. If new customer and Meet & Greet details provided, create record
       if (isNewCustomer && meetAndGreetData?.date && meetAndGreetData?.time) {

@@ -60,6 +60,7 @@ model Customer {
   transactions       Transaction[]
   meetAndGreets      MeetAndGreet[]
   intakeProfiles     IntakeProfile[]
+  legalAcceptances   LegalAcceptance[]
 
   @@map("customers")
 }
@@ -110,6 +111,13 @@ model Booking {
   totalPrice          Decimal         @db.Decimal(10, 2)
   paymentStatus       String          @default("UNPAID") // UNPAID, PAID, REFUNDED, PARTIALLY_REFUNDED
   isNewCustomer       Boolean         @default(true)
+  legalAgreed         Boolean         @default(false)
+  termsVersion        String?
+  waiverVersion       String?
+  signerLegalName     String?
+  signatureImage      String?         @db.LongText
+  signerIp            String?
+  signedAt            DateTime?
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
@@ -117,6 +125,7 @@ model Booking {
   meetAndGreet        MeetAndGreet?
   transactions        Transaction[]
   intakeProfiles      IntakeProfile[]
+  legalAcceptances    LegalAcceptance[]
 
   @@map("bookings")
 }
@@ -277,5 +286,40 @@ model BusinessSetting {
   updatedAt              DateTime @updatedAt
 
   @@map("business_settings")
+}
+
+model LegalDocument {
+  id            Int       @id @default(autoincrement())
+  type          String    // TERMS, WAIVER
+  title         String
+  version       String    // e.g. "v1.0", "v1.1"
+  status        String    @default("PUBLISHED") // PUBLISHED, ARCHIVED, DRAFT
+  content       String    @db.LongText
+  changeNotes   String?   @db.Text
+  effectiveDate String    @default("September 1, 2026")
+  publishedAt   DateTime? @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([type, version])
+  @@map("legal_documents")
+}
+
+model LegalAcceptance {
+  id              Int       @id @default(autoincrement())
+  customerId      Int
+  bookingId       Int?
+  termsVersion    String    @default("v1.0")
+  waiverVersion   String    @default("v1.0")
+  signerLegalName String
+  signatureImage  String?   @db.LongText
+  ipAddress       String?
+  userAgent       String?   @db.Text
+  acceptedAt      DateTime  @default(now())
+
+  customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  booking         Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@map("legal_acceptances")
 }
 

@@ -230,6 +230,20 @@ export default function BookingFlow() {
     time: string;
   }>({ date: '', time: '' });
 
+  const [legalAgreementData, setLegalAgreementData] = useState<{
+    agreed: boolean;
+    termsVersion: string;
+    waiverVersion: string;
+    signerLegalName: string;
+    signatureImage: string | null;
+  }>({
+    agreed: false,
+    termsVersion: 'v1.0',
+    waiverVersion: 'v1.0',
+    signerLegalName: '',
+    signatureImage: null,
+  });
+
   // Services list mapping
   const servicesList: SelectedService[] = [
     {
@@ -413,6 +427,7 @@ export default function BookingFlow() {
         paymentMethod: 'card',
         amount: currentBill.totalPrice,
       },
+      legalAgreement: legalAgreementData,
     };
 
     try {
@@ -624,7 +639,12 @@ export default function BookingFlow() {
               }}
               basePrice={currentBill.basePrice}
               pricingBreakdown={currentBill}
-              onContinueToPayment={() => setBookingScreen('payment')}
+              onContinueToPayment={(legalData) => {
+                if (legalData) {
+                  setLegalAgreementData(legalData);
+                }
+                setBookingScreen('payment');
+              }}
               onEditService={() => setBookingScreen('sub_services')}
               onEditDates={() => setBookingScreen('schedule')}
               onEditDetails={() => setBookingScreen('details')}

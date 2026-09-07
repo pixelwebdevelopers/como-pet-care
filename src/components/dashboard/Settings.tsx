@@ -17,11 +17,13 @@ import {
   Trash2,
   Camera,
   Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 import { parseTimeToMinutes, formatMinutesToTime } from '@/lib/availability';
+import LegalAgreements from './LegalAgreements';
 
 // --- TYPES ---
-type SettingsTab = 'profile' | 'business' | 'schedule' | 'notification' | 'policies';
+type SettingsTab = 'profile' | 'business' | 'schedule' | 'notification' | 'policies' | 'legal';
 
 const TIME_OPTIONS = [
   '6:00 AM',
@@ -484,6 +486,13 @@ export default function Settings() {
             >
               <FileCheck size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
               Booking Policies
+            </button>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'legal' ? styles.tabButtonActive : ''}`}
+              onClick={() => setActiveTab('legal')}
+            >
+              <ShieldCheck size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+              Legal Agreements
             </button>
           </div>
         </div>
@@ -1048,6 +1057,9 @@ export default function Settings() {
             </div>
           </form>
         )}
+
+        {/* TAB 5: LEGAL AGREEMENTS */}
+        {activeTab === 'legal' && <LegalAgreements />}
       </div>
     </div>
   );

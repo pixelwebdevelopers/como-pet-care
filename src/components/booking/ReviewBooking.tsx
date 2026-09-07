@@ -1,7 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import styles from './ReviewBooking.module.css';
+import LegalDocumentModal from '@/components/legal/LegalDocumentModal';
+import ElectronicSignaturePad from './ElectronicSignaturePad';
+import { ShieldCheck, AlertCircle, ArrowRight, Lock } from 'lucide-react';
+
+export interface LegalAgreementPayload {
+  agreed: boolean;
+  termsVersion: string;
+  waiverVersion: string;
+  signerLegalName: string;
+  signatureImage: string | null;
+}
 
 // --- TYPES ---
 export interface ReviewBookingData {
@@ -44,7 +55,7 @@ interface ReviewBookingProps {
     holidayName?: string;
     totalPrice: number;
   };
-  onContinueToPayment: () => void;
+  onContinueToPayment: (legalAgreement?: LegalAgreementPayload) => void;
   onEditService: () => void;
   onEditDates: () => void;
   onEditDetails: () => void;
@@ -156,30 +167,15 @@ const UserIcon = () => (
 const PawIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    fill="none"
     viewBox="0 0 24 24"
-    strokeWidth={1.8}
+    fill="none"
     stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
     style={{ width: '18px', height: '18px' }}
   >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z"
-    />
-  </svg>
-);
-
-const ArrowRightIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2.5}
-    stroke="currentColor"
-    style={{ width: '14px', height: '14px' }}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+    <path d="M12 2a3 3 0 0 0-3 3c0 .3.04.58.12.85A3 3 0 0 0 7 8.5c0 1.5.9 2.7 2.2 3.1-.1.4-.2.9-.2 1.4 0 2.5 2 4.5 4.5 4.5s4.5-2 4.5-4.5c0-.5-.1-1-.2-1.4 1.3-.4 2.2-1.6 2.2-3.1a3 3 0 0 0-2.12-2.65c.08-.27.12-.55.12-.85a3 3 0 0 0-3-3 3 3 0 0 0-3 3z" />
   </svg>
 );
 
@@ -195,27 +191,116 @@ const EditIcon = () => (
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
-      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z"
+      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
     />
+  </svg>
+);
+
+const ArrowRightIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={2}
+    stroke="currentColor"
+    style={{ width: '16px', height: '16px' }}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
   </svg>
 );
 
 // --- COMPONENT ---
 export default function ReviewBooking({
   data,
-  basePrice = 34,
+  basePrice = 0,
   pricingBreakdown,
   onContinueToPayment,
   onEditService,
   onEditDates,
   onEditDetails,
 }: ReviewBookingProps) {
+  const legalSectionRef = useRef<HTMLDivElement | null>(null);
+
+  // --- LEGAL AGREEMENT & SIGNATURE STATE ---
+  const [agreedToLegal, setAgreedToLegal] = useState<boolean>(false);
+  const [signatureData, setSignatureData] = useState<{
+    legalName: string;
+    signatureDataUrl: string | null;
+    isComplete: boolean;
+  }>({
+    legalName: data.customerName || '',
+    signatureDataUrl: null,
+    isComplete: false,
+  });
+  const [legalError, setLegalError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [modalTab, setModalTab] = useState<'TERMS' | 'WAIVER'>('TERMS');
+
+  const handleSignatureChange = React.useCallback(
+    (sig: { legalName: string; signatureDataUrl: string | null; isComplete: boolean }) => {
+      setSignatureData((prev) => {
+        if (
+          prev.legalName === sig.legalName &&
+          prev.signatureDataUrl === sig.signatureDataUrl &&
+          prev.isComplete === sig.isComplete
+        ) {
+          return prev;
+        }
+        return sig;
+      });
+    },
+    []
+  );
+
+  const openDocumentModal = (tab: 'TERMS' | 'WAIVER', e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setModalTab(tab);
+    setModalOpen(true);
+  };
+
+  const scrollToLegalSection = () => {
+    if (legalSectionRef.current) {
+      legalSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleContinue = () => {
+    setLegalError(null);
+
+    if (!agreedToLegal) {
+      setLegalError(
+        'Please agree to the Terms & Conditions and Pet Care Waiver before continuing.'
+      );
+      scrollToLegalSection();
+      return;
+    }
+
+    if (!signatureData.legalName || signatureData.legalName.trim().length < 2) {
+      setLegalError('Please provide your full legal name for the electronic signature.');
+      scrollToLegalSection();
+      return;
+    }
+
+    if (!signatureData.signatureDataUrl) {
+      setLegalError('Please electronically draw or type your signature before continuing.');
+      scrollToLegalSection();
+      return;
+    }
+
+    onContinueToPayment({
+      agreed: true,
+      termsVersion: 'v1.0',
+      waiverVersion: 'v1.0',
+      signerLegalName: signatureData.legalName.trim(),
+      signatureImage: signatureData.signatureDataUrl,
+    });
+  };
+
   // Pricing values from centralized breakdown or fallback calculation
   const computedBase = pricingBreakdown?.basePrice ?? basePrice;
-  const additionalPetFee =
-    pricingBreakdown?.additionalPetFee ?? (data.additionalPets > 0 ? data.additionalPets * 10 : 0);
-  const puppySurcharge =
-    pricingBreakdown?.puppySurcharge ?? (data.puppiesCount > 0 ? data.puppiesCount * 15 : 0);
+  const additionalPetFee = pricingBreakdown?.additionalPetFee ?? 0;
+  const puppySurcharge = pricingBreakdown?.puppySurcharge ?? 0;
   const holidaySurcharge = pricingBreakdown?.holidaySurcharge ?? 0;
   const holidayName = pricingBreakdown?.holidayName;
   const totalPrice =
@@ -230,7 +315,11 @@ export default function ReviewBooking({
   let dateDisplay = 'Not selected';
   if (data.bookingEndDate && data.bookingDate) {
     dateDisplay = `${data.bookingDate} - ${data.bookingEndDate}`;
-  } else if (data.bookingDate && data.bookingDate.trim().length > 0 && data.bookingDate !== 'Not selected') {
+  } else if (
+    data.bookingDate &&
+    data.bookingDate.trim().length > 0 &&
+    data.bookingDate !== 'Not selected'
+  ) {
     dateDisplay = data.bookingDate;
   } else if (data.preferredWeekdays && data.preferredWeekdays.length > 0) {
     const daysStr = data.preferredWeekdays.join(', ');
@@ -253,7 +342,8 @@ export default function ReviewBooking({
       <div className={styles.headingGroup}>
         <h2 className={styles.title}>Review &amp; Secure Your Booking</h2>
         <p className={styles.subtitle}>
-          Check your pet-sitting details and enter your payment information to submit the booking.
+          Please verify your service details, review the mandatory legal agreements, and provide
+          your electronic signature to proceed to payment.
         </p>
       </div>
 
@@ -278,7 +368,7 @@ export default function ReviewBooking({
                 <div className={styles.rowTitle}>Selected Service</div>
                 <div className={styles.rowValue}>{data.planTitle || data.serviceName}</div>
               </div>
-              <button className={styles.editBtn} onClick={onEditService}>
+              <button type="button" className={styles.editBtn} onClick={onEditService}>
                 <EditIcon /> Edit Services
               </button>
             </div>
@@ -295,7 +385,7 @@ export default function ReviewBooking({
                   {timeDisplay}
                 </div>
               </div>
-              <button className={styles.editBtn} onClick={onEditDates}>
+              <button type="button" className={styles.editBtn} onClick={onEditDates}>
                 <EditIcon /> Edit Dates
               </button>
             </div>
@@ -330,7 +420,7 @@ export default function ReviewBooking({
                   )}
                 </div>
               </div>
-              <button className={styles.editBtn} onClick={onEditDetails}>
+              <button type="button" className={styles.editBtn} onClick={onEditDetails}>
                 <EditIcon /> Edit Details
               </button>
             </div>
@@ -363,7 +453,7 @@ export default function ReviewBooking({
                   )}
                 </div>
               </div>
-              <button className={styles.editBtn} onClick={onEditDetails}>
+              <button type="button" className={styles.editBtn} onClick={onEditDetails}>
                 <EditIcon /> Edit Details
               </button>
             </div>
@@ -436,11 +526,128 @@ export default function ReviewBooking({
             <span className={styles.totalAmount}>${totalPrice.toFixed(2)}</span>
           </div>
 
-          <button className={styles.btnContinue} onClick={onContinueToPayment}>
-            Continue to Payment <ArrowRightIcon />
-          </button>
+          <div
+            style={{
+              marginTop: '1rem',
+              padding: '0.75rem',
+              background: '#f8fafc',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0',
+              fontSize: '0.82rem',
+              color: '#64748b',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            <Lock size={14} color="#059669" />
+            <span>Sign the agreement below to continue to payment.</span>
+          </div>
         </div>
       </div>
+
+      {/* Mandatory Legal Agreement & Electronic Signature Section */}
+      <div className={styles.legalSection} ref={legalSectionRef}>
+        <div className={styles.legalHeader}>
+          <span className={styles.legalHeaderIcon}>
+            <ShieldCheck size={22} />
+          </span>
+          <div>
+            <h3 className={styles.legalHeaderTitle}>Legal Agreement &amp; Electronic Signature</h3>
+            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#64748b' }}>
+              Required before payment. Both documents will apply to all services booked with CoMo Pet
+              Care.
+            </p>
+          </div>
+        </div>
+
+        {/* Combined Agreement Checkbox */}
+        <label
+          className={`${styles.legalCheckboxWrapper} ${
+            agreedToLegal ? styles.legalCheckboxWrapperChecked : ''
+          }`}
+        >
+          <input
+            type="checkbox"
+            className={styles.checkboxInput}
+            checked={agreedToLegal}
+            onChange={(e) => {
+              setAgreedToLegal(e.target.checked);
+              if (e.target.checked) setLegalError(null);
+            }}
+          />
+          <p className={styles.legalText}>
+            I agree to the{' '}
+            <button
+              type="button"
+              className={styles.legalLink}
+              onClick={(e) => openDocumentModal('TERMS', e)}
+            >
+              Terms &amp; Conditions
+            </button>{' '}
+            and{' '}
+            <button
+              type="button"
+              className={styles.legalLink}
+              onClick={(e) => openDocumentModal('WAIVER', e)}
+            >
+              Pet Care Waiver &amp; Release of Liability
+            </button>
+            . I understand that checking this box constitutes my electronic agreement to these
+            documents and that they apply to the services I am booking with CoMo Pet Care.
+          </p>
+        </label>
+
+        {/* Electronic Signature Flow */}
+        <ElectronicSignaturePad
+          initialName={data.customerName}
+          onSignatureChange={handleSignatureChange}
+        />
+
+        {/* Legal Error Banner */}
+        {legalError && (
+          <div className={styles.legalErrorBanner}>
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
+            <span>{legalError}</span>
+          </div>
+        )}
+
+        {/* Final Continue Button */}
+        <div style={{ marginTop: '0.75rem' }}>
+          <button
+            type="button"
+            className={`${styles.btnContinue} ${
+              !agreedToLegal || !signatureData.isComplete ? styles.btnContinueDisabled : ''
+            }`}
+            onClick={handleContinue}
+          >
+            <span>Accept &amp; Continue to Payment (${totalPrice.toFixed(2)})</span>
+            <ArrowRight size={18} />
+          </button>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              marginTop: '10px',
+              fontSize: '12px',
+              color: '#64748b',
+            }}
+          >
+            <Lock size={12} color="#059669" />
+            <span>256-bit SSL Encrypted • 100% Refundable up to 48 hrs before service</span>
+          </div>
+        </div>
+      </div>
+
+      {/* In-app Document Viewer Modal */}
+      <LegalDocumentModal
+        isOpen={modalOpen}
+        initialTab={modalTab}
+        onClose={() => setModalOpen(false)}
+      />
     </div>
   );
 }

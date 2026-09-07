@@ -204,29 +204,152 @@
   color: var(--primary, #123f3c);
 }
 
-/* CTA button */
+/* Legal Agreements & Signature Section */
+.legalSection {
+  margin-top: 24px;
+  background: #ffffff;
+  border: 1px solid #efe7d8;
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.legalHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #efe7d8;
+}
+
+.legalHeaderIcon {
+  color: #059669;
+  display: flex;
+  align-items: center;
+}
+
+.legalHeaderTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--foreground, #1c2524);
+}
+
+.legalCheckboxWrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fbf9f5;
+  border: 1px solid #e8decb;
+  border-radius: 10px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.legalCheckboxWrapper:hover {
+  border-color: #059669;
+  background: #f7faf8;
+}
+
+.legalCheckboxWrapperChecked {
+  border-color: #059669;
+  background: #f0fdf4;
+}
+
+.checkboxInput {
+  width: 20px;
+  height: 20px;
+  accent-color: #059669;
+  cursor: pointer;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.legalText {
+  font-size: 13.5px;
+  color: #334155;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.legalLink {
+  color: #059669;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+  display: inline;
+  transition: color 0.15s ease;
+}
+
+.legalLink:hover {
+  color: #047857;
+  text-decoration: underline;
+}
+
+.legalErrorBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
 .btnContinue {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 16px 24px;
-  margin-top: 16px;
-  background-color: var(--primary, #123f3c);
+  gap: 10px;
+  background-color: #059669;
   color: #ffffff;
-  font-size: 15px;
+  font-family: inherit;
+  font-size: 16px;
   font-weight: 700;
+  padding: 16px 28px;
+  border-radius: 12px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 0.01em;
 }
 
 .btnContinue:hover {
-  background-color: #0e332f;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(18, 63, 60, 0.2);
+  background-color: #047857;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.35);
+}
+
+.btnContinue:active {
+  transform: translateY(0);
+}
+
+.btnContinueDisabled {
+  background-color: #cbd5e1 !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.btnContinueDisabled:hover {
+  background-color: #cbd5e1 !important;
+  color: #64748b !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* ---- RESPONSIVE ---- */

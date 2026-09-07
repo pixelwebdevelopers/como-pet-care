@@ -720,6 +720,25 @@ export default function AuthControllerPage() {
                     Go to Customer Booking Flow →
                   </a>
                 </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '12px',
+                    marginTop: '8px',
+                    fontSize: '12px',
+                    color: '#64748b',
+                  }}
+                >
+                  <a href="/terms" style={{ color: '#64748b', textDecoration: 'underline' }}>
+                    Terms &amp; Conditions
+                  </a>
+                  <span>•</span>
+                  <a href="/waiver" style={{ color: '#64748b', textDecoration: 'underline' }}>
+                    Pet Care Waiver
+                  </a>
+                </div>
               </div>
             </>
           )}

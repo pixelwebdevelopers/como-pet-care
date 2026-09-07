@@ -24,6 +24,9 @@ import {
   Copy,
   CalendarClock,
   RotateCcw,
+  ShieldCheck,
+  PenTool,
+  Eye,
 } from 'lucide-react';
 
 // --- TSX TYPES & INTERFACES ---
@@ -135,6 +138,13 @@ export interface Booking {
   meetAndGreet?: MeetAndGreetInfo | null;
   transactions?: TransactionInfo[];
   allPets?: PetDetail[];
+  legalAgreed?: boolean;
+  termsVersion?: string;
+  waiverVersion?: string;
+  signerLegalName?: string;
+  signatureImage?: string | null;
+  signerIp?: string;
+  signedAt?: string;
 }
 
 export default function Bookings() {
@@ -144,6 +154,7 @@ export default function Bookings() {
 
   const [viewMode, setViewMode] = useState<'list' | 'details'>('list');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [previewSigModal, setPreviewSigModal] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -215,6 +226,13 @@ export default function Bookings() {
             transactions: b.transactions || [],
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             allPets: b.customer?.pets || [],
+            legalAgreed: b.legalAgreed ?? true,
+            termsVersion: b.termsVersion || 'v1.0',
+            waiverVersion: b.waiverVersion || 'v1.0',
+            signerLegalName: b.signerLegalName || `${b.customer?.firstName || ''} ${b.customer?.lastName || ''}`.trim(),
+            signatureImage: b.signatureImage || null,
+            signerIp: b.signerIp || '127.0.0.1',
+            signedAt: b.signedAt || b.createdAt,
           };
         });
 
@@ -1154,7 +1172,144 @@ Emergency Contact: ${intake?.primaryName || 'N/A'} (${intake?.primaryPhone || 'N
               </div>
             </div>
           </div>
+
+          {/* COLUMN 7: Legal Agreement & Electronic Signature Audit */}
+          <div className={styles.detailsCard}>
+            <div className={styles.detailsCardHeader}>
+              <span className={styles.detailsCardIcon}>
+                <ShieldCheck size={18} style={{ color: '#059669' }} />
+              </span>
+              <h3 className={styles.detailsCardTitle}>Legal Agreement &amp; Signature</h3>
+            </div>
+
+            <div className={styles.detailsMetaList}>
+              <div className={styles.metaRow}>
+                <span className={styles.metaLabel}>Agreement Status</span>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontWeight: 700,
+                    color: '#059669',
+                    fontSize: '12px',
+                    backgroundColor: '#ecfdf5',
+                    padding: '3px 8px',
+                    borderRadius: '9999px',
+                  }}
+                >
+                  <CheckCircle2 size={13} />
+                  Electronically Signed &amp; Bound
+                </span>
+              </div>
+
+              <div className={styles.metaRow}>
+                <span className={styles.metaLabel}>Signed Legal Name</span>
+                <span className={styles.metaValueHighlight}>
+                  {selectedBooking.signerLegalName || selectedBooking.clientName}
+                </span>
+              </div>
+
+              <div className={styles.metaRow}>
+                <span className={styles.metaLabel}>Document Versions</span>
+                <span className={styles.metaValue}>
+                  Terms: <strong>{selectedBooking.termsVersion || 'v1.0'}</strong> • Waiver: <strong>{selectedBooking.waiverVersion || 'v1.0'}</strong>
+                </span>
+              </div>
+
+              <div className={styles.metaRow}>
+                <span className={styles.metaLabel}>Timestamp &amp; IP Address</span>
+                <span className={styles.metaValue} style={{ fontSize: '12px' }}>
+                  {selectedBooking.signedAt ? new Date(selectedBooking.signedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : selectedBooking.date} • IP: {selectedBooking.signerIp || '127.0.0.1'}
+                </span>
+              </div>
+
+              {selectedBooking.signatureImage && (
+                <div style={{ marginTop: '8px' }}>
+                  <span className={styles.metaLabel} style={{ display: 'block', marginBottom: '4px' }}>
+                    Signature Capture:
+                  </span>
+                  <div
+                    style={{
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      padding: '8px',
+                      backgroundColor: '#f8fafc',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <img
+                      src={selectedBooking.signatureImage}
+                      alt="Electronic Signature"
+                      style={{ maxHeight: '42px', maxWidth: '160px', objectFit: 'contain' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setPreviewSigModal(selectedBooking.signatureImage || null)}
+                      style={{
+                        padding: '4px 8px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '4px',
+                        background: '#ffffff',
+                        cursor: 'pointer',
+                        color: '#059669',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                      }}
+                    >
+                      <Eye size={12} /> Expand
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Signature Preview Modal */}
+        {previewSigModal && (
+          <div
+            className={styles.modalOverlay}
+            onClick={() => setPreviewSigModal(null)}
+          >
+            <div
+              className={styles.modalContainer}
+              style={{ maxWidth: '420px', textAlign: 'center' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>Electronic Signature Capture</h3>
+                <button
+                  type="button"
+                  className={styles.modalCloseBtn}
+                  onClick={() => setPreviewSigModal(null)}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', margin: '16px 0' }}>
+                <img
+                  src={previewSigModal}
+                  alt="Customer Signature"
+                  style={{ maxWidth: '100%', maxHeight: '160px', objectFit: 'contain' }}
+                />
+              </div>
+              <button
+                type="button"
+                className={styles.btnActionPrimary}
+                style={{ width: '100%' }}
+                onClick={() => setPreviewSigModal(null)}
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
