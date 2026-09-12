@@ -188,7 +188,7 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
     return nowDate.getDate();
   });
   const [startTime, setStartTime] = useState<string>('9:00 AM');
-  const [timeFilter, setTimeFilter] = useState<'all' | 'morning' | 'afternoon' | 'evening'>('all');
+  const [timeFilter, setTimeFilter] = useState<'morning' | 'afternoon' | 'evening'>('morning');
 
   // Real-time slot availability
   const [unavailableSlots, setUnavailableSlots] = useState<Record<string, string>>({});
@@ -300,7 +300,7 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
     return !isAfternoonSlot(s);
   };
 
-  const getFilteredSlots = (filter: 'all' | 'morning' | 'afternoon' | 'evening') => {
+  const getFilteredSlots = (filter: 'morning' | 'afternoon' | 'evening') => {
     if (filter === 'morning') return uniqueTimeSlots.filter(isMorningSlot);
     if (filter === 'afternoon') return uniqueTimeSlots.filter(isAfternoonSlot);
     if (filter === 'evening') return uniqueTimeSlots.filter(isEveningSlot);
@@ -508,17 +508,14 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
 
             {/* Time Period Filter Tabs */}
             <div className={styles.timeFilterBar}>
-              {(['all', 'morning', 'afternoon', 'evening'] as const).map((period) => {
-                const count =
-                  period === 'all' ? uniqueTimeSlots.length : getFilteredSlots(period).length;
+              {(['morning', 'afternoon', 'evening'] as const).map((period) => {
+                const count = getFilteredSlots(period).length;
                 const label =
-                  period === 'all'
-                    ? 'All'
-                    : period === 'morning'
-                      ? 'Morning'
-                      : period === 'afternoon'
-                        ? 'Afternoon'
-                        : 'Evening';
+                  period === 'morning'
+                    ? 'Morning'
+                    : period === 'afternoon'
+                      ? 'Afternoon'
+                      : 'Evening';
 
                 return (
                   <button

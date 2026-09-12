@@ -701,7 +701,12 @@ export default function BookingFlow() {
       </main>
 
       {/* Verification modal dialog overlay */}
-      {showCustomerModal && <CustomerModal onSelectCustomerType={handleCustomerTypeSelect} />}
+      {showCustomerModal && (
+        <CustomerModal
+          onSelectCustomerType={handleCustomerTypeSelect}
+          onClose={() => setShowCustomerModal(false)}
+        />
+      )}
     </div>
   );
 }

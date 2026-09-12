@@ -88,13 +88,13 @@ export default function BookingSchedule({
   const [waitlistSubmitting, setWaitlistSubmitting] = useState<boolean>(false);
   const [waitlistSuccessMessage, setWaitlistSuccessMessage] = useState<string>('');
 
-  // Time Period Filter (Morning / Afternoon / Evening / All)
+  // Time Period Filter (Morning / Afternoon / Evening)
   const [timePeriodFilter, setTimePeriodFilter] = useState<
-    'all' | 'morning' | 'afternoon' | 'evening'
-  >('all');
+    'morning' | 'afternoon' | 'evening'
+  >('morning');
   const [endTimePeriodFilter, setEndTimePeriodFilter] = useState<
-    'all' | 'morning' | 'afternoon' | 'evening'
-  >('all');
+    'morning' | 'afternoon' | 'evening'
+  >('morning');
 
   // --- MONTH DATA ---
   const monthNames = [
@@ -170,7 +170,7 @@ export default function BookingSchedule({
     return !isAfternoonSlot(s);
   };
 
-  const getFilteredSlots = (filter: 'all' | 'morning' | 'afternoon' | 'evening') => {
+  const getFilteredSlots = (filter: 'morning' | 'afternoon' | 'evening') => {
     if (filter === 'morning') return timeSlotsList.filter(isMorningSlot);
     if (filter === 'afternoon') return timeSlotsList.filter(isAfternoonSlot);
     if (filter === 'evening') return timeSlotsList.filter(isEveningSlot);
@@ -196,8 +196,20 @@ export default function BookingSchedule({
         if (!isMounted) return;
         setLoadingAvailability(false);
 
-        if (Array.isArray(data.enabledSections)) {
+        if (Array.isArray(data.enabledSections) && data.enabledSections.length > 0) {
           setEnabledSections(data.enabledSections);
+          if (!data.enabledSections.includes(timePeriodFilter)) {
+            const firstValid = (['morning', 'afternoon', 'evening'] as const).find((p) =>
+              data.enabledSections.includes(p),
+            );
+            if (firstValid) setTimePeriodFilter(firstValid);
+          }
+          if (!data.enabledSections.includes(endTimePeriodFilter)) {
+            const firstValid = (['morning', 'afternoon', 'evening'] as const).find((p) =>
+              data.enabledSections.includes(p),
+            );
+            if (firstValid) setEndTimePeriodFilter(firstValid);
+          }
         }
 
         if (data.success && Array.isArray(data.slots)) {
@@ -1312,22 +1324,18 @@ export default function BookingSchedule({
               <div className={styles.timeFilterBar}>
                 {(
                   [
-                    'all',
                     ...(enabledSections.includes('morning') ? ['morning'] : []),
                     ...(enabledSections.includes('afternoon') ? ['afternoon'] : []),
                     ...(enabledSections.includes('evening') ? ['evening'] : []),
-                  ] as ('all' | 'morning' | 'afternoon' | 'evening')[]
+                  ] as ('morning' | 'afternoon' | 'evening')[]
                 ).map((period) => {
-                  const count =
-                    period === 'all' ? timeSlotsList.length : getFilteredSlots(period).length;
+                  const count = getFilteredSlots(period).length;
                   const label =
-                    period === 'all'
-                      ? 'All'
-                      : period === 'morning'
-                        ? 'Morning'
-                        : period === 'afternoon'
-                          ? 'Afternoon'
-                          : 'Evening';
+                    period === 'morning'
+                      ? 'Morning'
+                      : period === 'afternoon'
+                        ? 'Afternoon'
+                        : 'Evening';
 
                   return (
                     <button
@@ -1396,22 +1404,18 @@ export default function BookingSchedule({
                 <div className={styles.timeFilterBar}>
                   {(
                     [
-                      'all',
                       ...(enabledSections.includes('morning') ? ['morning'] : []),
                       ...(enabledSections.includes('afternoon') ? ['afternoon'] : []),
                       ...(enabledSections.includes('evening') ? ['evening'] : []),
-                    ] as ('all' | 'morning' | 'afternoon' | 'evening')[]
+                    ] as ('morning' | 'afternoon' | 'evening')[]
                   ).map((period) => {
-                    const count =
-                      period === 'all' ? timeSlotsList.length : getFilteredSlots(period).length;
+                    const count = getFilteredSlots(period).length;
                     const label =
-                      period === 'all'
-                        ? 'All'
-                        : period === 'morning'
-                          ? 'Morning'
-                          : period === 'afternoon'
-                            ? 'Afternoon'
-                            : 'Evening';
+                      period === 'morning'
+                        ? 'Morning'
+                        : period === 'afternoon'
+                          ? 'Afternoon'
+                          : 'Evening';
 
                     return (
                       <button

@@ -26,6 +26,7 @@
 }
 
 .dialog {
+  position: relative;
   background-color: #ffffff;
   border-radius: 24px;
   padding: 40px 32px;
@@ -38,6 +39,29 @@
   box-shadow: 0 20px 40px rgba(18, 63, 60, 0.15);
   animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, rgba(28, 37, 36, 0.5));
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.closeBtn:hover {
+  background-color: rgba(18, 63, 60, 0.08);
+  color: var(--foreground, #1c2524);
 }
 
 @keyframes scaleIn {

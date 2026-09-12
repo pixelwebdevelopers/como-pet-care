@@ -22,6 +22,7 @@ export interface ExistingCustomerData {
 
 interface CustomerModalProps {
   onSelectCustomerType: (isNew: boolean, existingData?: ExistingCustomerData) => void;
+  onClose?: () => void;
 }
 
 // User Avatar SVG Icon
@@ -42,7 +43,20 @@ const UserAvatarIcon = () => (
   </svg>
 );
 
-export default function CustomerModal({ onSelectCustomerType }: CustomerModalProps) {
+const CloseIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={2}
+    stroke="currentColor"
+    style={{ width: '18px', height: '18px' }}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+export default function CustomerModal({ onSelectCustomerType, onClose }: CustomerModalProps) {
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -67,7 +81,9 @@ export default function CustomerModal({ onSelectCustomerType }: CustomerModalPro
         onSelectCustomerType(false, data.customer);
       } else {
         // Customer not found or error, let them continue as existing and type details
-        setStatusMessage('No account found for this email. You can still proceed or select New Customer.');
+        setStatusMessage(
+          'No account found for this email. You can still proceed or select New Customer.',
+        );
         setTimeout(() => {
           onSelectCustomerType(false, { email: email.trim() });
         }, 1200);
@@ -81,6 +97,17 @@ export default function CustomerModal({ onSelectCustomerType }: CustomerModalPro
   return (
     <div className={styles.overlay}>
       <div className={styles.dialog}>
+        {onClose && (
+          <button
+            type="button"
+            className={styles.closeBtn}
+            onClick={onClose}
+            aria-label="Close modal"
+          >
+            <CloseIcon />
+          </button>
+        )}
+
         <div className={styles.avatarCircle}>
           <UserAvatarIcon />
         </div>
@@ -90,7 +117,8 @@ export default function CustomerModal({ onSelectCustomerType }: CustomerModalPro
         {!showEmailInput ? (
           <>
             <p className={styles.subtext}>
-              New customers receive a complimentary Meet &amp; Greet prior to service. Returning clients can fast-track their booking.
+              New customers receive a complimentary Meet &amp; Greet prior to service. Returning
+              clients can fast-track their booking.
             </p>
             <div className={styles.buttonRow}>
               <button
@@ -130,9 +158,9 @@ export default function CustomerModal({ onSelectCustomerType }: CustomerModalPro
               <button
                 type="button"
                 className={styles.cancelBtn}
-                onClick={() => onSelectCustomerType(false)}
+                onClick={() => onSelectCustomerType(true)}
               >
-                Skip Lookup
+                Continue as new
               </button>
             </div>
           </form>
