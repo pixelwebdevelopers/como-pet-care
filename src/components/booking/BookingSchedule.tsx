@@ -352,19 +352,68 @@ export default function BookingSchedule({
     }
   };
 
+  const isSelectedDateToday = () => {
+    const now = new Date();
+    return (
+      currentYear === now.getFullYear() &&
+      currentMonth === now.getMonth() &&
+      selectedDay === now.getDate()
+    );
+  };
+
+  const currentMinutesFromMidnight = () => {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  };
+
+  const getMaxDurationMinutes = (): number | null => {
+    if (selectedPlanId === 'sitting_half_day') return 240; // 4 hours
+    if (selectedPlanId === 'sitting_full_day') return 480; // 8 hours
+    return null;
+  };
+
   const handleClearTime = (type: 'start' | 'end') => {
     if (type === 'start') setStartTime('');
     else setEndTime('');
   };
 
   const handleSlotClick = (slot: string, isUnavailable: boolean, type: 'start' | 'end') => {
-    if (isUnavailable) {
-      setSelectedUnavailableSlot(slot);
-      setUnavailableModalOpen(true);
-      return;
+    if (type === 'start') {
+      const isPast = isSelectedDateToday() && parseTimeToMinutes(slot) <= currentMinutesFromMidnight();
+      if (isPast) return;
+      if (isUnavailable) {
+        setSelectedUnavailableSlot(slot);
+        setUnavailableModalOpen(true);
+        return;
+      }
+      setStartTime(slot);
+
+      // Validate/adjust current endTime against the new startTime
+      const newStartM = parseTimeToMinutes(slot);
+      const maxDur = getMaxDurationMinutes();
+      if (endTime) {
+        const curEndM = parseTimeToMinutes(endTime);
+        if (curEndM <= newStartM || (maxDur !== null && curEndM > newStartM + maxDur)) {
+          setEndTime('');
+        }
+      }
+    } else {
+      if (!startTime) return;
+      const startM = parseTimeToMinutes(startTime);
+      const endM = parseTimeToMinutes(slot);
+      const maxDur = getMaxDurationMinutes();
+      if (endM <= startM || (maxDur !== null && endM > startM + maxDur)) {
+        return;
+      }
+      const isPast = isSelectedDateToday() && endM <= currentMinutesFromMidnight();
+      if (isPast) return;
+      if (isUnavailable) {
+        setSelectedUnavailableSlot(slot);
+        setUnavailableModalOpen(true);
+        return;
+      }
+      setEndTime(slot);
     }
-    if (type === 'start') setStartTime(slot);
-    else setEndTime(slot);
   };
 
   const handleJoinWaitlistSubmit = async (e: React.FormEvent) => {
@@ -1087,16 +1136,28 @@ export default function BookingSchedule({
 
               <div className={styles.slotsScrollContainer}>
                 <div className={styles.slotsGrid}>
-                  {timeSlotsList.map((slot) => (
-                    <button
-                      key={`start-${slot}`}
-                      type="button"
-                      className={`${styles.slotButton} ${startTime === slot ? styles.slotButtonActive : ''}`}
-                      onClick={() => setStartTime(slot)}
-                    >
-                      <span className={styles.slotTimeText}>{slot}</span>
-                    </button>
-                  ))}
+                  {timeSlotsList.map((slot) => {
+                    const isArrivalToday =
+                      currentYear === new Date().getFullYear() &&
+                      currentMonth === new Date().getMonth() &&
+                      rangeStart === new Date().getDate();
+                    const isPast = isArrivalToday && parseTimeToMinutes(slot) <= currentMinutesFromMidnight();
+
+                    return (
+                      <button
+                        key={`start-${slot}`}
+                        type="button"
+                        disabled={isPast}
+                        title={isPast ? 'This time has already passed' : 'Available for booking'}
+                        className={`${styles.slotButton} ${startTime === slot ? styles.slotButtonActive : ''} ${
+                          isPast ? styles.slotButtonDisabled : ''
+                        }`}
+                        onClick={() => !isPast && setStartTime(slot)}
+                      >
+                        <span className={styles.slotTimeText}>{slot}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1106,25 +1167,39 @@ export default function BookingSchedule({
                     <Clock size={18} />
                     Select End Time
                   </h3>
-                  <button className={styles.btnClear} onClick={() => handleClearTime('end')}>
-                    Clear
-                  </button>
+                  {endTime && (
+                    <button className={styles.btnClear} onClick={() => handleClearTime('end')}>
+                      Clear
+                    </button>
+                  )}
                 </div>
                 <p className={styles.timeInfo}>All times shown are in Central Time (CT)</p>
               </div>
 
               <div className={styles.slotsScrollContainer}>
                 <div className={styles.slotsGrid}>
-                  {timeSlotsList.map((slot) => (
-                    <button
-                      key={`end-${slot}`}
-                      type="button"
-                      className={`${styles.slotButton} ${endTime === slot ? styles.slotButtonActive : ''}`}
-                      onClick={() => setEndTime(slot)}
-                    >
-                      <span className={styles.slotTimeText}>{slot}</span>
-                    </button>
-                  ))}
+                  {timeSlotsList.map((slot) => {
+                    const isDepartureToday =
+                      currentYear === new Date().getFullYear() &&
+                      currentMonth === new Date().getMonth() &&
+                      rangeEnd === new Date().getDate();
+                    const isPast = isDepartureToday && parseTimeToMinutes(slot) <= currentMinutesFromMidnight();
+
+                    return (
+                      <button
+                        key={`end-${slot}`}
+                        type="button"
+                        disabled={isPast}
+                        title={isPast ? 'This time has already passed' : 'Available for booking'}
+                        className={`${styles.slotButton} ${endTime === slot ? styles.slotButtonActive : ''} ${
+                          isPast ? styles.slotButtonDisabled : ''
+                        }`}
+                        onClick={() => !isPast && setEndTime(slot)}
+                      >
+                        <span className={styles.slotTimeText}>{slot}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -1356,25 +1431,30 @@ export default function BookingSchedule({
               <div className={styles.slotsScrollContainer}>
                 <div className={styles.slotsGrid}>
                   {getFilteredSlots(timePeriodFilter).map((slot) => {
+                    const isPast = isSelectedDateToday() && parseTimeToMinutes(slot) <= currentMinutesFromMidnight();
                     const isUnavailable = Boolean(unavailableSlots[slot]);
                     const isSelected = startTime === slot;
+                    const isSlotDisabled = isPast;
+
+                    let title = 'Available for booking';
+                    if (isPast) title = 'This time has already passed';
+                    else if (isUnavailable) title = `${unavailableSlots[slot]} - Click to join waitlist`;
 
                     return (
                       <button
                         key={`start-${slot}`}
                         type="button"
-                        title={
-                          isUnavailable
-                            ? `${unavailableSlots[slot]} - Click to join waitlist`
-                            : 'Available for booking'
-                        }
+                        disabled={isSlotDisabled}
+                        title={title}
                         className={`${styles.slotButton} ${
                           isSelected ? styles.slotButtonActive : ''
-                        } ${isUnavailable ? styles.slotButtonUnavailable : ''}`}
+                        } ${isUnavailable && !isPast ? styles.slotButtonUnavailable : ''} ${
+                          isSlotDisabled ? styles.slotButtonDisabled : ''
+                        }`}
                         onClick={() => handleSlotClick(slot, isUnavailable, 'start')}
                       >
                         <span className={styles.slotTimeText}>{slot}</span>
-                        {isUnavailable && <span className={styles.bookedTag}>Booked</span>}
+                        {isUnavailable && !isPast && <span className={styles.bookedTag}>Booked</span>}
                       </button>
                     );
                   })}
@@ -1436,25 +1516,46 @@ export default function BookingSchedule({
                 <div className={styles.slotsScrollContainer}>
                   <div className={styles.slotsGrid}>
                     {getFilteredSlots(endTimePeriodFilter).map((slot) => {
+                      const slotMin = parseTimeToMinutes(slot);
+                      const startMin = startTime ? parseTimeToMinutes(startTime) : 0;
+                      const maxDur = getMaxDurationMinutes();
+
+                      const isPast = isSelectedDateToday() && slotMin <= currentMinutesFromMidnight();
+                      const isBeforeOrEqualStart = !startTime || slotMin <= startMin;
+                      const isExceedingMax = Boolean(startTime && maxDur !== null && slotMin > startMin + maxDur);
                       const isUnavailable = Boolean(unavailableSlots[slot]);
                       const isSelected = endTime === slot;
+
+                      const isSlotDisabled = isPast || isBeforeOrEqualStart || isExceedingMax;
+
+                      let title = 'Available for booking';
+                      if (isPast) {
+                        title = 'This time has already passed';
+                      } else if (!startTime) {
+                        title = 'Please select a start time first';
+                      } else if (slotMin <= startMin) {
+                        title = 'End time must be after start time';
+                      } else if (isExceedingMax) {
+                        title = `Exceeds maximum duration of ${maxDur! / 60} hours for ${selectedPlanTitle}`;
+                      } else if (isUnavailable) {
+                        title = `${unavailableSlots[slot]} - Click to join waitlist`;
+                      }
 
                       return (
                         <button
                           key={`end-${slot}`}
                           type="button"
-                          title={
-                            isUnavailable
-                              ? `${unavailableSlots[slot]} - Click to join waitlist`
-                              : 'Available for booking'
-                          }
+                          disabled={isSlotDisabled}
+                          title={title}
                           className={`${styles.slotButton} ${
                             isSelected ? styles.slotButtonActive : ''
-                          } ${isUnavailable ? styles.slotButtonUnavailable : ''}`}
+                          } ${isUnavailable && !isSlotDisabled ? styles.slotButtonUnavailable : ''} ${
+                            isSlotDisabled ? styles.slotButtonDisabled : ''
+                          }`}
                           onClick={() => handleSlotClick(slot, isUnavailable, 'end')}
                         >
                           <span className={styles.slotTimeText}>{slot}</span>
-                          {isUnavailable && <span className={styles.bookedTag}>Booked</span>}
+                          {isUnavailable && !isSlotDisabled && <span className={styles.bookedTag}>Booked</span>}
                         </button>
                       );
                     })}

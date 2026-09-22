@@ -296,7 +296,11 @@ export default function BookingFlow() {
     }
 
     if (bookingScreen === 'confirmation') {
-      router.push('/');
+      if (typeof window !== 'undefined') {
+        window.location.href = 'https://comopetcare.com';
+      } else {
+        router.push('/');
+      }
     } else if (bookingScreen === 'payment') {
       setBookingScreen('review');
     } else if (bookingScreen === 'review') {
@@ -314,7 +318,16 @@ export default function BookingFlow() {
     } else if (bookingScreen === 'sub_services') {
       setBookingScreen('main_services');
     } else {
-      router.push('/');
+      // Very first step (main_services): navigate browser back or redirect to https://comopetcare.com
+      if (typeof window !== 'undefined') {
+        if (window.history.length > 1 && document.referrer && !document.referrer.includes('/booking')) {
+          window.history.back();
+        } else {
+          window.location.href = 'https://comopetcare.com';
+        }
+      } else {
+        router.push('/');
+      }
     }
   };
 

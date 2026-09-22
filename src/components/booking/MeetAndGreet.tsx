@@ -329,7 +329,35 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
             }
           }
           setUnavailableSlots(map);
-          if (map[startTime]) {
+
+          const isSameDayAsService = Boolean(
+            selectedDay &&
+              parsedLimit &&
+              selectedDay === parsedLimit.day &&
+              currentMonth === parsedLimit.month &&
+              currentYear === parsedLimit.year,
+          );
+          const limitMin = parseTimeToMinutes(serviceSchedule?.startTime);
+          const isToday =
+            currentYear === new Date().getFullYear() &&
+            currentMonth === new Date().getMonth() &&
+            selectedDay === new Date().getDate();
+          const currentMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+
+          const hasAvailableSlotsBefore = uniqueTimeSlots.some((s) => {
+            const sMin = parseTimeToMinutes(s);
+            if (sMin >= limitMin) return false;
+            const isPast = isToday && sMin <= currentMinutes;
+            const isBooked = Boolean(map[s]);
+            return !isPast && !isBooked;
+          });
+
+          const isExceptionSlot =
+            isSameDayAsService &&
+            !hasAvailableSlotsBefore &&
+            startTime === serviceSchedule?.startTime;
+
+          if (map[startTime] && !isExceptionSlot) {
             setStartTime('');
           }
         }
@@ -350,7 +378,35 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
       alert('Please select a time slot.');
       return;
     }
-    if (unavailableSlots[startTime]) {
+
+    const isSameDayAsService = Boolean(
+      selectedDay &&
+        parsedLimit &&
+        selectedDay === parsedLimit.day &&
+        currentMonth === parsedLimit.month &&
+        currentYear === parsedLimit.year,
+    );
+    const limitMin = parseTimeToMinutes(serviceSchedule?.startTime);
+    const isToday =
+      currentYear === new Date().getFullYear() &&
+      currentMonth === new Date().getMonth() &&
+      selectedDay === new Date().getDate();
+    const currentMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+
+    const hasAvailableSlotsBefore = uniqueTimeSlots.some((s) => {
+      const sMin = parseTimeToMinutes(s);
+      if (sMin >= limitMin) return false;
+      const isPast = isToday && sMin <= currentMinutes;
+      const isBooked = Boolean(unavailableSlots[s]);
+      return !isPast && !isBooked;
+    });
+
+    const isExceptionSlot =
+      isSameDayAsService &&
+      !hasAvailableSlotsBefore &&
+      startTime === serviceSchedule?.startTime;
+
+    if (unavailableSlots[startTime] && !isExceptionSlot) {
       alert('The selected time slot is already booked. Please pick another available slot.');
       return;
     }
@@ -536,37 +592,73 @@ export default function MeetAndGreet({ serviceSchedule, onConfirm }: MeetAndGree
             <div className={styles.slotsScrollContainer}>
               <div className={styles.slotsGrid}>
                 {getFilteredSlots(timeFilter).map((slot, idx) => {
-                  let isLimitDisabled = false;
-                  if (
+                  const isToday =
+                    currentYear === new Date().getFullYear() &&
+                    currentMonth === new Date().getMonth() &&
+                    selectedDay === new Date().getDate();
+                  const currentMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+                  const slotMin = parseTimeToMinutes(slot);
+
+                  const isPast = isToday && slotMin <= currentMinutes;
+
+                  const isSameDayAsService = Boolean(
                     selectedDay &&
-                    parsedLimit &&
-                    selectedDay === parsedLimit.day &&
-                    currentMonth === parsedLimit.month &&
-                    currentYear === parsedLimit.year
-                  ) {
-                    const slotMin = parseTimeToMinutes(slot);
-                    const limitMin = parseTimeToMinutes(serviceSchedule?.startTime);
-                    if (slotMin >= limitMin) {
-                      isLimitDisabled = true;
+                      parsedLimit &&
+                      selectedDay === parsedLimit.day &&
+                      currentMonth === parsedLimit.month &&
+                      currentYear === parsedLimit.year,
+                  );
+                  const limitMin = parseTimeToMinutes(serviceSchedule?.startTime);
+
+                  const hasAvailableSlotsBefore = uniqueTimeSlots.some((s) => {
+                    const sMin = parseTimeToMinutes(s);
+                    if (sMin >= limitMin) return false;
+                    const sIsPast = isToday && sMin <= currentMinutes;
+                    const sIsBooked = Boolean(unavailableSlots[s]);
+                    return !sIsPast && !sIsBooked;
+                  });
+
+                  let isLimitDisabled = false;
+                  let isExceptionSlot = false;
+
+                  if (isSameDayAsService) {
+                    if (hasAvailableSlotsBefore) {
+                      // Normal rule: meet & greet must be before the service start time
+                      if (slotMin >= limitMin) {
+                        isLimitDisabled = true;
+                      }
+                    } else {
+                      // Special rule: if no slots available before service, enable the exact booked service timeslot
+                      if (slotMin > limitMin) {
+                        isLimitDisabled = true;
+                      } else if (slotMin === limitMin) {
+                        isExceptionSlot = true;
+                      }
                     }
                   }
 
                   const isBooked = Boolean(unavailableSlots[slot]);
-                  const isSlotDisabled = isLimitDisabled || isBooked;
+                  const isSlotDisabled = isPast || (isExceptionSlot ? false : isLimitDisabled || isBooked);
+
+                  let title = '';
+                  if (isPast) title = 'This time has already passed';
+                  else if (isExceptionSlot) title = 'Scheduled at service start time';
+                  else if (isBooked) title = unavailableSlots[slot];
+                  else if (isLimitDisabled) title = 'Must be scheduled before service start time';
 
                   return (
                     <button
                       key={`meet-${slot}-${idx}`}
                       type="button"
                       disabled={isSlotDisabled}
-                      title={isBooked ? unavailableSlots[slot] : ''}
+                      title={title}
                       className={`${styles.slotButton} ${
                         startTime === slot ? styles.slotButtonActive : ''
                       } ${isSlotDisabled ? styles.slotButtonDisabled : ''}`}
                       onClick={() => !isSlotDisabled && setStartTime(slot)}
                     >
                       <span className={styles.slotTimeText}>{slot}</span>
-                      {isBooked && <span className={styles.bookedTag}>Booked</span>}
+                      {isBooked && !isExceptionSlot && !isPast && <span className={styles.bookedTag}>Booked</span>}
                     </button>
                   );
                 })}

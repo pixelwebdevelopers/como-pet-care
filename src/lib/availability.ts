@@ -336,6 +336,10 @@ export async function calculateSlotsAvailability(
   const weekday = getWeekdayName(targetDate);
   const slotDuration = resolveServiceDuration(serviceId, planId);
 
+  const now = new Date();
+  const isToday = normalizeDateKey(targetDate) === normalizeDateKey(now);
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
   // If service is overnight stay, daytime slot collision is exempt
   const isOvernight = serviceId === '3' && planId?.includes('overnight');
   if (isOvernight) {
@@ -343,7 +347,13 @@ export async function calculateSlotsAvailability(
       date: dateStr,
       weekday,
       slotDuration,
-      slots: candidateSlots.map((time) => ({ time, available: true })),
+      slots: candidateSlots.map((time) => {
+        const slotStart = parseTimeToMinutes(time);
+        if (isToday && slotStart <= currentMinutes) {
+          return { time, available: false, reason: 'This time has already passed' };
+        }
+        return { time, available: true };
+      }),
       bookedIntervals: [],
     };
   }
@@ -353,6 +363,15 @@ export async function calculateSlotsAvailability(
   const slots: SlotAvailability[] = candidateSlots.map((time) => {
     const slotStart = parseTimeToMinutes(time);
     const slotEnd = slotStart + slotDuration;
+
+    // Check if slot has already passed on today's date
+    if (isToday && slotStart <= currentMinutes) {
+      return {
+        time,
+        available: false,
+        reason: 'This time has already passed',
+      };
+    }
 
     // Check collision against all booked intervals
     const collidingBooking = bookedIntervals.find((interval) =>

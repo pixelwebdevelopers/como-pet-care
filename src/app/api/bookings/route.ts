@@ -8,6 +8,8 @@ import {
   formatMinutesToTime,
   resolveServiceDuration,
   isIntervalOverlapping,
+  parseDateString,
+  normalizeDateKey,
 } from '@/lib/availability';
 
 export const dynamic = 'force-dynamic';
@@ -65,6 +67,24 @@ export async function POST(req: Request) {
 
     const additionalPetsCount = parseInt(petData?.additionalPets || '0', 10) || 0;
     const puppiesCount = parseInt(petData?.puppiesCount || '0', 10) || 0;
+
+    // Past Time Validation Guard for today's date
+    if (scheduleData?.bookingDate && scheduleData?.startTime) {
+      const targetDate = parseDateString(scheduleData.bookingDate);
+      if (targetDate && normalizeDateKey(targetDate) === normalizeDateKey(new Date())) {
+        const startM = parseTimeToMinutes(scheduleData.startTime);
+        const currentMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+        if (startM <= currentMinutes) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `The selected time (${scheduleData.startTime}) on today's date has already passed. Please choose a future time slot.`,
+            },
+            { status: 400 },
+          );
+        }
+      }
+    }
 
     // Double Booking Collision Validation Guard (for timed 30/60 min services)
     const isOvernight =

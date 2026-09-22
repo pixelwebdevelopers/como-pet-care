@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { parseDateString, normalizeDateKey } from '@/lib/availability';
+import { parseDateString, normalizeDateKey, parseTimeToMinutes } from '@/lib/availability';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,7 +53,6 @@ export async function GET() {
         orderBy: {
           createdAt: 'desc',
         },
-        take: 20,
       }),
       prisma.transaction.aggregate({
         where: {
@@ -89,18 +88,37 @@ export async function GET() {
     const totalRevenue = revenueResult._sum.amount ? Number(revenueResult._sum.amount) : 0;
 
     // Filter today's bookings
-    const bookingsTodayList = allBookings.filter((b) => {
+    const bookingsTodayList = allBookings
+      .filter((b) => {
+        const parsed = parseDateString(b.bookingDate);
+        return parsed ? normalizeDateKey(parsed) === todayNormalized : false;
+      })
+      .sort((a, b) => {
+        const startA = parseTimeToMinutes(a.startTime);
+        const startB = parseTimeToMinutes(b.startTime);
+        return startA - startB;
+      });
+
+    const bookingsTodayCount = bookingsTodayList.length;
+
+    // Calculate visits for the current calendar week (Sunday - Saturday)
+    const currentDayOfWeek = today.getDay();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - currentDayOfWeek);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const visitsThisWeekCount = allBookings.filter((b) => {
       const parsed = parseDateString(b.bookingDate);
-      return parsed ? normalizeDateKey(parsed) === todayNormalized : false;
-    });
+      if (!parsed) return false;
+      return parsed >= startOfWeek && parsed <= endOfWeek;
+    }).length;
 
-    const bookingsTodayCount = bookingsTodayList.length > 0 ? bookingsTodayList.length : allBookings.length;
-    const visitsThisWeekCount = allBookings.length;
-
-    // 2. Transform Today's Schedule
-    const scheduleSource = bookingsTodayList.length > 0 ? bookingsTodayList : allBookings.slice(0, 4);
-
-    const todaySchedule = scheduleSource.map((b) => {
+    // 2. Transform Today's Schedule (Only actual bookings scheduled for today)
+    const todaySchedule = bookingsTodayList.map((b) => {
       const pet = b.customer?.pets?.[0];
       let statusFormatted: 'Confirmed' | 'Pending' | 'In Progress' = 'Confirmed';
       if (b.status === 'PENDING_MEET_GREET' || b.status === 'PENDING') {
@@ -124,21 +142,42 @@ export async function GET() {
       };
     });
 
-    // 3. Transform Upcoming Bookings
-    const upcomingBookings = allBookings.slice(0, 5).map((b) => {
-      const pet = b.customer?.pets?.[0];
-      return {
-        id: String(b.id),
-        clientName: `${b.customer.firstName} ${b.customer.lastName}`,
-        petName: pet?.name || 'Pet',
-        date: b.bookingDate,
-        time: b.startTime || '9:00 AM',
-        service: b.serviceName,
-        duration: b.serviceId === '2' || b.planTitle?.includes('60') ? '60 min' : '30 min',
-        status: b.status,
-        reference: b.reference,
-      };
-    });
+    // 3. Transform Upcoming Bookings (Only future bookings strictly after now, sorted chronologically)
+    const nowMinutes = today.getHours() * 60 + today.getMinutes();
+
+    const upcomingBookings = allBookings
+      .filter((b) => {
+        const parsed = parseDateString(b.bookingDate);
+        if (!parsed) return false;
+        const norm = normalizeDateKey(parsed);
+        if (norm > todayNormalized) return true;
+        if (norm === todayNormalized) {
+          const startM = parseTimeToMinutes(b.startTime);
+          return startM >= nowMinutes;
+        }
+        return false;
+      })
+      .sort((a, b) => {
+        const dateA = parseDateString(a.bookingDate)?.getTime() || 0;
+        const dateB = parseDateString(b.bookingDate)?.getTime() || 0;
+        if (dateA !== dateB) return dateA - dateB;
+        return parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime);
+      })
+      .slice(0, 5)
+      .map((b) => {
+        const pet = b.customer?.pets?.[0];
+        return {
+          id: String(b.id),
+          clientName: `${b.customer.firstName} ${b.customer.lastName}`,
+          petName: pet?.name || 'Pet',
+          date: b.bookingDate,
+          time: b.startTime || '9:00 AM',
+          service: b.serviceName,
+          duration: b.serviceId === '2' || b.planTitle?.includes('60') ? '60 min' : '30 min',
+          status: b.status,
+          reference: b.reference,
+        };
+      });
 
     // 4. Transform Recent Activity from System Audit Logs
     let activities = systemLogs.map((log) => {
