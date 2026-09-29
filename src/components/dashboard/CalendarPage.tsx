@@ -28,6 +28,7 @@ interface CalendarBooking {
   service: string;
   duration: string;
   date: string; // "YYYY-MM-DD"
+  endDate?: string; // "YYYY-MM-DD"
   time: string;
   status:
     | 'confirmed'
@@ -55,10 +56,13 @@ export default function CalendarPage() {
       const res = await fetch('/api/bookings');
       const data = await res.json();
       if (data.success && Array.isArray(data.bookings)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mapped: CalendarBooking[] = data.bookings.map((b: any) => {
           const pet = b.customer?.pets?.[0];
           const parsed = parseDateString(b.bookingDate);
           const dateNormalized = parsed ? normalizeDateKey(parsed) : '2026-08-10';
+          const parsedEnd = b.bookingEndDate ? parseDateString(b.bookingEndDate) : null;
+          const endDateNormalized = parsedEnd ? normalizeDateKey(parsedEnd) : undefined;
 
           let mappedStatus: CalendarBooking['status'] = 'confirmed';
           const s = (b.status || '').toLowerCase();
@@ -72,14 +76,23 @@ export default function CalendarPage() {
             ? `${b.customer.firstName || ''} ${b.customer.lastName || ''}`.trim()
             : 'Customer';
 
+          let dur = '30 min';
+          if (b.serviceId === '3' || b.serviceName?.toLowerCase().includes('sitting') || b.planTitle?.toLowerCase().includes('overnight')) {
+            const days = b.numberOfDays || 1;
+            dur = `Overnight (${days} ${days === 1 ? 'Night' : 'Nights'})`;
+          } else if (b.serviceId === '2' || b.planTitle?.includes('60')) {
+            dur = '60 min';
+          }
+
           return {
             id: String(b.id),
             reference: b.reference,
             clientName: custName || 'Client',
             petName: pet?.name || 'Pet',
             service: b.serviceName,
-            duration: b.serviceId === '2' || b.planTitle?.includes('60') ? '60 min' : '30 min',
+            duration: dur,
             date: dateNormalized,
+            endDate: endDateNormalized,
             time: b.startTime || '9:00 AM',
             status: mappedStatus,
           };
@@ -151,17 +164,17 @@ export default function CalendarPage() {
     });
   };
 
-  // Get bookings for a particular date
+  // Get bookings for a particular date (supports multi-day overnight stays)
   const getBookingsForDate = (dateStr: string) => {
     return bookings.filter((b) => {
-      const matchDate = b.date === dateStr;
+      const matchDate = b.endDate ? (dateStr >= b.date && dateStr <= b.endDate) : (b.date === dateStr);
       if (statusFilter === 'all') return matchDate;
       return matchDate && b.status === statusFilter;
     });
   };
 
   const getBookingsCountForDate = (dateStr: string) => {
-    return bookings.filter((b) => b.date === dateStr).length;
+    return bookings.filter((b) => (b.endDate ? dateStr >= b.date && dateStr <= b.endDate : b.date === dateStr)).length;
   };
 
   // 1. Day View

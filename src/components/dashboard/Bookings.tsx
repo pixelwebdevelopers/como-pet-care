@@ -138,6 +138,9 @@ export interface Booking {
   meetAndGreet?: MeetAndGreetInfo | null;
   transactions?: TransactionInfo[];
   allPets?: PetDetail[];
+  bookingDate?: string;
+  bookingEndDate?: string | null;
+  numberOfDays?: number;
   legalAgreed?: boolean;
   termsVersion?: string;
   waiverVersion?: string;
@@ -155,6 +158,7 @@ export default function Bookings() {
   const [viewMode, setViewMode] = useState<'list' | 'details'>('list');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [previewSigModal, setPreviewSigModal] = useState<string | null>(null);
+  const [viewReceiptBooking, setViewReceiptBooking] = useState<Booking | null>(null);
 
   const [activeTab, setActiveTab] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -167,6 +171,8 @@ export default function Bookings() {
   // Reschedule Modal State
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState<boolean>(false);
   const [rescheduleDate, setRescheduleDate] = useState<string>('');
+  const [rescheduleEndDate, setRescheduleEndDate] = useState<string>('');
+  const [rescheduleNumberOfDays, setRescheduleNumberOfDays] = useState<number>(1);
   const [rescheduleTime, setRescheduleTime] = useState<string>('');
   const [rescheduling, setRescheduling] = useState<boolean>(false);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
@@ -191,14 +197,32 @@ export default function Bookings() {
 
           const intake = b.intakeProfiles?.[0] || null;
 
+          const isOvernight =
+            b.serviceId === '3' ||
+            b.serviceName?.toLowerCase().includes('sitting') ||
+            b.planTitle?.toLowerCase().includes('overnight');
+          const daysCount = b.numberOfDays || 1;
+          const computedDuration = isOvernight
+            ? `Overnight (${daysCount} ${daysCount === 1 ? 'Night' : 'Nights'})`
+            : b.serviceId === '2' || b.planTitle?.includes('60')
+              ? '60 min'
+              : '30 min';
+
+          const computedDate = b.bookingEndDate
+            ? `${b.bookingDate} – ${b.bookingEndDate}`
+            : b.bookingDate;
+
           return {
             id: String(b.id),
             reference: b.reference,
             clientName: `${b.customer?.firstName || ''} ${b.customer?.lastName || ''}`.trim(),
             petName: primaryPet?.name || 'Pet',
             service: b.serviceName,
-            duration: b.serviceId === '2' || b.planTitle?.includes('60') ? '60 min' : '30 min',
-            date: b.bookingDate,
+            duration: computedDuration,
+            date: computedDate,
+            bookingDate: b.bookingDate,
+            bookingEndDate: b.bookingEndDate || null,
+            numberOfDays: b.numberOfDays || 1,
             time: `${b.startTime || '9:00 AM'}${b.endTime ? `–${b.endTime}` : ''}`,
             status: mappedStatus,
             payment: b.paymentStatus === 'PAID' ? 'paid' : 'unpaid',
@@ -353,32 +377,41 @@ export default function Bookings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: selectedBooking.id,
-          bookingDate: rescheduleDate || selectedBooking.date,
+          bookingDate: rescheduleDate || selectedBooking.bookingDate || selectedBooking.date,
+          bookingEndDate: rescheduleEndDate ? rescheduleEndDate.trim() : null,
+          numberOfDays: rescheduleNumberOfDays || 1,
           startTime: rescheduleTime || selectedBooking.time.split('–')[0],
         }),
       });
 
       const data = await res.json();
       if (data.success) {
-        alert('Booking rescheduled successfully!');
+        alert('Booking schedule updated successfully!');
         setRescheduleModalOpen(false);
         loadBookings();
         if (selectedBooking) {
+          const updatedDate = rescheduleEndDate
+            ? `${rescheduleDate} – ${rescheduleEndDate}`
+            : rescheduleDate || selectedBooking.date;
+
           setSelectedBooking((prev) =>
             prev
               ? {
                   ...prev,
-                  date: rescheduleDate || prev.date,
+                  date: updatedDate,
+                  bookingDate: rescheduleDate || prev.bookingDate,
+                  bookingEndDate: rescheduleEndDate || null,
+                  numberOfDays: rescheduleNumberOfDays || 1,
                   time: rescheduleTime || prev.time,
                 }
               : null,
           );
         }
       } else {
-        alert(data.message || 'Reschedule failed');
+        alert(data.message || 'Schedule update failed');
       }
     } catch {
-      alert('Network error rescheduling appointment');
+      alert('Network error updating appointment schedule');
     } finally {
       setRescheduling(false);
     }
@@ -585,13 +618,27 @@ Emergency Contact: ${intake?.primaryName || 'N/A'} (${intake?.primaryPhone || 'N
               type="button"
               className={styles.btnActionSecondary}
               onClick={() => {
-                setRescheduleDate(selectedBooking.date);
+                setRescheduleDate(selectedBooking.bookingDate || selectedBooking.date.split('–')[0].trim());
+                setRescheduleEndDate(selectedBooking.bookingEndDate || '');
+                setRescheduleNumberOfDays(selectedBooking.numberOfDays || 1);
                 setRescheduleTime(selectedBooking.time.split('–')[0]);
                 setRescheduleModalOpen(true);
               }}
             >
               <CalendarClock size={14} />
-              <span>Reschedule</span>
+              <span>Reschedule / Edit Dates</span>
+            </button>
+
+            {/* View Receipt Button */}
+            <button
+              type="button"
+              className={styles.btnActionPrimary}
+              style={{ backgroundColor: 'var(--primary)' }}
+              onClick={() => setViewReceiptBooking(selectedBooking)}
+              title="View, download, or print official receipt"
+            >
+              <Printer size={14} />
+              <span>View Receipt</span>
             </button>
 
             {/* Payment Toggle */}
@@ -687,7 +734,7 @@ Emergency Contact: ${intake?.primaryName || 'N/A'} (${intake?.primaryPhone || 'N
           <div className={styles.modalOverlay} onClick={() => setRescheduleModalOpen(false)}>
             <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
               <div className={styles.modalHeader}>
-                <h3 className={styles.modalTitle}>Reschedule Booking {selectedBooking.reference}</h3>
+                <h3 className={styles.modalTitle}>Reschedule / Edit Dates for #{selectedBooking.reference}</h3>
                 <button
                   type="button"
                   className={styles.modalCloseBtn}
@@ -700,12 +747,12 @@ Emergency Contact: ${intake?.primaryName || 'N/A'} (${intake?.primaryPhone || 'N
               <form onSubmit={handleRescheduleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
-                    New Scheduled Date
+                    Scheduled Start Date
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. August 15, 2026 or 2026-08-15"
+                    placeholder="e.g. October 16, 2026 or 2026-10-16"
                     className={styles.searchInput}
                     style={{ width: '100%' }}
                     value={rescheduleDate}
@@ -715,12 +762,42 @@ Emergency Contact: ${intake?.primaryName || 'N/A'} (${intake?.primaryPhone || 'N
 
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
-                    New Appointment Start Time
+                    Scheduled End Date (For Overnight Stays / Multi-Day Care)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. October 18, 2026 (Optional if single-day)"
+                    className={styles.searchInput}
+                    style={{ width: '100%' }}
+                    value={rescheduleEndDate}
+                    onChange={(e) => setRescheduleEndDate(e.target.value)}
+                  />
+                </div>
+
+                {rescheduleEndDate && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+                      Number of Nights / Days
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      className={styles.searchInput}
+                      style={{ width: '100%' }}
+                      value={rescheduleNumberOfDays}
+                      onChange={(e) => setRescheduleNumberOfDays(parseInt(e.target.value, 10) || 1)}
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+                    Appointment Start Time
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 10:00 AM"
+                    placeholder="e.g. 9:00 AM"
                     className={styles.searchInput}
                     style={{ width: '100%' }}
                     value={rescheduleTime}
@@ -741,7 +818,7 @@ Emergency Contact: ${intake?.primaryName || 'N/A'} (${intake?.primaryPhone || 'N
                     className={styles.btnActionPrimary}
                     disabled={rescheduling}
                   >
-                    {rescheduling ? 'Updating...' : 'Confirm Reschedule'}
+                    {rescheduling ? 'Updating...' : 'Save Schedule Changes'}
                   </button>
                 </div>
               </form>
@@ -1554,17 +1631,31 @@ Emergency Contact: ${intake?.primaryName || 'N/A'} (${intake?.primaryPhone || 'N
                       </td>
 
                       <td className={styles.td}>
-                        <button
-                          type="button"
-                          className={styles.btnActionSecondary}
-                          style={{ padding: '4px 10px', fontSize: '12px' }}
-                          onClick={() => {
-                            setSelectedBooking(b);
-                            setViewMode('details');
-                          }}
-                        >
-                          View Details &gt;
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <button
+                            type="button"
+                            className={styles.btnActionSecondary}
+                            style={{ padding: '4px 8px', fontSize: '12px' }}
+                            title="View & Print official receipt"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewReceiptBooking(b);
+                            }}
+                          >
+                            <Printer size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.btnActionSecondary}
+                            style={{ padding: '4px 10px', fontSize: '12px' }}
+                            onClick={() => {
+                              setSelectedBooking(b);
+                              setViewMode('details');
+                            }}
+                          >
+                            View Details &gt;
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1574,6 +1665,128 @@ Emergency Contact: ${intake?.primaryName || 'N/A'} (${intake?.primaryPhone || 'N
           </table>
         </div>
       </div>
+
+      {/* Official Printable Receipt Modal */}
+      {viewReceiptBooking && (
+        <div className={styles.modalOverlay} onClick={() => setViewReceiptBooking(null)}>
+          <div
+            className={styles.modalContainer}
+            style={{ maxWidth: '640px', width: '92%', maxHeight: '90vh', overflowY: 'auto', padding: '28px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Receipt Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #123f3c', paddingBottom: '16px', marginBottom: '20px' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#123f3c' }}>CoMo Pet Care</h2>
+                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>Official Booking Receipt &amp; Schedule Confirmation</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ display: 'inline-block', backgroundColor: '#e6edea', color: '#123f3c', fontWeight: 700, fontSize: '12px', padding: '4px 10px', borderRadius: '16px' }}>
+                  REF #{viewReceiptBooking.reference}
+                </span>
+                <div style={{ fontSize: '11.5px', color: '#9ca3af', marginTop: '4px' }}>
+                  Issued: {new Date(viewReceiptBooking.signedAt || Date.now()).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+
+            {/* Customer & Pet Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px', backgroundColor: '#fbf9f4', padding: '16px', borderRadius: '10px', border: '1px solid #efe7d8' }}>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#9ca3af', marginBottom: '4px' }}>Client Details</div>
+                <div style={{ fontWeight: 700, fontSize: '14px', color: '#1c2524' }}>{viewReceiptBooking.clientName}</div>
+                <div style={{ fontSize: '13px', color: '#4b5563' }}>{viewReceiptBooking.customerEmail}</div>
+                <div style={{ fontSize: '13px', color: '#4b5563' }}>{viewReceiptBooking.customerPhone}</div>
+                <div style={{ fontSize: '12.5px', color: '#6b7280', marginTop: '4px' }}>{viewReceiptBooking.customerAddress}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#9ca3af', marginBottom: '4px' }}>Pet &amp; Service Info</div>
+                <div style={{ fontWeight: 700, fontSize: '14px', color: '#1c2524' }}>🐾 {viewReceiptBooking.allPets?.map((p) => p.name).join(', ') || viewReceiptBooking.petName}</div>
+                <div style={{ fontSize: '13px', color: '#123f3c', fontWeight: 600 }}>{viewReceiptBooking.service} ({viewReceiptBooking.duration})</div>
+                <div style={{ fontSize: '12.5px', color: '#b18a45', fontWeight: 600, marginTop: '4px' }}>
+                  {viewReceiptBooking.date} • {viewReceiptBooking.time}
+                </div>
+                {viewReceiptBooking.meetAndGreet?.date && (
+                  <div style={{ fontSize: '12px', color: '#059669', marginTop: '4px', fontWeight: 600 }}>
+                    🤝 Meet &amp; Greet: {viewReceiptBooking.meetAndGreet.date} at {viewReceiptBooking.meetAndGreet.time}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Line Items Table */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', fontSize: '13.5px' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #e5e7eb', textAlign: 'left', color: '#6b7280', fontSize: '12px' }}>
+                  <th style={{ padding: '8px 0' }}>Item Description</th>
+                  <th style={{ padding: '8px 0', textAlign: 'right' }}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                  <td style={{ padding: '10px 0' }}>Base Service Rate ({viewReceiptBooking.service})</td>
+                  <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: 600 }}>{viewReceiptBooking.basePrice}</td>
+                </tr>
+                {parseFloat(viewReceiptBooking.additionalPetFee?.replace('$', '') || '0') > 0 && (
+                  <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '8px 0' }}>Additional Pet Fee</td>
+                    <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 600 }}>{viewReceiptBooking.additionalPetFee}</td>
+                  </tr>
+                )}
+                {parseFloat(viewReceiptBooking.puppySurcharge?.replace('$', '') || '0') > 0 && (
+                  <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '8px 0' }}>Puppy Care Surcharge</td>
+                    <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 600 }}>{viewReceiptBooking.puppySurcharge}</td>
+                  </tr>
+                )}
+                {parseFloat(viewReceiptBooking.holidaySurcharge?.replace('$', '') || '0') > 0 && (
+                  <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '8px 0' }}>Holiday Peak Surcharge</td>
+                    <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 600 }}>{viewReceiptBooking.holidaySurcharge}</td>
+                  </tr>
+                )}
+                <tr style={{ borderTop: '2px solid #123f3c' }}>
+                  <td style={{ padding: '12px 0', fontWeight: 800, fontSize: '15px', color: '#123f3c' }}>Total Paid</td>
+                  <td style={{ padding: '12px 0', textAlign: 'right', fontWeight: 800, fontSize: '17px', color: '#123f3c' }}>
+                    {viewReceiptBooking.totalPrice}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* Payment & Legal footer */}
+            <div style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span>Payment Status: <strong style={{ color: viewReceiptBooking.payment === 'paid' ? '#059669' : '#dc2626' }}>{viewReceiptBooking.payment.toUpperCase()}</strong></span>
+                <span>Agreement: <strong>Terms {viewReceiptBooking.termsVersion || 'v1.0'} &amp; Waiver {viewReceiptBooking.waiverVersion || 'v1.0'} (Signed)</strong></span>
+              </div>
+              {viewReceiptBooking.signerLegalName && (
+                <div>Signed electronically by <strong>{viewReceiptBooking.signerLegalName}</strong> on {viewReceiptBooking.signedAt ? new Date(viewReceiptBooking.signedAt).toLocaleString() : 'N/A'}.</div>
+              )}
+            </div>
+
+            {/* Modal Buttons */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                className={styles.btnActionSecondary}
+                onClick={() => setViewReceiptBooking(null)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className={styles.btnActionPrimary}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                onClick={() => window.print()}
+              >
+                <Printer size={15} />
+                <span>Print / Save PDF</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

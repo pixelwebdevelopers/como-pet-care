@@ -21,6 +21,20 @@ function formatRelativeTime(date: Date): string {
   return `${diffDays} days ago`;
 }
 
+function formatBookingDuration(b: any): string {
+  if (b.serviceId === '3' || b.serviceName?.toLowerCase().includes('sitting') || b.planTitle?.toLowerCase().includes('overnight')) {
+    const days = b.numberOfDays || 1;
+    return `Overnight (${days} ${days === 1 ? 'Night' : 'Nights'})`;
+  }
+  if (b.bookingEndDate && b.numberOfDays > 1) {
+    return `${b.numberOfDays} Days`;
+  }
+  if (b.serviceId === '2' || b.planTitle?.includes('60')) {
+    return '60 min';
+  }
+  return '30 min';
+}
+
 export async function GET() {
   try {
     const today = new Date();
@@ -131,7 +145,7 @@ export async function GET() {
         id: String(b.id),
         time: b.startTime || '9:00 AM',
         service: b.serviceName,
-        duration: b.serviceId === '2' || b.planTitle?.includes('60') ? '60 min' : '30 min',
+        duration: formatBookingDuration(b),
         provider: {
           name: `${b.customer.firstName} ${b.customer.lastName}`,
           role: b.isNewCustomer ? 'New Client' : 'Returning Client',
@@ -166,14 +180,18 @@ export async function GET() {
       .slice(0, 5)
       .map((b) => {
         const pet = b.customer?.pets?.[0];
+        const dateFormatted = b.bookingEndDate
+          ? `${b.bookingDate} – ${b.bookingEndDate}`
+          : b.bookingDate;
+
         return {
           id: String(b.id),
           clientName: `${b.customer.firstName} ${b.customer.lastName}`,
           petName: pet?.name || 'Pet',
-          date: b.bookingDate,
+          date: dateFormatted,
           time: b.startTime || '9:00 AM',
           service: b.serviceName,
-          duration: b.serviceId === '2' || b.planTitle?.includes('60') ? '60 min' : '30 min',
+          duration: formatBookingDuration(b),
           status: b.status,
           reference: b.reference,
         };
@@ -217,38 +235,16 @@ export async function GET() {
       }));
     }
 
-    // 5. Waitlist / Pending Approval Queue
-    // Real waitlist entries from WaitlistEntry table, or fallback to pending bookings
-    let waitlist: any[] = [];
-    if (dbWaitlistEntries.length > 0) {
-      waitlist = dbWaitlistEntries.map((w) => ({
-        id: String(w.id),
-        name: `${w.firstName} ${w.lastName || ''}`.trim(),
-        petType: w.serviceDuration || '30 Minutes',
-        service: w.serviceName,
-        date: w.preferredDate,
-        time: w.preferredTime,
-        status: w.status === 'waiting' ? 'Requested' : w.status === 'availability_sent' ? 'Availability Sent' : w.status,
-      }));
-    } else {
-      const pendingBookings = allBookings.filter(
-        (b) => b.status === 'PENDING_MEET_GREET' || b.status === 'PENDING',
-      );
-      waitlist = (pendingBookings.length > 0 ? pendingBookings : allBookings.slice(0, 3)).map(
-        (b) => {
-          const pet = b.customer?.pets?.[0];
-          return {
-            id: String(b.id),
-            name: `${b.customer.firstName} ${b.customer.lastName}`,
-            petType: pet?.type || 'Dog',
-            petName: pet?.name || 'Pet',
-            service: b.serviceName,
-            date: b.bookingDate,
-            status: b.status === 'PENDING_MEET_GREET' ? 'Meet & Greet' : 'Requested',
-          };
-        },
-      );
-    }
+    // 5. Waitlist Queue (Only actual waitlist entries)
+    const waitlist = dbWaitlistEntries.map((w) => ({
+      id: String(w.id),
+      name: `${w.firstName} ${w.lastName || ''}`.trim(),
+      petType: w.serviceDuration || '30 Minutes',
+      service: w.serviceName,
+      date: w.preferredDate,
+      time: w.preferredTime,
+      status: w.status === 'waiting' ? 'Requested' : w.status === 'availability_sent' ? 'Availability Sent' : w.status,
+    }));
 
     return NextResponse.json({
       success: true,

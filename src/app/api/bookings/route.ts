@@ -333,12 +333,17 @@ export async function POST(req: Request) {
           serviceName: result.booking.serviceName,
           planTitle: result.booking.planTitle || undefined,
           bookingDate: result.booking.bookingDate,
+          bookingEndDate: result.booking.bookingEndDate || undefined,
+          numberOfDays: result.booking.numberOfDays || undefined,
           startTime: result.booking.startTime || '9:00 AM',
           endTime: result.booking.endTime || undefined,
           petNames: result.pet?.name || 'Your Pet',
           address: `${result.customer.address || ''}${result.customer.city ? `, ${result.customer.city}` : ''}`,
           totalPrice: `$${Number(result.booking.totalPrice).toFixed(2)}`,
           paymentStatus: result.booking.paymentStatus,
+          meetAndGreetDate: meetAndGreetData?.date || undefined,
+          meetAndGreetTime: meetAndGreetData?.time || undefined,
+          meetAndGreetAddress: result.customer.address || undefined,
           notes: result.booking.specialNotes || undefined,
         });
 
@@ -358,7 +363,9 @@ export async function POST(req: Request) {
           reference: result.booking.reference,
           serviceName: result.booking.serviceName,
           planTitle: result.booking.planTitle || undefined,
-          bookingDate: result.booking.bookingDate,
+          bookingDate: result.booking.bookingEndDate
+            ? `${result.booking.bookingDate} – ${result.booking.bookingEndDate} (${result.booking.numberOfDays} Nights)`
+            : result.booking.bookingDate,
           startTime: result.booking.startTime || '9:00 AM',
           endTime: result.booking.endTime || undefined,
           petNames: result.pet?.name || 'Pet',
@@ -453,7 +460,17 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { id, status, paymentStatus, bookingDate, startTime, endTime, specialNotes } = body;
+    const {
+      id,
+      status,
+      paymentStatus,
+      bookingDate,
+      bookingEndDate,
+      numberOfDays,
+      startTime,
+      endTime,
+      specialNotes,
+    } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -467,6 +484,8 @@ export async function PATCH(req: Request) {
     if (status) updateData.status = status.toUpperCase();
     if (paymentStatus) updateData.paymentStatus = paymentStatus.toUpperCase();
     if (bookingDate) updateData.bookingDate = bookingDate.trim();
+    if (bookingEndDate !== undefined) updateData.bookingEndDate = bookingEndDate ? bookingEndDate.trim() : null;
+    if (numberOfDays !== undefined) updateData.numberOfDays = parseInt(String(numberOfDays), 10) || 1;
     if (startTime) updateData.startTime = startTime.trim();
     if (endTime) updateData.endTime = endTime.trim();
     if (specialNotes !== undefined) updateData.specialNotes = specialNotes ? specialNotes.trim() : null;

@@ -241,14 +241,24 @@ export const emailTemplates = {
     serviceName: string;
     planTitle?: string;
     bookingDate: string;
+    bookingEndDate?: string;
+    numberOfDays?: number;
     startTime: string;
     endTime?: string;
     petNames: string;
     address: string;
     totalPrice: string;
     paymentStatus: string;
+    meetAndGreetDate?: string;
+    meetAndGreetTime?: string;
+    meetAndGreetAddress?: string;
     notes?: string;
-  }) => `
+  }) => {
+    const formattedDates = data.bookingEndDate
+      ? `${data.bookingDate} – ${data.bookingEndDate}${data.numberOfDays ? ` (${data.numberOfDays} ${data.numberOfDays === 1 ? 'Night' : 'Nights'})` : ''}`
+      : data.bookingDate;
+
+    return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -395,13 +405,21 @@ export const emailTemplates = {
                   <td class="info-value">${data.serviceName} ${data.planTitle ? `(${data.planTitle})` : ''}</td>
                 </tr>
                 <tr>
-                  <td class="info-label">Date:</td>
-                  <td class="info-value">${data.bookingDate}</td>
+                  <td class="info-label">Dates of Care:</td>
+                  <td class="info-value">${formattedDates}</td>
                 </tr>
                 <tr>
                   <td class="info-label">Scheduled Time:</td>
                   <td class="info-value">${data.startTime}${data.endTime ? ` – ${data.endTime}` : ''}</td>
                 </tr>
+                ${
+                  data.meetAndGreetDate
+                    ? `<tr>
+                  <td class="info-label">Meet &amp; Greet:</td>
+                  <td class="info-value" style="color: #b18a45; font-weight: 700;">🤝 ${data.meetAndGreetDate} ${data.meetAndGreetTime ? `at ${data.meetAndGreetTime}` : ''}</td>
+                </tr>`
+                    : ''
+                }
                 <tr>
                   <td class="info-label">Pet(s):</td>
                   <td class="info-value">🐾 ${data.petNames}</td>
@@ -429,7 +447,11 @@ export const emailTemplates = {
 
             <div class="notice-box">
               <strong>What Happens Next?</strong><br>
-              Our care specialists are preparing for your pet's visit. If this is your first time booking with us, our team will coordinate your complimentary Meet &amp; Greet before service begins.
+              Our care specialists are preparing for your pet's visit. ${
+                data.meetAndGreetDate
+                  ? `Your Meet &amp; Greet is scheduled for <strong>${data.meetAndGreetDate} at ${data.meetAndGreetTime || 'scheduled time'}</strong>.`
+                  : 'If this is your first time booking with us, our team will coordinate your complimentary Meet &amp; Greet before service begins.'
+              }
             </div>
 
             <p style="font-size: 13.5px; color: #4b5563;">
@@ -444,7 +466,8 @@ export const emailTemplates = {
         </div>
       </body>
     </html>
-  `,
+  `;
+  },
 
   adminBookingAlert: (data: {
     clientName: string;

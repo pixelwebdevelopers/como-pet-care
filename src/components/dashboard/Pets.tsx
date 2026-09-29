@@ -37,6 +37,7 @@ export default function Pets() {
   const [sortBy, setSortBy] = useState<string>('name-asc');
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [selectedPetModal, setSelectedPetModal] = useState<Pet | null>(null);
 
   // Fetch live pets from API
   const loadPets = async () => {
@@ -261,7 +262,14 @@ export default function Pets() {
                             <PawPrint size={18} />
                           </div>
                           <div>
-                            <span className={styles.petLink}>{p.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPetModal(p)}
+                              className={styles.petLink}
+                              style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', textAlign: 'left' }}
+                            >
+                              {p.name}
+                            </button>
                             {p.isPuppy && (
                               <span
                                 style={{
@@ -328,6 +336,127 @@ export default function Pets() {
           </table>
         </div>
       </div>
+
+      {/* Pet Profile Details Modal */}
+      {selectedPetModal && (
+        <div className={styles.modalOverlay} onClick={() => setSelectedPetModal(null)}>
+          <div
+            className={styles.modalContent}
+            style={{ maxWidth: '520px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '50%',
+                    backgroundColor: '#f5eee3',
+                    color: '#b18a45',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <PawPrint size={22} />
+                </div>
+                <div>
+                  <h3 className={styles.modalTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {selectedPetModal.name}
+                    {selectedPetModal.isPuppy && (
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          color: '#b45309',
+                          backgroundColor: '#fef3c7',
+                          padding: '2px 8px',
+                          borderRadius: '8px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Puppy
+                      </span>
+                    )}
+                  </h3>
+                  <span style={{ fontSize: '12px', color: 'rgba(28,37,36,0.6)' }}>
+                    {selectedPetModal.breed} &bull; {selectedPetModal.type}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className={styles.btnCloseModal}
+                onClick={() => setSelectedPetModal(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px',
+                  backgroundColor: '#fbf9f5',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: '1px solid #efe7d8',
+                }}
+              >
+                <div>
+                  <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'rgba(28,37,36,0.5)', fontWeight: 600 }}>
+                    Age / Life Stage
+                  </span>
+                  <p style={{ margin: '2px 0 0', fontSize: '14px', fontWeight: 600, color: '#1c2524' }}>
+                    {selectedPetModal.age}
+                  </p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'rgba(28,37,36,0.5)', fontWeight: 600 }}>
+                    Owner
+                  </span>
+                  <p style={{ margin: '2px 0 0', fontSize: '14px', fontWeight: 600, color: '#1c2524', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <User size={13} color="#b18a45" /> {selectedPetModal.ownerName}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ backgroundColor: '#ffffff', border: '1px solid #efe7d8', padding: '16px', borderRadius: '12px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#123f3c', display: 'block', marginBottom: '6px' }}>
+                  Care &amp; Feeding Instructions
+                </span>
+                <p style={{ margin: 0, fontSize: '13.5px', color: '#1c2524', lineHeight: 1.5 }}>
+                  {selectedPetModal.careInstructions || 'No specific care instructions provided.'}
+                </p>
+              </div>
+
+              {selectedPetModal.upcomingService && (
+                <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '14px', borderRadius: '12px' }}>
+                  <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#166534', fontWeight: 700 }}>
+                    Latest / Upcoming Service
+                  </span>
+                  <p style={{ margin: '3px 0 0', fontSize: '13.5px', fontWeight: 600, color: '#14532d' }}>
+                    {selectedPetModal.upcomingService}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.modalActions} style={{ marginTop: '16px' }}>
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                onClick={() => setSelectedPetModal(null)}
+              >
+                Close Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -52,6 +52,7 @@ export default function Clients() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
+  const [selectedClientModal, setSelectedClientModal] = useState<Client | null>(null);
 
   // Dispatch Customer Reminder Emails (Intake Form or Meet & Greet)
   const handleSendClientReminder = async (type: 'INTAKE_REMINDER' | 'MEET_GREET_RESCHEDULE', c: Client) => {
@@ -311,7 +312,14 @@ export default function Clients() {
                             <User size={16} />
                           </div>
                           <div>
-                            <span className={styles.clientLink}>{c.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedClientModal(c)}
+                              className={styles.clientLink}
+                              style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', textAlign: 'left' }}
+                            >
+                              {c.name}
+                            </button>
                           </div>
                         </div>
                       </td>
@@ -450,6 +458,159 @@ export default function Clients() {
           </table>
         </div>
       </div>
+
+      {/* Client Profile Details Modal */}
+      {selectedClientModal && (
+        <div className={styles.modalOverlay} onClick={() => setSelectedClientModal(null)}>
+          <div
+            className={styles.modalContent}
+            style={{ maxWidth: '560px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: '#e6edea',
+                    color: '#123f3c',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                  }}
+                >
+                  <User size={20} />
+                </div>
+                <div>
+                  <h3 className={styles.modalTitle}>{selectedClientModal.name}</h3>
+                  <span style={{ fontSize: '12px', color: 'rgba(28,37,36,0.6)' }}>
+                    Client Profile &bull; {selectedClientModal.status.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className={styles.btnCloseModal}
+                onClick={() => setSelectedClientModal(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px',
+                  backgroundColor: '#fbf9f5',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: '1px solid #efe7d8',
+                }}
+              >
+                <div>
+                  <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'rgba(28,37,36,0.5)', fontWeight: 600 }}>
+                    Email Address
+                  </span>
+                  <p style={{ margin: '2px 0 0', fontSize: '13.5px', fontWeight: 600, color: '#1c2524' }}>
+                    {selectedClientModal.email}
+                  </p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'rgba(28,37,36,0.5)', fontWeight: 600 }}>
+                    Phone Number
+                  </span>
+                  <p style={{ margin: '2px 0 0', fontSize: '13.5px', fontWeight: 600, color: '#1c2524' }}>
+                    {selectedClientModal.phone}
+                  </p>
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'rgba(28,37,36,0.5)', fontWeight: 600 }}>
+                    Address
+                  </span>
+                  <p style={{ margin: '2px 0 0', fontSize: '13.5px', fontWeight: 600, color: '#1c2524' }}>
+                    {selectedClientModal.address || 'Columbia, MO'}
+                  </p>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '10px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ backgroundColor: '#ffffff', border: '1px solid #efe7d8', padding: '12px', borderRadius: '10px' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(28,37,36,0.6)' }}>Total Spent</span>
+                  <p style={{ margin: '4px 0 0', fontSize: '16px', fontWeight: 700, color: '#123f3c' }}>
+                    {selectedClientModal.totalSpent}
+                  </p>
+                </div>
+                <div style={{ backgroundColor: '#ffffff', border: '1px solid #efe7d8', padding: '12px', borderRadius: '10px' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(28,37,36,0.6)' }}>Bookings</span>
+                  <p style={{ margin: '4px 0 0', fontSize: '16px', fontWeight: 700, color: '#123f3c' }}>
+                    {selectedClientModal.bookingsCount}
+                  </p>
+                </div>
+                <div style={{ backgroundColor: '#ffffff', border: '1px solid #efe7d8', padding: '12px', borderRadius: '10px' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(28,37,36,0.6)' }}>Intake Status</span>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', fontWeight: 700, color: selectedClientModal.intakeStatus === 'completed' ? '#059669' : '#b45309' }}>
+                    {selectedClientModal.intakeStatus === 'completed' ? 'Completed' : 'Pending'}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ backgroundColor: '#ffffff', border: '1px solid #efe7d8', padding: '14px', borderRadius: '10px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#123f3c', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                  <PawPrint size={15} color="#b45309" /> Registered Pets ({selectedClientModal.petsCount})
+                </span>
+                <p style={{ margin: 0, fontSize: '13.5px', color: '#1c2524' }}>
+                  {selectedClientModal.pets || 'No pets listed yet'}
+                </p>
+              </div>
+
+              {selectedClientModal.upcomingBooking && (
+                <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '12px 14px', borderRadius: '10px' }}>
+                  <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#166534', fontWeight: 700 }}>
+                    Latest / Upcoming Booking
+                  </span>
+                  <p style={{ margin: '3px 0 0', fontSize: '13.5px', fontWeight: 600, color: '#14532d' }}>
+                    {selectedClientModal.upcomingBooking}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.modalActions} style={{ marginTop: '16px' }}>
+              {selectedClientModal.intakeStatus !== 'completed' && (
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => handleSendClientReminder('INTAKE_REMINDER', selectedClientModal)}
+                  disabled={sendingReminderId === selectedClientModal.id}
+                  style={{ color: '#b18a45', borderColor: '#b18a45' }}
+                >
+                  <FileText size={14} />
+                  <span>Send Intake Link Email</span>
+                </button>
+              )}
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                onClick={() => setSelectedClientModal(null)}
+              >
+                Close Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
